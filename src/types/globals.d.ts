@@ -107,5 +107,16 @@ interface BoardViewOptions {
   onRomBitToggle(address: number, bit: number): void;
   onInputBitToggle(bit: number): void;
 }
-interface BoardViewApi { mount(options: BoardViewOptions): void }
+
+interface BoardRenderOptions {
+  circuit: IcCircuitApi;
+  cpu: CpuState;
+  clockHigh: boolean;
+  selectedNet: string;
+}
+interface BoardViewApi {
+  mount(options: BoardViewOptions): void;
+  render(options: BoardRenderOptions): void;
+  drawWires(options: BoardRenderOptions): void;
+}
 interface Window { TD4BoardView: BoardViewApi }

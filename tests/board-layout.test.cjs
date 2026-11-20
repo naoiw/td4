@@ -67,7 +67,7 @@ test('IC physical pins, net coloring and click toggles are preserved',()=>{
   assert.match(css,/\.ic-footprint \.ic-leg\.is-high:before/);
   assert.match(css,/\.ic-footprint \.ic-leg\.is-low:before/);
   assert.match(boardJs,/physicalPins\[pinNumber - 1\]/);
-  assert.match(js,/document\.querySelectorAll\('\.ic-probe'\)/);
+  assert.match(boardJs,/document\.querySelectorAll\('\.ic-probe'\)/);
   assert.match(boardJs,/chipToggle\.addEventListener\('click'/);
   assert.match(boardJs,/pinList\.hidden\s*=\s*true/);
 });
@@ -122,4 +122,16 @@ test('DOM construction is delegated to stateless board renderer',()=>{
   assert.match(boardJs,/onRomBitToggle\(addr, bit\)/);
   assert.match(boardJs,/onInputBitToggle\(bit\)/);
   assert.ok(!boardJs.includes('cpu.rom['), 'renderer must not own CPU mutations');
+});
+
+test('board H/L and selected-net SVG renderers stay separate from CPU state',()=>{
+  assert.match(js,/TD4BoardView\.render\(/);
+  assert.match(js,/TD4BoardView\.drawWires\(/);
+  assert.match(boardJs,/function render\(options\)/);
+  assert.match(boardJs,/function drawWires\(options\)/);
+  assert.match(boardJs,/drawWires\(options\)/);
+  assert.match(boardJs,/selectedNetName/);
+  assert.match(boardJs,/getBoundingClientRect\(\)/);
+  assert.match(boardJs,/classList\.toggle\('is-high'/);
+  assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');
 });

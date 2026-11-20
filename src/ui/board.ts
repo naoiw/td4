@@ -195,5 +195,99 @@
     
   }
 
-  window.TD4BoardView = {mount};
+  function render(options: BoardRenderOptions):void {
+    const {cpu, clockHigh, selectedNet, circuit}=options;
+    const board=document.getElementById('schematicBoard');
+    if(!board)return;
+    const values=circuit.levels(cpu,clockHigh);
+    for(const element of document.querySelectorAll<HTMLElement>('.ic-probe')) {
+      const net=element.dataset.net||'';
+      const level=values[net];
+      element.classList.toggle('is-high',level===1);
+      element.classList.toggle('is-low',level===0);
+      element.classList.toggle('is-selected',net===selectedNet);
+      const value=element.querySelector<HTMLElement>('.ic-pin-level');
+      if(value)value.textContent=level?'H':'L';
+      element.title=`${net}: ${level?'HIGH (1)':'LOW (0)'}`;
+    }
+    for (const leg of board.querySelectorAll<HTMLElement>('.ic-leg')) {
+      const net = leg.dataset.net;
+      const level = net ? values[net] : undefined;
+      leg.classList.toggle('is-high', level === 1);
+      leg.classList.toggle('is-low', level === 0);
+      leg.classList.toggle('is-unmodelled', level === undefined);
+      leg.title = '#' + leg.dataset.pinNumber + ' ' + leg.dataset.pinName + ': ' +
+        (level === undefined ? '未モデル化' : level === 1 ? 'H (1)' : 'L (0)');
+    }
+    for(const cell of board.querySelectorAll<HTMLElement>('.rom-slot')){
+      const addr=Number(cell.dataset.addr);
+      const selected=cpu.pc===addr;
+      const byte=cpu.rom[addr];
+      cell.classList.toggle('is-current',selected);
+      const lamp=cell.querySelector<HTMLElement>('.rom-select-lamp')!;
+      lamp.classList.toggle('is-on',selected);
+      lamp.classList.toggle('is-selected',selectedNet===`ROM_SEL_${addr}`);
+      cell.querySelector<HTMLElement>('.rom-slot-value')!.textContent=byte.toString(16).toUpperCase().padStart(2,'0');
+      for(const btn of cell.querySelectorAll<HTMLButtonElement>('.rom-dip')){
+        const bit=Number(btn.dataset.bit);
+        const on=!!(byte&(1<<bit));
+        btn.classList.toggle('is-on',on);
+        btn.dataset.net=selected?`D${bit}`:'';
+        btn.setAttribute('aria-pressed',String(on));
+        btn.title=`ROM ${HEX(addr)} / D${bit} = ${+on}（クリックで反転）`;
+        btn.setAttribute('aria-label',`ROM ${HEX(addr)}番地 D${bit} を${on?'OFF':'ON'}にする`);
+      }
+    }
+    board.querySelectorAll<HTMLButtonElement>('.schematic-io-switch').forEach(btn=>{
+      const bit=Number(btn.dataset.bit),on=!!(cpu.input&(1<<bit));
+      btn.textContent=`SW${bit} ${on?'ON':'OFF'}`;
+      btn.classList.toggle('is-on',on);
+      btn.setAttribute('aria-pressed',String(on));
+      btn.title=`IN${bit} = ${+on}`;
+    });
+    board.querySelectorAll<HTMLButtonElement>('.schematic-io-led').forEach(btn=>{
+      const bit=Number(btn.dataset.bit),on=!!(cpu.out&(1<<bit));
+      btn.classList.toggle('is-on',on);
+      btn.textContent=`LED${bit}`;
+      btn.title=`OUT${bit} = ${+on}（クリックで信号を追跡）`;
+    });
+    $('selectedNetName').textContent=selectedNet.replace(/^ROM_SEL_(\d+)$/,(_,n)=>`/ROM${Number(n).toString(16).toUpperCase()}`);
+    const level=values[selectedNet];
+    $('selectedNetLevel').textContent=level?'H':'L';
+    $('selectedNetLevel').className=level?'hi':'lo';
+    for(const el of document.querySelectorAll<HTMLElement>('[data-net]')){
+      el.classList.toggle('net-selected',!!el.dataset.net&&el.dataset.net===selectedNet);
+    }
+    // ROM switch connections change with PC. Re-draw only when required.
+    drawWires(options);
+  }
+
+  function drawWires(options: BoardRenderOptions):void {
+    const {cpu, clockHigh, selectedNet, circuit}=options;
+    const board=document.getElementById('schematicBoard');
+    if(!board)return;
+    const svg=document.getElementById('icWireLayer') as unknown as SVGSVGElement;
+    const bounds=board.getBoundingClientRect();
+    if(!bounds.width||!bounds.height)return;
+    svg.setAttribute('viewBox',`0 0 ${bounds.width} ${bounds.height}`);
+    svg.replaceChildren();
+    const matches=[...board.querySelectorAll<HTMLElement>('[data-net]')].filter(el=>el.dataset.net===selectedNet && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0);
+    if(matches.length<2)return;
+    const point=(node:HTMLElement)=>{
+      const r=node.getBoundingClientRect();
+      return {x:r.left-bounds.left+r.width/2,y:r.top-bounds.top+r.height/2};
+    };
+    const anchor=point(matches[0]);
+    const level=circuit.levels(cpu,clockHigh)[selectedNet];
+    for(const node of matches.slice(1)){
+      const dest=point(node);
+      const bend=(anchor.x+dest.x)/2;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M${anchor.x} ${anchor.y} H${bend} V${dest.y} H${dest.x}`);
+      path.setAttribute('class',level?'ic-wire hi':'ic-wire lo');
+      svg.append(path);
+    }
+  }
+
+  window.TD4BoardView = {mount, render, drawWires};
 })();
