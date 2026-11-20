@@ -33,7 +33,7 @@ test('Input and Output panels are horizontal beneath the ROM',()=>{
 });
 
 test('four grouped DIP IC areas remain on left side of board',()=>{
-  assert.match(lastRule('schematic-board'),/grid-template-columns:\s*410px\s+minmax\(0,\s*1fr\)/);
+  assert.match(css,/\.schematic-board\s*\{[^}]*grid-template-columns:\s*410px\s+minmax\(0,\s*1fr\)/);
   assert.match(lastRule('ic-chip-grid'),/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   for(const role of ['fetch','alu','registers','control'])
     assert.match(js,new RegExp("key:\\s*'"+role+"'"));
@@ -46,7 +46,7 @@ test('IC detail is outside board and large enough to inspect H/L probes',()=>{
   assert.match(js,/function toggleIcDetails\(chipId\)/);
   assert.match(js,/host\.append\(head,\s*pins\)/);
   assert.match(js,/oldCard\.append\(oldPins\)/);
-  assert.match(lastRule('ic-detail-panel'),/padding:\s*20px 24px 24px/);
+  assert.match(css,/\.ic-detail-panel\s*\{[^}]*padding:\s*20px 24px 24px/);
   assert.match(css,/\.ic-detail-panel \.ic-functional-layout\s*\{[^}]*grid-template-columns:\s*repeat\(2/);
 });
 
