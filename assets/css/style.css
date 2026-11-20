@@ -602,3 +602,85 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
   .ic-detail-panel .ic-functional-layout{grid-template-columns:1fr}
   .ic-detail-panel-head h3{font-size:18px}
 }
+
+/* PCB finish: green solder mask, white surround, and four mounting holes. */
+.schematic-scroll{
+  background:#ffffff;
+  padding:14px;
+  border:1px solid #e0e7e2;
+  border-radius:12px;
+  scrollbar-color:#9aaca2 #f2f5f2
+}
+.schematic-board{
+  background-color:#166342;
+  background-image:
+    repeating-linear-gradient(0deg,transparent 0 39px,rgba(178,223,173,.055) 40px),
+    repeating-linear-gradient(90deg,transparent 0 39px,rgba(178,223,173,.055) 40px);
+  border:6px solid #0d4b32;
+  border-radius:7px;
+  padding:28px 24px 30px;
+  box-shadow:
+    inset 0 0 0 2px rgba(164,205,159,.24),
+    inset 0 0 28px rgba(5,46,29,.3),
+    0 6px 18px rgba(13,61,38,.18)
+}
+.pcb-mount-hole{
+  position:absolute;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  z-index:8;
+  pointer-events:none;
+  background:radial-gradient(circle at center,
+    #ffffff 0 5px,
+    #334e48 5.5px 7px,
+    #d7ded7 7.5px 9px,
+    #a2aea5 9.5px 10.5px,
+    #145a3e 11px);
+  box-shadow:0 0 0 1px #8dac94,0 1px 2px rgba(0,0,0,.35)
+}
+.pcb-mount-tl{top:6px;left:6px}
+.pcb-mount-tr{top:6px;right:6px}
+.pcb-mount-bl{bottom:6px;left:6px}
+.pcb-mount-br{bottom:6px;right:6px}
+
+/* 16 horizontal 8-position DIP packages remain in the 4×4 ROM matrix.
+   Within each package D7–D0 run left-to-right and the handles slide up/down. */
+.rom-dip-switches{
+  display:flex;
+  flex-direction:row;
+  width:100%;
+  max-width:none;
+  margin:0 auto;
+  padding:3px;
+  gap:2px;
+  align-items:stretch;
+  justify-content:space-between;
+  background:#1754a7
+}
+.rom-dip{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  flex:1 1 0;
+  min-width:0;
+  width:auto;
+  height:30px;
+  min-height:30px;
+  padding:2px 0;
+  background:#0f488b
+}
+.rom-dip.is-on{
+  flex-direction:column;
+  justify-content:flex-start;
+  background:#1762c4
+}
+.rom-dip .dip-handle{
+  flex:none;
+  width:75%;
+  height:11px;
+  min-width:0;
+  border-radius:2px
+}
+.rom-slot-bits{margin-top:6px;letter-spacing:.3px}

@@ -20,11 +20,12 @@ test('ROM DIP 8-bit modules make a 4 by 4 address matrix',()=>{
   assert.match(js,/for\s*\(let addr\s*=\s*0;\s*addr\s*<\s*16/);
 });
 
-test('8 switches per ROM address are vertically arranged',()=>{
-  assert.match(lastRule('rom-dip-switches'),/flex-direction:\s*column/);
-  assert.match(lastRule('rom-dip'),/flex-direction:\s*row/);
-  assert.match(lastRule('rom-dip'),/flex:\s*0 0 15px/);
-  assert.match(js,/footer\.textContent\s*=\s*'D7 ↓ D0'/);
+test('each ROM address contains eight horizontally arranged DIP toggles',()=>{
+  assert.match(lastRule('rom-dip-switches'),/flex-direction:\s*row/);
+  assert.match(lastRule('rom-dip'),/flex-direction:\s*column/);
+  assert.match(lastRule('rom-dip'),/flex:\s*1 1 0/);
+  assert.match(lastRule('rom-dip.is-on'),/justify-content:\s*flex-start/);
+  assert.match(js,/footer\.textContent\s*=\s*'D7 → D0'/);
 });
 
 test('Input and Output panels are horizontal beneath the ROM',()=>{
@@ -57,4 +58,23 @@ test('IC physical pins, net coloring and click toggles are preserved',()=>{
   assert.match(js,/document\.querySelectorAll\('\.ic-probe'\)/);
   assert.match(js,/chipToggle\.addEventListener\('click'/);
   assert.match(js,/pinList\.hidden\s*=\s*true/);
+});
+
+
+test('the PCB has a green solder mask and a white surrounding background',()=>{
+  const surround=lastRule('schematic-scroll');
+  assert.match(surround,/background:\s*#ffffff/);
+  const board=lastRule('schematic-board');
+  assert.match(board,/background-color:\s*#166342/);
+  assert.match(board,/border:\s*6px solid #0d4b32/);
+});
+test('four circular mounting holes occupy the PCB corners',()=>{
+  const hole=lastRule('pcb-mount-hole');
+  assert.match(hole,/border-radius:\s*50%/);
+  assert.match(hole,/pointer-events:\s*none/);
+  for(const position of ['tl','tr','bl','br']){
+    assert.match(html,new RegExp('class="pcb-mount-hole pcb-mount-'+position+'" aria-hidden="true"'));
+    assert.match(css,new RegExp('\\.pcb-mount-'+position+'\\s*\\{'));
+  }
+  assert.equal((html.match(/class="pcb-mount-hole pcb-mount-/g)||[]).length,4);
 });

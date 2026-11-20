@@ -359,7 +359,7 @@
             }
             const footer = document.createElement('div');
             footer.className = 'rom-slot-bits';
-            footer.textContent = 'D7 ↓ D0';
+            footer.textContent = 'D7 → D0';
             cell.append(head, bits, footer);
             grid.append(cell);
         }
