@@ -53,7 +53,7 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 - 既存HTMLの `<script defer>` 参照と CommonJS互換（Nodeの `require()` でテスト）は変更しません。
 - `strict` な型チェックにより、4bit CPU状態・命令履歴・ROM・アセンブル結果・各種H/L信号・ブラウザDOM操作を検証します。
 - 実行時依存ゼロ、DOM/SVGレイアウト・LED・スイッチ・波形・サンプルの動作を維持します。
-- GitHub Pagesは `main` の `/` に置いた `index.html` と `assets/` から生成済みJavaScriptを配信するため、GitHub ActionsやViteの設定変更は不要です。
+- GitHub Actionsがmainとdevelopの `index.html` と `assets/` を検証して、`/td4/` と `/td4/develop/` にまとめて配信します。PagesのSourceはGitHub Actionsに設定してください。詳細は [デプロイ手順](deployment.md) に記載しています。
 - `.js` は生成物なので直接編集せず、TypeScriptを更新して `npm run verify` 後にソースと生成物を一緒にコミットします。
 
 ## ディレクトリ変更時の注意

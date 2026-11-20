@@ -2,11 +2,11 @@
 
 『CPUの創りかた』に登場する4bit CPU「TD4」を、ブラウザで実行して観察するためのエミュレータです。
 
-- **公開ページ（main）**: https://naoiw.github.io/td4/
+- **本番ページ（main）**: https://naoiw.github.io/td4/
+- **開発プレビュー（develop）**: https://naoiw.github.io/td4/develop/
 - **GitHub**: https://github.com/naoiw/td4
-- **開発ブランチ**: `develop`
 
-公開済みの `index.html` はバックエンド・外部ライブラリなしで動作します。**開発用ソースはTypeScript**です。公開時は `assets/js/` 配下のコンパイル済みJavaScriptを読み込むため、GitHub PagesでのNode.jsビルドやActionsは不要です。Pagesの設定は引き続き `main` / `(root)` を使用します。
+公開済みの `index.html` はバックエンド・外部ライブラリなしで動作します。開発用ソースはTypeScriptです。GitHub Actionsでmainとdevelopをビルドして、**本番 `/td4/` とプレビュー `/td4/develop/` を同時に公開**します。最初にPagesのSourceを **GitHub Actions** に切り替えてください。詳細は [`docs/deployment.md`](docs/deployment.md) を参照。
 
 ## 機能
 
@@ -45,9 +45,9 @@ npm test           # TypeScript型チェック + Node.jsの全テスト
 npm run verify     # ビルド + 型チェック + テスト
 ```
 
-`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。GitHub Pagesは `main` のルートにある `index.html` からこれらを直接読み込みます。`assets/css/style.css` は直接編集するCSSです。`LICENSE`は変更しません。
+`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。Pagesの公開アーティファクトにはmain/developそれぞれの `index.html` と `assets/` が含まれます。`assets/css/style.css` は直接編集するCSSです。`LICENSE`は変更しません。
 
-Vite/ReactやGitHub Actionsを追加していないため、以前のPages公開設定を変更する必要はありません。ビルド後も `index.html` を直接開いて動作を確認できます。
+Vite/Reactは導入していません。公開は `.github/workflows/deploy-pages.yml` で両ブランチを合わせて実行します。開発時は `index.html` を直接開いても動作を確認できます。
 
 ## ファイル構成
 
@@ -67,11 +67,12 @@ Vite/ReactやGitHub Actionsを追加していないため、以前のPages公開
 │   └── types/             # 型定義
 ├── tests/
 ├── docs/
+├── .github/workflows/      # Pagesデプロイとdevelop検証
 ├── package.json
 └── tsconfig.json
 ```
 
-TypeScript製の他リポジトリを参考に、ソース・アセット・テスト・ドキュメントを分離しました。TD4は外部依存なしの静的サイトのためVite/Reactは導入せず、既存の `main / (root)` のGitHub Pages設定を維持します。ルート直下にJavaScriptファイルは置きません。
+TypeScript製の他リポジトリを参考に、ソース・アセット・テスト・ドキュメントを分離しました。TD4は外部依存なしの静的サイトのためVite/Reactは導入せず、PagesのSourceをGitHub Actionsに変更して2ブランチを同時公開します。ルート直下にJavaScriptファイルは置きません。
 
 ## テスト
 
