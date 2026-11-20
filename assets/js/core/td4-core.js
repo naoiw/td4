@@ -135,10 +135,10 @@
             number = parseInt(token.slice(0, -1), 16);
         else if (/^[0-9]+$/.test(token))
             number = parseInt(token, 10);
-        else if (/^[A-F]$/i.test(token))
-            number = parseInt(token, 16);
         else if (Object.prototype.hasOwnProperty.call(symbols, upper))
             number = symbols[upper];
+        else if (/^[A-F]$/i.test(token))
+            number = parseInt(token, 16);
         else
             throw new Error(`${lineNo}行目: 数値またはラベルを解釈できません: ${token}`);
         if (!Number.isInteger(number) || number < 0 || number > max) {
