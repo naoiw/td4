@@ -192,23 +192,76 @@
             const desc = document.createElement('p');
             desc.textContent = chip.description;
             desc.className = 'ic-description';
-            const pinList = document.createElement('div');
-            pinList.className = 'ic-pin-list';
-            for (const pin of chip.pins) {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'ic-probe';
-                button.dataset.net = pin.net;
-                const name = document.createElement('span');
-                name.textContent = pin.name;
-                const value = document.createElement('b');
-                value.className = 'ic-pin-level';
-                value.textContent = 'L';
-                button.append(name, value);
-                button.addEventListener('click', () => setSelectedNet(pin.net));
-                pinList.append(button);
-            }
-            card.append(title, desc, pinList);
+      const layout = circuit.layout(chip);
+      card.classList.add('ic-dip');
+      card.dataset.packagePins = String(layout.packagePins);
+      const badge = document.createElement('small');
+      badge.className = 'ic-package-label';
+      badge.textContent = `DIP-${layout.packagePins} · ${layout.packagePins / 2} pins/side`;
+      title.append(badge);
+      const createLegs = (side) => {
+        const bank = document.createElement('div');
+        bank.className = `ic-leg-bank ic-leg-${side}`;
+        const half=layout.packagePins/2;
+        for(let position=0; position<half; position++){
+          const leg=document.createElement('span');
+          leg.className='ic-leg';
+          const pinNumber=side==='left'? position+1 : layout.packagePins-position;
+          leg.title=`DIP physical pin ${pinNumber} (visual guide)`;
+          leg.dataset.pinNumber=String(pinNumber);
+          bank.append(leg);
+        }
+        card.append(bank);
+      };
+      createLegs('left');
+      createLegs('right');
+      const pinList = document.createElement('div');
+      pinList.className = 'ic-functional-layout';
+      const createProbe=(pin,compact)=>{
+        const button=document.createElement('button');
+        button.type='button';
+        button.className='ic-probe'+(compact?' ic-probe-compact':'');
+        button.dataset.net=pin.net;
+        const name=document.createElement('span');name.textContent=pin.name;
+        const value=document.createElement('b');value.className='ic-pin-level';value.textContent='L';
+        button.append(name,value);
+        button.addEventListener('click',()=>setSelectedNet(pin.net));
+        return button;
+      };
+      for(const section of layout.sections){
+        const unit=document.createElement('section');
+        unit.className='ic-function-section';
+        if(section.label){
+          const heading=document.createElement('div');
+          heading.className='ic-function-title';
+          heading.textContent=section.label;
+          unit.append(heading);
+        }
+        const headings=document.createElement('div');
+        headings.className='ic-function-headings';
+        for(const name of [layout.leftLabel,layout.rightLabel]){
+          const span=document.createElement('span');
+          span.textContent=name;
+          headings.append(span);
+        }
+        unit.append(headings);
+        const columns=document.createElement('div');
+        columns.className='ic-function-columns';
+        for(const side of [section.left,section.right]){
+          const column=document.createElement('div');
+          column.className='ic-function-column';
+          for(const rowPins of side){
+            const row=document.createElement('div');
+            row.className='ic-function-row';
+            for(const pin of rowPins)row.append(createProbe(pin,rowPins.length>1));
+            column.append(row);
+          }
+          columns.append(column);
+        }
+        unit.append(columns);
+        pinList.append(unit);
+      }
+      card.append(title,desc,pinList);
             chips.append(card);
         }
         const grid = $('romDipGrid');

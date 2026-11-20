@@ -30,6 +30,77 @@
         { id: 'U6', type: '74HC161', description: 'PC counter / parallel load', group: 'register', pins: [p('CLK', 'CLK'), p('CLR#', 'RST_N'), p('PE#', 'LOAD_PC_N'), ...nibble('D', 'ALU'), ...nibble('Q', 'PC')] },
         { id: 'U2', type: '74HC14', description: 'Schmitt clock/reset stage', group: 'clock', pins: [p('CLK', 'CLK'), p('RESET#', 'RST_N')] }
     ];
+  // DIP physical pad count is independent from the functional terminal positions.
+  // Left/right terminal groups follow signal flow, not physical package pin numbers.
+  const pin = (name, net) => ({name, net});
+  const row = (...pins) => pins;
+  const lines = (prefix, net, size) =>
+    Array.from({length: size}, (_, index) => row(pin(`${prefix}${index}`, `${net}${index}`)));
+  const layout = (component) => {
+    const common = {packagePins: ({
+      '74HC154': 24, '74HC540': 20,
+      '74HC161': 16, '74HC153': 16, '74HC283': 16,
+      '74HC74': 14, '74HC32': 14, '74HC10': 14, '74HC14': 14
+    })[component.type]};
+    const make = (leftLabel, rightLabel, sections) => ({...common, leftLabel, rightLabel, sections});
+    if(component.type === '74HC154') {
+      const left = [...lines('A', 'PC', 4), row(pin('G1#', 'GND')), row(pin('G2#', 'GND'))];
+      const right = Array.from({length: 8}, (_, index) => row(
+        pin(`Y${(index*2).toString(16).toUpperCase()}#`, `ROM_SEL_${index*2}`),
+        pin(`Y${(index*2+1).toString(16).toUpperCase()}#`, `ROM_SEL_${index*2+1}`)
+      ));
+      return make('INPUT · A / G#', 'OUTPUT · Y', [{left, right}]);
+    }
+    if(component.type === '74HC540') {
+      return make('INPUT · A / OE#', 'OUTPUT · Y', [{
+        left:[...lines('A','ROM_RAW',8), row(pin('OE1#','OE_N')), row(pin('OE2#','OE_N'))],
+        right:lines('Y','D',8)
+      }]);
+    }
+    if(component.type === '74HC153') {
+      const high=component.id==='U8', first=high?2:0, second=first+1;
+      const section=(n,index)=>({
+        label:`回路${index+1} · bit${n}`,
+        left:[row(pin(`A${n}`,`A${n}`)),row(pin(`B${n}`,`B${n}`)),
+          row(pin(`IN${n}`,`IN${n}`)),row(pin('0','GND'))],
+        right:[row(pin(`Y${n}`,`MUX${n}`)),row(pin('S0','SEL_A')),
+          row(pin('S1','SEL_B')),row(pin(`E${index+1}#`,'GND'))]
+      });
+      return make('INPUT · 4:1', 'SELECT / Y', [section(first,0),section(second,1)]);
+    }
+    if(component.type === '74HC283') {
+      return make('INPUT · A / B / CIN','OUTPUT · SUM / COUT',[{
+        left:[...Array.from({length:4},(_,n)=>row(pin(`A${n}`,`MUX${n}`),pin(`B${n}`,`D${n}`))),row(pin('CIN','GND'))],
+        right:[...lines('SUM','ALU',4),row(pin('COUT','COUT'))]
+      }]);
+    }
+    if(component.type === '74HC161') {
+      return make('INPUT · D / CTRL','OUTPUT · Q',[{
+        left:[row(pin('CLK','CLK')),row(pin('CLR#','RST_N')),
+          ...component.pins.filter(x=>x.name==='PE#').map(x=>row(x)),
+          ...lines('D','ALU',4)],
+        right:component.pins.filter(x=>/^Q[0-3]$/.test(x.name)).map(x=>row(x))
+      }]);
+    }
+    if(component.type === '74HC74') {
+      return make('INPUT','OUTPUT',[{
+        left:component.pins.filter(x=>!/^Q/.test(x.name)).map(x=>row(x)),
+        right:component.pins.filter(x=>/^Q/.test(x.name)).map(x=>row(x))
+      }]);
+    }
+    if(component.type === '74HC14') {
+      return make('INPUT','OUTPUT',[{
+        left:component.pins.map(x=>row(x)),
+        right:[row(pin('CLK','CLK')),row(pin('RESET#','RST_N'))]
+      }]);
+    }
+    const index=component.pins.findIndex(x=>/^SEL_|^LD_/.test(x.name));
+    return make('INPUT','OUTPUT',[{
+      left:component.pins.slice(0,index>=0?index:component.pins.length).map(x=>row(x)),
+      right:component.pins.slice(index>=0?index:component.pins.length).map(x=>row(x))
+    }]);
+  };
+
     function levels(cpu, clock) {
         const instruction = cpu.rom[cpu.pc];
         const d4 = bit(instruction, 4), d5 = bit(instruction, 5), d6 = bit(instruction, 6), d7 = bit(instruction, 7);
@@ -64,5 +135,5 @@
         }
         return nets;
     }
-    return { chips, levels };
+    return { chips, levels, layout };
 });

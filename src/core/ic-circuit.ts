@@ -34,7 +34,6 @@
   // Left/right terminal groups follow signal flow, not physical package pin numbers.
   const pin = (name: string, net: string): IcPin => ({name, net});
   const row = (...pins: IcPin[]): IcPin[] => pins;
-  const empty: IcPin[][] = [];
   const lines = (prefix: string, net: string, size: number): IcPin[][] =>
     Array.from({length: size}, (_, index) => row(pin(`${prefix}${index}`, `${net}${index}`)));
   const layout = (component: IcComponent): IcLayout => {
@@ -44,7 +43,7 @@
       '74HC74': 14, '74HC32': 14, '74HC10': 14, '74HC14': 14
     } as Record<string, number>)[component.type]};
     const make = (leftLabel: string, rightLabel: string, sections: IcSection[]): IcLayout =>
-      {...common, leftLabel, rightLabel, sections};
+      ({...common, leftLabel, rightLabel, sections});
     if(component.type === '74HC154') {
       const left = [...lines('A', 'PC', 4), row(pin('G1#', 'GND')), row(pin('G2#', 'GND'))];
       const right = Array.from({length: 8}, (_, index) => row(
