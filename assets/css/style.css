@@ -450,3 +450,155 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 @media(max-width:650px){
   .schematic-board{width:1040px}
 }
+
+/* Four-by-four vertically oriented ROM DIP matrix. Each 8-bit module is
+ * a vertical column; the eight switch handles slide horizontally. */
+.schematic-board {
+  width:1050px;
+  min-height:0;
+  grid-template-columns:410px minmax(0,1fr);
+  gap:16px;
+  align-items:start;
+  padding:16px 14px 22px
+}
+.ic-chip-grid {grid-template-columns:minmax(0,1fr);gap:7px}
+.ic-role-group{padding:7px 8px 9px}
+.ic-role-rack {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:center;
+  gap:3px 10px
+}
+.ic-role-head{min-height:0;margin-bottom:4px}
+.ic-role-head span{font-size:8px}
+.ic-role-group:has(.is-expanded){z-index:auto}
+.ic-role-rack>.ic-chip.is-expanded{z-index:auto}
+.ic-role-rack .ic-functional-layout {
+  position:static;
+  top:auto;
+  bottom:auto;
+  left:auto;
+  transform:none;
+  width:auto;
+  max-width:none;
+  border:0;
+  box-shadow:none
+}
+.rom-dip-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:repeat(4,max-content);
+  grid-auto-flow:row;
+  gap:8px;
+  align-items:start
+}
+.rom-slot{padding:6px 4px 7px;text-align:center}
+.rom-slot-head{gap:5px;text-align:left;margin-bottom:5px;justify-content:space-around}
+.rom-dip-switches {
+  width:56px;
+  margin:0 auto;
+  padding:4px 5px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  border-radius:3px;
+  align-items:stretch;
+  justify-content:flex-start
+}
+.rom-dip {
+  flex:0 0 15px;
+  width:100%;
+  height:15px;
+  min-height:15px;
+  padding:1px 2px;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  background:#0f488b
+}
+.rom-dip.is-on{
+  flex-direction:row;
+  justify-content:flex-end;
+  background:#1762c4
+}
+.rom-dip .dip-handle {
+  display:block;
+  flex:0 0 17px;
+  width:17px;
+  height:11px;
+  border-radius:2px
+}
+.rom-slot-bits{margin-top:6px}
+.schematic-io-strip{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin-top:16px
+}
+.schematic-io{padding:10px 7px}
+.schematic-io strong{font-size:10px}
+.schematic-input-bits,.schematic-output-leds{gap:3px}
+.schematic-io-switch{padding:10px 1px}
+.schematic-io-led:before{width:17px;height:17px}
+/* Full-width details below the PCB. No overlay touches the board. */
+.ic-detail-panel {
+  margin:16px 0 0;
+  padding:20px 24px 24px;
+  border-radius:10px;
+  border:1px solid #54836e;
+  background:linear-gradient(160deg,#172e2a,#101f27);
+  color:#e0f0e7;
+  box-shadow:0 8px 24px rgba(16,34,30,.16)
+}
+.ic-detail-panel[hidden]{display:none!important}
+.ic-detail-panel-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin:0 0 16px;
+  padding-bottom:12px;
+  border-bottom:1px solid #4d7568
+}
+.ic-detail-panel-head h3{margin:0;font:800 23px/1.3 ui-monospace,monospace;color:#eefbf3}
+.ic-detail-panel-head p{margin:5px 0 0;font:500 12px/1.5 sans-serif;color:#a7c6b8}
+.ic-detail-close{flex:none}
+.ic-detail-panel .ic-functional-layout {
+  position:static!important;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+  max-width:none!important;
+  padding:0;
+  margin:0;
+  transform:none!important;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none
+}
+.ic-detail-panel .ic-function-section{
+  min-width:0;
+  padding:16px;
+  border-radius:7px;
+  border:1px solid #476c69;
+  background:#1b3339
+}
+.ic-detail-panel .ic-function-headings,
+.ic-detail-panel .ic-function-columns{gap:15px}
+.ic-detail-panel .ic-function-title{margin-bottom:12px;padding-bottom:10px;font-size:14px}
+.ic-detail-panel .ic-function-headings{font-size:12px;margin-bottom:10px}
+.ic-detail-panel .ic-function-column{gap:7px}
+.ic-detail-panel .ic-function-row{min-height:37px;gap:8px}
+.ic-detail-panel .ic-probe{min-height:37px;padding:7px 10px;font-size:12px}
+.ic-detail-panel .ic-probe-compact{font-size:11px}
+.ic-detail-panel .ic-probe b{font-size:12px;padding:3px 7px}
+@media(max-width:650px){
+  .schematic-board{width:1050px}
+  .ic-detail-panel{padding:15px}
+  .ic-detail-panel .ic-functional-layout{grid-template-columns:1fr}
+  .ic-detail-panel-head h3{font-size:18px}
+}
