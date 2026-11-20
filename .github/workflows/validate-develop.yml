@@ -2,7 +2,7 @@ name: Validate develop
 
 on:
   push:
-    branches: [develop]
+    branches: [main, develop]
   pull_request:
     branches: [main, develop]
 
@@ -15,13 +15,11 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '26'
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Build, typecheck and test
-        run: npm run verify
+    uses: naoiw/.github/.github/workflows/reusable-node-ci.yml@00047e65d7e53551e2644df02d2f22743ea2c471
+    with:
+      package-manager: npm
+      node-version: "26"
+      run-lint: false # No lint script
+      run-typecheck: true
+      run-tests: true
+      run-build: true
