@@ -25,10 +25,10 @@ test('IO panels stack vertically and provide extra space for ICs', () => {
 });
 
 
-test('IC cards are approximately half-width, with four per row instead of two', () => {
+test('four functional zones arrange as two columns in a compact PCB', () => {
   const matches = [...css.matchAll(/\.ic-chip-grid\s*\{([^}]*)\}/g)];
   assert.ok(matches.length > 0);
-  assert.match(matches.at(-1)[1], /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(matches.at(-1)[1], /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
 });
 
 test('DIP drawing uses fixed 2.54mm lead pitch and proportional package lengths', () => {
@@ -69,4 +69,24 @@ test('IC details are hidden by default and opened using accessible toggles', () 
   assert.match(app,/chipToggle\.addEventListener\('click'/);
   assert.match(app,/circuit\.physicalPins\(chip\)/);
   assert.match(css,/\.ic-functional-layout\[hidden\]\s*\{display:none!important\}/);
+});
+
+
+test('ICs are moved into four role-labelled PCB areas without individual card borders', () => {
+  const js=fs.readFileSync(path.join(__dirname,'../assets/js/ui/app.js'),'utf8');
+  for (const role of ['fetch','alu','registers','control']) {
+    assert.match(js,new RegExp("key:\\s*'"+role+"'"));
+  }
+  assert.match(js,/role\.types\.some/);
+  assert.match(js,/chips\.append\(area\)/);
+  assert.match(css,/\.ic-role-rack>\.ic-chip\s*\{[^}]*border:0/);
+  assert.match(css,/\.ic-role-group:has\(\.is-expanded\)/);
+});
+test('packed PCB keeps ROM 8 by 2 and original DIP leg colors and accessible details', () => {
+  const js=fs.readFileSync(path.join(__dirname,'../assets/js/ui/app.js'),'utf8');
+  assert.match(css,/\.rom-dip-grid\s*\{[^}]*grid-template-rows:\s*repeat\(8,\s*max-content\)/);
+  assert.match(css,/\.ic-footprint \.ic-leg\.is-high:before/);
+  assert.match(css,/\.ic-footprint \.ic-leg\.is-low:before/);
+  assert.match(js,/chipToggle\.addEventListener\('click'/);
+  assert.match(js,/physicalPins\[pinNumber - 1\]/);
 });
