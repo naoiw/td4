@@ -52,7 +52,7 @@ test('DIP drawing uses fixed 2.54mm lead pitch and proportional package lengths'
 test('physical footprint is separate from logical signal probes', () => {
   const app = fs.readFileSync(path.join(__dirname, '../assets/js/ui/app.js'), 'utf8');
   assert.match(app, /footprint\.append\(bank\)/);
-  assert.match(app, /card\.append\(title,\s*desc,\s*footprint,\s*pinList\)/);
+  assert.match(app, /card\.append\(title,\s*desc,\s*chipToggle,\s*pinList\)/);
   assert.match(app, /packageMark\.textContent\s*=\s*chip\.type/);
 });
 
