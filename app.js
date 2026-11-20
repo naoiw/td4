@@ -3,18 +3,19 @@
   'use strict';
   const {CPU, assemble, HEX, BINARY, disassemble, isStandard, romToSource} = window.TD4;
   const $ = id => document.getElementById(id);
-  const SAMPLE_PROGRAMS = {
-    led: `; LEDを左右に流すパターン\nstart: OUT 3\n       OUT 6\n       OUT 12\n       OUT 8\n       OUT 12\n       OUT 6\n       OUT 3\n       OUT 1\n       JMP start`,
-    counter: `; Bレジスタで0〜15を繰り返す\n       MOV B, 0\nloop:  OUT B\n       ADD B, 1\n       JMP loop`,
-    echo: `; 入力スイッチをLEDへ反映\nread:  IN B\n       OUT B\n       JMP read`,
-    carry: `; 15+1でC=1、JNCは分岐しない\n       MOV A, 15\n       ADD A, 1\n       JNC skip\n       OUT 15\nend:   JMP end\nskip:  OUT 0\n       JMP end`
-  };
+  const SAMPLES = window.TD4Samples;
+  const SAMPLE_PROGRAMS = Object.fromEntries(SAMPLES.map(sample => [sample.id, sample.source]));
+  const {GROUPS, preview, snapshot, appendSample, waveformPath} = window.TD4Signals;
   const cpu = new CPU();
   const history = [];
   const breakpoints = new Set();
   let intervalId = null;
   let sourceMatchesROM = true;
-  let animationTime = 0;
+  let clockHigh = false;
+  let pulseTimer = null;
+  const waveSamples = [];
+  const MAX_WAVE_SAMPLES = 80;
+  let lastWaveDrawAt = 0;
 
   function renderBits(value, container) {
     container.innerHTML = '';
@@ -65,6 +66,7 @@
       button.addEventListener('click', () => {
         cpu.setInput(cpu.input ^ (1 << bit));
         renderSwitches();
+        renderCPU(); recordSignals();
         showMessage(`入力ポート = 0x${HEX(cpu.input)} (${BINARY(cpu.input,4)})`);
       });
       const index = document.createElement('small');
@@ -157,6 +159,9 @@
     $('fetchHex').textContent = instruction.toString(16).toUpperCase().padStart(2, '0');
     $('fetchDetail').textContent = `PC = ${HEX(cpu.pc)} · 次に実行する命令`;
     $('fetchState').textContent = intervalId ? 'RUN' : 'NEXT';
+    const alu = preview(cpu);
+    $('aluValue').textContent = HEX(alu.result);
+    $('aluEquation').textContent = `${HEX(alu.source)} + ${HEX(alu.imm)} = ${HEX(alu.result)}${alu.carry ? ' (C=1)' : ''}`;
     renderROM();
   }
 
@@ -184,6 +189,122 @@
     }
   }
 
+  function renderLiveSignals(levels) {
+    const region = $('liveSignals');
+    region.replaceChildren();
+    for (const key of ['CLK', 'C', 'IN3', 'IN2', 'IN1', 'IN0', 'OUT3', 'OUT2', 'OUT1', 'OUT0']) {
+      const label = document.createElement('span');
+      const high = levels[key] === 1;
+      label.className = 'signal-pill ' + (high ? 'is-high' : 'is-low');
+      label.textContent = `${key} ${high ? 'H' : 'L'}`;
+      label.title = `${key} = ${high ? 'HIGH (1)' : 'LOW (0)'}`;
+      region.append(label);
+    }
+  }
+
+  function renderWireLevels(levels) {
+    for (const wire of document.querySelectorAll('[data-wire]')) {
+      const high = levels[wire.dataset.wire] === 1;
+      wire.classList.toggle('wire-high', high);
+      wire.classList.toggle('wire-low', !high);
+    }
+    $('clockLamp').classList.toggle('on', !!levels.CLK);
+    $('clockLevel').textContent = levels.CLK ? 'H' : 'L';
+    $('clockStateLabel').textContent = levels.CLK ? 'HIGH' : 'LOW';
+  }
+
+  function renderWaveforms(levels) {
+    const area = $('scopeView');
+    area.replaceChildren();
+    const group = GROUPS[$('signalGroup').value] || GROUPS.basic;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    for (const signal of group) {
+      const row = document.createElement('div');
+      row.className = 'scope-row';
+      const name = document.createElement('span');
+      name.className = 'scope-name';
+      name.textContent = signal;
+      const graph = document.createElementNS(svgNS,'svg');
+      graph.setAttribute('viewBox','0 0 640 36');
+      graph.setAttribute('preserveAspectRatio','none');
+      graph.classList.add('scope-graph');
+      graph.setAttribute('aria-hidden','true');
+      for (let x = 0; x <= 640; x += 80) {
+        const grid = document.createElementNS(svgNS, 'path');
+        grid.setAttribute('d', `M${x} 0 V36`);
+        grid.setAttribute('class', 'scope-gridline');
+        graph.append(grid);
+      }
+      const high = document.createElementNS(svgNS,'path');
+      high.setAttribute('d',waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
+      high.setAttribute('class','wave-trace');
+      graph.append(high);
+      const status = document.createElement('strong');
+      status.className = 'scope-level ' + (levels[signal] ? 'hi' : 'lo');
+      status.textContent = levels[signal] ? 'H' : 'L';
+      row.append(name, graph, status);
+      area.append(row);
+    }
+    $('sampleCount').textContent = `${waveSamples.length} samples / ${MAX_WAVE_SAMPLES}`;
+  }
+
+  function recordSignals() {
+    const levels = snapshot(cpu, clockHigh);
+    appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    renderWireLevels(levels);
+    renderLiveSignals(levels);
+    const now = performance.now();
+    if (intervalId === null || now - lastWaveDrawAt > 35) {
+      renderWaveforms(levels);
+      lastWaveDrawAt = now;
+    }
+  }
+
+  function setClockLow() {
+    if (!clockHigh) return;
+    clockHigh = false;
+    recordSignals();
+  }
+
+  function clearPulseTimer() {
+    if (pulseTimer !== null) { clearTimeout(pulseTimer); pulseTimer = null; }
+  }
+
+  function buildSamples() {
+    const select = $('examples');
+    select.replaceChildren();
+    for (const sample of SAMPLES) {
+      const option = document.createElement('option');
+      option.value = sample.id;
+      option.textContent = `${sample.title} — ${sample.description}`;
+      select.append(option);
+    }
+    const cards = $('sampleCards');
+    for (const sample of SAMPLES.slice(0,6)) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'sample-card';
+      card.dataset.sample = sample.id;
+      card.title = `${sample.title}を読み込んで実行`;
+      const icon = document.createElement('span');
+      icon.className = 'sample-icon';
+      icon.textContent = sample.icon;
+      const words = document.createElement('span');
+      const title = document.createElement('strong');
+      title.textContent = sample.title;
+      const description = document.createElement('small');
+      description.textContent = sample.description;
+      words.append(title, description);
+      card.append(icon, words);
+      card.addEventListener('click', () => {
+        select.value = sample.id;
+        switchExample(sample.id);
+        run();
+      });
+      cards.append(card);
+    }
+  }
+
   function showMessage(message, kind = '') {
     $('editorMessage').textContent = message;
     $('editorMessage').className = 'editor-message' + (kind ? ` ${kind}` : '');
@@ -191,22 +312,39 @@
 
   function stop(reason = '') {
     if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
+    clearPulseTimer();
+    setClockLow();
     $('runBtn').disabled = false;
     $('stopBtn').disabled = true;
     $('stepBtn').disabled = false;
     $('runStatus').classList.remove('running');
     $('runStatus').lastChild.textContent = '停止中';
     $('fetchState').textContent = 'NEXT';
+    renderWaveforms(snapshot(cpu, clockHigh));
     if (reason) showMessage(reason);
   }
 
-  function step() {
+  // A high-going clock edge commits exactly one CPU instruction.
+  function risingEdge() {
+    clockHigh = true;
     const outcome = cpu.step();
     history.unshift(outcome);
     history.splice(25);
-    animationTime = performance.now();
     renderCPU();
     renderHistory();
+    recordSignals();
+  }
+
+  function step() {
+    if (intervalId !== null) return;
+    clearPulseTimer();
+    setClockLow();
+    risingEdge();
+    // Hold H long enough to observe the pulse, then return to L.
+    pulseTimer = setTimeout(() => {
+      pulseTimer = null;
+      setClockLow();
+    }, 180);
   }
 
   function run() {
@@ -215,27 +353,33 @@
       showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。1クロックで進めるかBPを解除してください。`);
       return;
     }
-    intervalId = setInterval(() => {
-      if (breakpoints.has(cpu.pc)) {
-        stop(`PC=${HEX(cpu.pc)} のブレークポイントで停止しました。`);
-        renderCPU();
-        return;
-      }
-      step();
-    }, 1000 / Number($('speed').value));
+    clearPulseTimer();
+    setClockLow();
     $('runBtn').disabled = true;
     $('stopBtn').disabled = false;
     $('stepBtn').disabled = true;
     $('runStatus').classList.add('running');
     $('runStatus').lastChild.textContent = '実行中';
     $('fetchState').textContent = 'RUN';
+    const halfPeriod = 500 / Number($('speed').value);
+    intervalId = setInterval(() => {
+      if (clockHigh) { setClockLow(); return; }
+      if (breakpoints.has(cpu.pc)) {
+        stop(`PC=${HEX(cpu.pc)} のブレークポイントで停止しました。`);
+        renderCPU();
+        return;
+      }
+      risingEdge();
+    }, halfPeriod);
+    risingEdge();
   }
 
   function reset() {
     stop();
     cpu.reset();
     history.splice(0);
-    renderCPU(); renderHistory();
+    waveSamples.splice(0);
+    renderCPU(); renderHistory(); recordSignals();
     showMessage('CPUをリセットしました（ROMと入力スイッチは保持）');
   }
 
@@ -244,8 +388,9 @@
     cpu.loadROM(bytes);
     cpu.reset();
     history.splice(0);
+    waveSamples.splice(0);
     breakpoints.clear();
-    renderCPU(); renderHistory();
+    renderCPU(); renderHistory(); recordSignals();
     if (message) showMessage(message);
   }
 
@@ -266,6 +411,10 @@
     $('source').value = SAMPLE_PROGRAMS[name];
     compileSource();
     updateCount();
+    $('examples').value = name;
+    document.querySelectorAll('.sample-card').forEach(card => {
+      card.classList.toggle('is-selected', card.dataset.sample === name);
+    });
   }
 
   function updateCount() {
@@ -310,6 +459,8 @@
     });
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
+    $('clearWaveBtn').addEventListener('click', () => {waveSamples.splice(0);recordSignals();});
+    $('signalGroup').addEventListener('change', () => renderWaveforms(snapshot(cpu,clockHigh)));
     $('assembleBtn').addEventListener('click', compileSource);
     $('fromRomBtn').addEventListener('click', () => {
       $('source').value = romToSource(cpu.rom);
@@ -344,6 +495,7 @@
   }
 
   buildRomRows();
+  buildSamples();
   renderSwitches();
   connectActions();
   switchExample('led');

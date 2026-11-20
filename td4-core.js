@@ -1,6 +1,6 @@
 /* TD4 4-bit CPU — instruction-level emulator, no external dependencies.
  * Hardware decoding, including unofficial opcodes, follows the original TD4's
- * 74HC153 mux, 4-bit adder, and destination decode. Apache-2.0 license.
+ * 74HC153 mux, 4-bit adder, and destination decode. Apache License 2.0.
  */
 (function (root, factory) {
   'use strict';
