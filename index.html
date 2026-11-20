@@ -10,6 +10,7 @@
   <script src="assets/js/core/td4-core.js" defer></script>
   <script src="assets/js/data/samples.js" defer></script>
   <script src="assets/js/core/signals.js" defer></script>
+  <script src="assets/js/core/ic-circuit.js" defer></script>
   <script src="assets/js/ui/app.js" defer></script>
 </head>
 <body>
@@ -60,6 +61,30 @@
         <div><p class="eyebrow">HARDWARE WORKBENCH</p><h1 id="boardTitle">TD4 ボード</h1><p class="board-subtitle">スイッチを動かし、LEDと信号の変化を観察する</p></div>
         <span class="panel-tag">4-BIT / 16 BYTE ROM</span>
       </div>
+      <div class="ic-toolbar">
+        <div><strong>実ICロジック・ROM基板</strong><span>各ピン（機能信号）を選択すると、その信号の接続と H / L を強調表示します</span></div>
+        <div class="ic-probe-control"><span>追跡中</span><code id="selectedNetName">CLK</code><b id="selectedNetLevel">L</b><button type="button" id="resetNetBtn" class="btn btn-small">CLKに戻す</button></div>
+      </div>
+      <div class="schematic-scroll" tabindex="0" aria-label="IC単位の論理回路と16個のROM DIPスイッチ">
+        <div class="schematic-board" id="schematicBoard">
+          <svg class="ic-wire-layer" id="icWireLayer" aria-hidden="true"></svg>
+          <section class="ic-zone" aria-label="TD4の個別ロジックIC">
+            <div class="schematic-zone-head"><strong>LOGIC ICs</strong><span>74HC SERIES · 13 PACKAGES</span></div>
+            <div class="ic-chip-grid" id="icChipGrid"></div>
+          </section>
+          <section class="rom-zone" aria-label="DIPスイッチROM">
+            <div class="schematic-zone-head"><strong>ROM · 16 × 8-bit</strong><span>74HC154でアドレスを選択</span></div>
+            <div class="rom-dip-grid" id="romDipGrid"></div>
+            <div class="schematic-io-strip">
+              <div class="schematic-io"><strong>INPUT · 4bit</strong><div id="schematicInput" class="schematic-input-bits"></div></div>
+              <div class="schematic-io"><strong>OUTPUT LED · 4bit</strong><div id="schematicOutput" class="schematic-output-leds"></div></div>
+            </div>
+            <div class="schematic-explain"><span class="signal-key high"></span> HIGH 1 <span class="signal-key low"></span> LOW 0 <span class="rom-select-lamp is-on"></span> アドレス選択中（/Y=L）</div>
+            <p class="schematic-caution">74HC系列の部品構成と論理接続を示しています。各ICは機能信号単位で表示しており、パッケージの実ピン番号や基板配線の完全再現ではありません。配線は選択信号のみを描画します。</p>
+          </section>
+        </div>
+      </div>
+      <details class="overview-collapse"><summary>従来のCPU機能ブロック図を表示</summary>
       <div class="pcb-scroll" tabindex="0" aria-label="TD4ボード。幅が狭い画面では横スクロールできます">
         <div class="pcb-board" id="pcbBoard">
           <span class="pcb-model">TD4 / LOGIC BOARD <span>REV. 01</span></span>
@@ -98,6 +123,7 @@
           <div class="board-component component-carry" id="reg-c"><div class="chip-kicker">CARRY FLAG</div><div class="clock-state"><span class="carry-lamp" id="carryLamp"></span><strong id="c-value">0</strong><small id="carryText">NO CARRY</small></div></div>
         </div>
       </div>
+      </details>
       <div class="board-bottom"><p><span class="signal-key high"></span> H / 1 <span class="signal-key low"></span> L / 0 <span class="signal-key led-key"></span> LED点灯</p><p>信号線は選択した<strong>1bit</strong>の論理値を表します。IC配置・配線は理解しやすくした概念図です。</p></div>
       <div class="live-signals" id="liveSignals" aria-label="現在の主要信号レベル"></div>
     </section>

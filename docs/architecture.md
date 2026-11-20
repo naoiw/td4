@@ -58,4 +58,20 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 ## ディレクトリ変更時の注意
 
-`tsconfig.json` の `rootDir` は `src`、`outDir` は `assets/js` です。TypeScriptの階層が公開用JSにも反映されます。HTMLの4つの `<script defer>` は依存順を維持してください。生成物は手作業で変更せず、`npm run verify` で再生成します。
+`tsconfig.json` の `rootDir` が `src`、`outDir` が `assets/js` のため、TypeScriptのディレクトリ階層が生成物にもそのまま反映されます。HTMLの4つの `<script defer>` は依存順を維持してください。`assets/js/` のファイルは手作業で変更せず、`npm run verify` で再生成してください。
+
+## ICレベル回路モデル（2026年11月）
+
+- 13個の74HCパッケージを機能単位で可視化：74HC161×4、74HC153×2、74HC283、74HC74、74HC32、74HC10、74HC14、74HC154、74HC540。
+- `src/core/ic-circuit.ts` がICごとの機能信号（ピン名ラベル）と論理ネットを定義し、`levels(cpu, clock)` から現在の0/1を計算する。
+- `src/ui/app.ts` がIC/DIPカードとネット接続SVGを構築し、ROM/入力/出力/クロックの変化時に同期表示する。
+- ROM 16×8bitは`cpu.rom`と双方向に連動。アドレスランプは74HC154の負論理選択出力(`/ROMn` = 0)で点灯。
+- ROMの生バスは負論理の`ROM_RAW0..7`で、74HC540を介したCPU命令バス`D0..7`はその反転値。
+- MUX選択: `SEL_A=D4 OR D7`、`SEL_B=D5`。4bit ALUの`COUT`と74HC74に保持された`C`は別信号。
+- レジスタ書込制御は負論理: `LOAD_A_N=D6 OR D7`、`LOAD_B_N=!D6 OR D7`、`LOAD_OUT_N=!D7 OR D6`、`LOAD_PC_N=!(D6 AND D7 AND (D4 OR !C))`。JNC判定に使うCは前クロックのキャリーフラグ。
+
+### スコープと精度
+
+この画面の IC ピンラベルは**論理上の機能信号**を示し、部品の実ピン番号や配線ルートを一対一対応させるものではありません。選択された一つの信号ネットに接続する表示点をSVGで結んでいます。実物の基板の完全なネットリスト・実際のパッケージのすべてのピン・未使用ゲート/電源配線・抵抗/ダイオードは未再現です。実装を実回路図の詳細シミュレータへ発展させる際は、ユーザーのKiCad回路図/ネットリストに置き換える必要があります。
+
+参照: [Kevin's Blog: TD4 architecture](https://emalliab.wordpress.com/2025/09/18/td4-4-bit-diy-cpu/) および [TD4 4-bit DIY CPU – Part 2](https://emalliab.wordpress.com/2025/09/28/td4-4-bit-diy-cpu-part-2/)。

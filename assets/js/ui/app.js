@@ -12,7 +12,9 @@
     const SAMPLES = window.TD4Samples;
     const SAMPLE_PROGRAMS = Object.fromEntries(SAMPLES.map(sample => [sample.id, sample.source]));
     const { GROUPS, preview, snapshot, appendSample, waveformPath } = window.TD4Signals;
+    const circuit = window.TD4Circuit;
     const cpu = new CPU();
+    let selectedNet = 'CLK';
     const history = [];
     const breakpoints = new Set();
     let intervalId = null;
@@ -116,6 +118,7 @@
                     sourceMatchesROM = false;
                     renderROM();
                     renderCPU();
+                    recordSignals();
                     showMessage('ROMを直接変更しました。ソースとの内容が異なります。', 'unsynced');
                 });
                 bits.append(button);
@@ -169,6 +172,213 @@
         $('aluValue').textContent = HEX(alu.result);
         $('aluEquation').textContent = `${HEX(alu.source)} + ${HEX(alu.imm)} = ${HEX(alu.result)}${alu.carry ? ' (C=1)' : ''}`;
         renderROM();
+        updateCircuitBoard();
+    }
+    /** Each switch is a real editable ROM bit; all display surfaces share cpu.rom. */
+    function buildCircuitBoard() {
+        const chips = $('icChipGrid');
+        chips.replaceChildren();
+        for (const chip of circuit.chips) {
+            const card = document.createElement('article');
+            card.className = `ic-chip ic-group-${chip.group}`;
+            card.dataset.chip = chip.id;
+            const title = document.createElement('div');
+            title.className = 'ic-head';
+            const id = document.createElement('span');
+            id.textContent = chip.id;
+            const type = document.createElement('strong');
+            type.textContent = chip.type;
+            title.append(id, type);
+            const desc = document.createElement('p');
+            desc.textContent = chip.description;
+            desc.className = 'ic-description';
+            const pinList = document.createElement('div');
+            pinList.className = 'ic-pin-list';
+            for (const pin of chip.pins) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'ic-probe';
+                button.dataset.net = pin.net;
+                const name = document.createElement('span');
+                name.textContent = pin.name;
+                const value = document.createElement('b');
+                value.className = 'ic-pin-level';
+                value.textContent = 'L';
+                button.append(name, value);
+                button.addEventListener('click', () => setSelectedNet(pin.net));
+                pinList.append(button);
+            }
+            card.append(title, desc, pinList);
+            chips.append(card);
+        }
+        const grid = $('romDipGrid');
+        grid.replaceChildren();
+        for (let addr = 0; addr < 16; addr++) {
+            const cell = document.createElement('div');
+            cell.className = 'rom-slot';
+            cell.dataset.addr = String(addr);
+            const head = document.createElement('div');
+            head.className = 'rom-slot-head';
+            const led = document.createElement('button');
+            led.type = 'button';
+            led.className = 'rom-select-lamp';
+            led.dataset.net = `ROM_SEL_${addr}`;
+            led.setAttribute('aria-label', `ROMアドレス${HEX(addr)}の選択信号を追跡`);
+            led.title = '74HC154の出力は負論理です。LED点灯時は/ROM=L';
+            led.addEventListener('click', () => setSelectedNet(`ROM_SEL_${addr}`));
+            const address = document.createElement('strong');
+            address.textContent = HEX(addr);
+            const value = document.createElement('span');
+            value.className = 'rom-slot-value';
+            head.append(led, address, value);
+            const bits = document.createElement('div');
+            bits.className = 'rom-dip-switches';
+            for (let bit = 7; bit >= 0; bit--) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'rom-dip';
+                button.dataset.bit = String(bit);
+                const handle = document.createElement('span');
+                handle.className = 'dip-handle';
+                button.append(handle);
+                button.addEventListener('click', () => {
+                    stop();
+                    cpu.rom[addr] ^= (1 << bit);
+                    sourceMatchesROM = false;
+                    renderROM();
+                    renderCPU();
+                    recordSignals();
+                    showMessage(`ROM ${HEX(addr)}番地 D${bit}を変更しました。ソースとROMの内容が異なります。`, 'unsynced');
+                });
+                bits.append(button);
+            }
+            const footer = document.createElement('div');
+            footer.className = 'rom-slot-bits';
+            footer.textContent = 'D7 · · · · · · · D0';
+            cell.append(head, bits, footer);
+            grid.append(cell);
+        }
+        const input = $('schematicInput');
+        input.replaceChildren();
+        const output = $('schematicOutput');
+        output.replaceChildren();
+        for (let bit = 3; bit >= 0; bit--) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'schematic-io-switch';
+            b.dataset.bit = String(bit);
+            b.dataset.net = `IN${bit}`;
+            b.addEventListener('click', () => {
+                cpu.setInput(cpu.input ^ (1 << bit));
+                renderSwitches();
+                renderCPU();
+                recordSignals();
+            });
+            input.append(b);
+            const diode = document.createElement('button');
+            diode.type = 'button';
+            diode.className = 'schematic-io-led';
+            diode.dataset.bit = String(bit);
+            diode.dataset.net = `OUT${bit}`;
+            diode.title = `OUT${bit}の信号線を追跡`;
+            diode.addEventListener('click', () => setSelectedNet(`OUT${bit}`));
+            diode.setAttribute('aria-label', `出力LED${bit}の信号線を追跡`);
+            output.append(diode);
+        }
+        $('resetNetBtn').addEventListener('click', () => setSelectedNet('CLK'));
+        window.addEventListener('resize', drawSelectedWires);
+        setSelectedNet('CLK');
+    }
+    function setSelectedNet(net) {
+        selectedNet = net;
+        updateCircuitBoard();
+        drawSelectedWires();
+    }
+    function updateCircuitBoard() {
+        const board = document.getElementById('schematicBoard');
+        if (!board)
+            return;
+        const values = circuit.levels(cpu, clockHigh);
+        for (const element of board.querySelectorAll('.ic-probe')) {
+            const net = element.dataset.net || '';
+            const level = values[net];
+            element.classList.toggle('is-high', level === 1);
+            element.classList.toggle('is-low', level === 0);
+            element.classList.toggle('is-selected', net === selectedNet);
+            const value = element.querySelector('.ic-pin-level');
+            if (value)
+                value.textContent = level ? 'H' : 'L';
+            element.title = `${net}: ${level ? 'HIGH (1)' : 'LOW (0)'}`;
+        }
+        for (const cell of board.querySelectorAll('.rom-slot')) {
+            const addr = Number(cell.dataset.addr);
+            const selected = cpu.pc === addr;
+            const byte = cpu.rom[addr];
+            cell.classList.toggle('is-current', selected);
+            const lamp = cell.querySelector('.rom-select-lamp');
+            lamp.classList.toggle('is-on', selected);
+            lamp.classList.toggle('is-selected', selectedNet === `ROM_SEL_${addr}`);
+            cell.querySelector('.rom-slot-value').textContent = byte.toString(16).toUpperCase().padStart(2, '0');
+            for (const btn of cell.querySelectorAll('.rom-dip')) {
+                const bit = Number(btn.dataset.bit);
+                const on = !!(byte & (1 << bit));
+                btn.classList.toggle('is-on', on);
+                btn.dataset.net = selected ? `D${bit}` : '';
+                btn.setAttribute('aria-pressed', String(on));
+                btn.title = `ROM ${HEX(addr)} / D${bit} = ${+on}（クリックで反転）`;
+                btn.setAttribute('aria-label', `ROM ${HEX(addr)}番地 D${bit} を${on ? 'OFF' : 'ON'}にする`);
+            }
+        }
+        board.querySelectorAll('.schematic-io-switch').forEach(btn => {
+            const bit = Number(btn.dataset.bit), on = !!(cpu.input & (1 << bit));
+            btn.textContent = `SW${bit} ${on ? 'ON' : 'OFF'}`;
+            btn.classList.toggle('is-on', on);
+            btn.setAttribute('aria-pressed', String(on));
+            btn.title = `IN${bit} = ${+on}`;
+        });
+        board.querySelectorAll('.schematic-io-led').forEach(btn => {
+            const bit = Number(btn.dataset.bit), on = !!(cpu.out & (1 << bit));
+            btn.classList.toggle('is-on', on);
+            btn.textContent = `LED${bit}`;
+            btn.title = `OUT${bit} = ${+on}（クリックで信号を追跡）`;
+        });
+        $('selectedNetName').textContent = selectedNet.replace(/^ROM_SEL_(\d+)$/, (_, n) => `/ROM${Number(n).toString(16).toUpperCase()}`);
+        const level = values[selectedNet];
+        $('selectedNetLevel').textContent = level ? 'H' : 'L';
+        $('selectedNetLevel').className = level ? 'hi' : 'lo';
+        for (const el of board.querySelectorAll('[data-net]')) {
+            el.classList.toggle('net-selected', !!el.dataset.net && el.dataset.net === selectedNet);
+        }
+        // ROM switch connections change with PC. Re-draw only when required.
+        drawSelectedWires();
+    }
+    function drawSelectedWires() {
+        const board = document.getElementById('schematicBoard');
+        if (!board)
+            return;
+        const svg = document.getElementById('icWireLayer');
+        const bounds = board.getBoundingClientRect();
+        if (!bounds.width || !bounds.height)
+            return;
+        svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+        svg.replaceChildren();
+        const matches = [...board.querySelectorAll('[data-net]')].filter(el => el.dataset.net === selectedNet);
+        if (matches.length < 2)
+            return;
+        const point = (node) => {
+            const r = node.getBoundingClientRect();
+            return { x: r.left - bounds.left + r.width / 2, y: r.top - bounds.top + r.height / 2 };
+        };
+        const anchor = point(matches[0]);
+        const level = circuit.levels(cpu, clockHigh)[selectedNet];
+        for (const node of matches.slice(1)) {
+            const dest = point(node);
+            const bend = (anchor.x + dest.x) / 2;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M${anchor.x} ${anchor.y} H${bend} V${dest.y} H${dest.x}`);
+            path.setAttribute('class', level ? 'ic-wire hi' : 'ic-wire lo');
+            svg.append(path);
+        }
     }
     function renderHistory() {
         const list = $('traceList');
@@ -215,6 +425,7 @@
         $('clockLamp').classList.toggle('on', !!levels.CLK);
         $('clockLevel').textContent = levels.CLK ? 'H' : 'L';
         $('clockStateLabel').textContent = levels.CLK ? 'HIGH' : 'LOW';
+        updateCircuitBoard();
     }
     function renderWaveforms(levels) {
         const area = $('scopeView');
@@ -519,6 +730,7 @@
     }
     buildRomRows();
     buildSamples();
+    buildCircuitBoard();
     renderSwitches();
     connectActions();
     switchExample('led');
