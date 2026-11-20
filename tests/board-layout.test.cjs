@@ -55,3 +55,18 @@ test('physical footprint is separate from logical signal probes', () => {
   assert.match(app, /card\.append\(title,\s*desc,\s*footprint,\s*pinList\)/);
   assert.match(app, /packageMark\.textContent\s*=\s*chip\.type/);
 });
+
+
+test('all DIP widths use the same common physical row spacing', () => {
+  const compact=css.replace(/\s+/g,'');
+  assert.ok(compact.includes('.ic-dip[data-package-pins="24"]{--dip-height:216px;--dip-span:54px;--dip-body-width:44px;'));
+});
+
+test('IC details are hidden by default and opened using accessible toggles', () => {
+  const app=fs.readFileSync(path.join(__dirname,'../assets/js/ui/app.js'),'utf8');
+  assert.match(app,/pinList\.hidden\s*=\s*true/);
+  assert.match(app,/chipToggle\.setAttribute\('aria-expanded', 'false'\)/);
+  assert.match(app,/chipToggle\.addEventListener\('click'/);
+  assert.match(app,/circuit\.physicalPins\(chip\)/);
+  assert.match(css,/\.ic-functional-layout\[hidden\]\s*\{display:none!important\}/);
+});

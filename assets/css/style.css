@@ -297,3 +297,50 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .ic-dip .ic-probe b{font-size:9px;padding:1px 2px}
 .ic-dip .ic-probe-compact{font-size:7px;padding:2px 1px;gap:1px}
 .ic-dip .ic-probe-compact b{font-size:8px;padding:1px}
+
+/* Compact DIP-only overview with click-to-expand functional probe panels. */
+.ic-dip[data-package-pins="24"]{
+  --dip-height:216px;
+  --dip-span:54px;
+  --dip-body-width:44px;
+}
+.ic-dip:not(.is-expanded) .ic-head strong{display:none}
+.ic-dip .ic-description{display:none}
+.ic-dip.is-expanded .ic-description{display:block}
+.ic-functional-layout[hidden]{display:none!important}
+.ic-dip.is-expanded{grid-column:span 2}
+.ic-open-details{
+  width:100%;
+  display:block;
+  border:0;
+  border-radius:6px;
+  padding:0;
+  margin:0;
+  background:transparent;
+  cursor:pointer;
+}
+.ic-open-details:hover .ic-footprint-body,
+.ic-open-details:focus-visible .ic-footprint-body{
+  outline:2px solid #b6e2d1;
+  outline-offset:3px;
+}
+.ic-open-details[aria-expanded="true"] .ic-footprint-body{
+  outline:2px solid #f9c877;
+  outline-offset:3px;
+}
+.ic-open-details:focus-visible{outline:2px solid #b6e2d1;outline-offset:3px}
+.ic-footprint .ic-leg.is-high:before{
+  background:linear-gradient(90deg,#b4ffd1,#48ce83);
+  border-color:#c7ffe1;
+  box-shadow:0 0 6px #52d694a1;
+}
+.ic-footprint .ic-leg.is-low:before{
+  background:linear-gradient(90deg,#b6bec3,#718088);
+  border-color:#a9b6bc;
+  box-shadow:0 1px 1px #061111;
+}
+.ic-footprint .ic-leg.is-unmodelled:before{
+  background:repeating-linear-gradient(90deg,#5e7073 0 2px,#32454a 2px 4px);
+  border-color:#75898a;
+  opacity:.55;
+}

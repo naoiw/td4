@@ -201,7 +201,7 @@
       title.append(badge);
       const footprint = document.createElement('div');
       footprint.className = 'ic-footprint';
-      footprint.setAttribute('aria-hidden', 'true');
+      footprint.classList.add('ic-footprint-interactive');
       const packageBody = document.createElement('div');
       packageBody.className = 'ic-footprint-body';
       const packageMark = document.createElement('span');
@@ -209,6 +209,7 @@
       packageMark.textContent = chip.type;
       packageBody.append(packageMark);
       footprint.append(packageBody);
+      const physicalPins = circuit.physicalPins(chip);
       const createLegs = (side) => {
         const bank = document.createElement('div');
         bank.className = `ic-leg-bank ic-leg-${side}`;
@@ -217,7 +218,10 @@
           const leg=document.createElement('span');
           leg.className='ic-leg';
           const pinNumber=side==='left'? position+1 : layout.packagePins-position;
-          leg.title=`DIP physical pin ${pinNumber} (visual guide)`;
+          const physicalPin = physicalPins[pinNumber - 1];
+          leg.dataset.pinName = physicalPin.name;
+          if (physicalPin.net) leg.dataset.net = physicalPin.net;
+          leg.title = '#' + pinNumber + ' ' + physicalPin.name + ': ' + (physicalPin.net || '未モデル化');
           leg.dataset.pinNumber=String(pinNumber);
           bank.append(leg);
         }
@@ -225,8 +229,25 @@
       };
       createLegs('left');
       createLegs('right');
+      const chipToggle = document.createElement('button');
+      chipToggle.className = 'ic-open-details';
+      chipToggle.type = 'button';
+      chipToggle.setAttribute('aria-label', chip.id + ' ' + chip.type + ' の入出力詳細を表示');
+      chipToggle.setAttribute('aria-expanded', 'false');
+      chipToggle.setAttribute('aria-controls', 'ic-details-' + chip.id);
+      chipToggle.append(footprint);
       const pinList = document.createElement('div');
       pinList.className = 'ic-functional-layout';
+      pinList.id = 'ic-details-' + chip.id;
+      pinList.hidden = true;
+      chipToggle.addEventListener('click', () => {
+        const expanded = pinList.hidden;
+        pinList.hidden = !expanded;
+        card.classList.toggle('is-expanded', expanded);
+        chipToggle.setAttribute('aria-expanded', String(expanded));
+        chipToggle.setAttribute('aria-label', chip.id + ' ' + chip.type + ' の入出力詳細を' + (expanded ? '閉じる' : '表示'));
+        drawSelectedWires();
+      });
       const createProbe=(pin,compact)=>{
         const button=document.createElement('button');
         button.type='button';
@@ -271,7 +292,7 @@
         unit.append(columns);
         pinList.append(unit);
       }
-      card.append(title,desc,footprint,pinList);
+      card.append(title,desc,chipToggle,pinList);
             chips.append(card);
         }
         const grid = $('romDipGrid');
@@ -373,6 +394,15 @@
                 value.textContent = level ? 'H' : 'L';
             element.title = `${net}: ${level ? 'HIGH (1)' : 'LOW (0)'}`;
         }
+        for (const leg of board.querySelectorAll('.ic-leg')) {
+            const net = leg.dataset.net;
+            const level = net ? values[net] : undefined;
+            leg.classList.toggle('is-high', level === 1);
+            leg.classList.toggle('is-low', level === 0);
+            leg.classList.toggle('is-unmodelled', level === undefined);
+            leg.title = '#' + leg.dataset.pinNumber + ' ' + leg.dataset.pinName + ': ' +
+                (level === undefined ? '未モデル化' : level === 1 ? 'H (1)' : 'L (0)');
+        }
         for (const cell of board.querySelectorAll('.rom-slot')) {
             const addr = Number(cell.dataset.addr);
             const selected = cpu.pc === addr;
@@ -425,7 +455,7 @@
             return;
         svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
         svg.replaceChildren();
-        const matches = [...board.querySelectorAll('[data-net]')].filter(el => el.dataset.net === selectedNet);
+        const matches = [...board.querySelectorAll('[data-net]')].filter(el => el.dataset.net === selectedNet && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0);
         if (matches.length < 2)
             return;
         const point = (node) => {
