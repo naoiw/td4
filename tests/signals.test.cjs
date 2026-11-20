@@ -1,8 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { CPU, assemble } = require('../td4-core.js');
-const { GROUPS, preview, snapshot, appendSample, waveformPath } = require('../signals.js');
-const examples = require('../samples.js');
+const { CPU, assemble } = require('../assets/js/core/td4-core.js');
+const { GROUPS, preview, snapshot, appendSample, waveformPath } = require('../assets/js/core/signals.js');
+const examples = require('../assets/js/data/samples.js');
 
 test('all sample programs assemble inside TD4 16-byte ROM', () => {
   assert.equal(examples.length, 8);

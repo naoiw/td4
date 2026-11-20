@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {CPU,assemble,disassemble,isStandard,romToSource}=require('../td4-core.js');
+const {CPU,assemble,disassemble,isStandard,romToSource}=require('../assets/js/core/td4-core.js');
 const cpu=bytes=>new CPU([...bytes,...Array(16).fill(0)].slice(0,16));
 test('MOV and transfer',()=>{const x=cpu([0x3C,0x40,0x70,0x10]);x.step();assert.equal(x.a,12);x.step();assert.equal(x.b,12);x.step();assert.equal(x.b,0);x.step();assert.equal(x.a,0);});
 test('4bit carry',()=>{const x=cpu([0x3F,0x01,0x70]);x.step();x.step();assert.equal(x.a,0);assert.equal(x.carry,1);x.step();assert.equal(x.carry,0);});
