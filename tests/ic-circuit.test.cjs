@@ -75,3 +75,28 @@ test('carry flag is latched and differs from combinational COUT', () => {
   assert.equal(nets.C_N,0);
   assert.equal(nets.LOAD_PC_N,1, 'JNC disabled when previously carry=1');
 });
+
+test('DIP pin counts and functional signal orientation', () => {
+  const named=Object.fromEntries(chips.map(c=>[c.id,c]));
+  const expected={'74HC154':24,'74HC540':20,'74HC161':16,'74HC153':16,'74HC283':16,'74HC74':14,'74HC32':14,'74HC10':14,'74HC14':14};
+  for(const c of chips){
+    const l=require('../assets/js/core/ic-circuit.js').layout(c);
+    assert.equal(l.packagePins,expected[c.type],c.id);
+    assert.equal(l.packagePins%2,0,c.id);
+    assert.ok(l.sections.length>=1,c.id);
+  }
+  for(const id of ['U13','U12']){
+    const l=require('../assets/js/core/ic-circuit.js').layout(named[id]);
+    assert.match(l.leftLabel,/INPUT/);
+    assert.match(l.rightLabel,/OUTPUT/);
+    assert.ok(l.sections[0].left.flat().every(p=>!/^Y[0-9A-F]/.test(p.name)));
+    assert.ok(l.sections[0].right.flat().every(p=>/^Y[0-9A-F]/.test(p.name)));
+  }
+  for(const id of ['U7','U8']){
+    const l=require('../assets/js/core/ic-circuit.js').layout(named[id]);
+    assert.deepEqual(l.sections.map(s=>s.label.split(' · ')[0]),['回路1','回路2']);
+  }
+  const adder=require('../assets/js/core/ic-circuit.js').layout(named.U9);
+  assert.deepEqual(adder.sections[0].right.flat().map(x=>x.name),['SUM0','SUM1','SUM2','SUM3','COUT']);
+  assert.deepEqual(adder.sections[0].left.flat().map(x=>x.name),['A0','B0','A1','B1','A2','B2','A3','B3','CIN']);
+});

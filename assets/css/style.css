@@ -156,3 +156,28 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .overview-collapse{margin-top:16px;background:#eef4f3;border-radius:9px;padding:9px 12px;color:#47685e}
 .overview-collapse summary{cursor:pointer;font-size:12px;font-weight:750}.overview-collapse .pcb-scroll{margin-top:12px}
 @media(max-width:650px){.ic-toolbar{align-items:start;flex-direction:column}.schematic-board{margin:0}.ic-probe-control{width:100%;justify-content:space-between}}
+
+
+/* Functional pin-oriented IC layout. Physical DIP leg count is precise but
+   displayed functional terminals are NOT asserted to be package pin positions. */
+.ic-chip-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ic-dip{padding:11px 17px 14px;overflow:visible}
+.ic-dip:before,.ic-dip:after{display:none}
+.ic-leg-bank{position:absolute;z-index:2;top:30px;bottom:14px;width:8px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none}
+.ic-leg-left{left:-4px}.ic-leg-right{right:-4px}
+.ic-leg{display:block;height:6px;border:1px solid #a3b0b3;border-radius:2px;background:linear-gradient(90deg,#d8dce0,#71868c);box-shadow:0 1px 1px #081414}
+.ic-package-label{font:700 8px ui-monospace,monospace;color:#8bacac;white-space:nowrap}
+.ic-dip .ic-head{flex-wrap:wrap;justify-content:space-between;align-items:center}
+.ic-dip .ic-head strong{font-size:14px}
+.ic-functional-layout{display:flex;flex-direction:column;gap:7px}
+.ic-function-section{min-width:0;padding:6px;background:#14262c;border:1px solid #38575a;border-radius:5px}
+.ic-function-section+.ic-function-section{border-top:2px solid #87ae9d}
+.ic-function-title{margin:0 0 6px;padding-bottom:4px;font:800 10px ui-monospace,monospace;color:#def0de;border-bottom:1px dashed #648b82}
+.ic-function-headings,.ic-function-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.ic-function-headings{margin:0 0 4px;font:700 8px/1.35 ui-monospace,monospace;color:#8abdad}
+.ic-function-headings span:last-child{text-align:right}
+.ic-function-column{min-width:0;display:flex;flex-direction:column;gap:4px}
+.ic-function-row{display:flex;gap:3px;min-width:0;min-height:23px}
+.ic-dip .ic-probe{flex:1;min-width:0;padding:3px 4px;min-height:23px}
+.ic-dip .ic-probe-compact{font-size:8px;padding:3px 2px}
+.ic-dip .ic-probe-compact b{font-size:9px;padding:1px 2px}

@@ -79,6 +79,8 @@ declare const module: {exports?: unknown};
 
 /** Named IC functional probes; not literal package pin numbers. */
 interface IcPin { name: string; net: string }
+interface IcSection {label?: string; left: IcPin[][]; right: IcPin[][]}
+interface IcLayout {packagePins: number; leftLabel: string; rightLabel: string; sections: IcSection[]}
 interface IcComponent {
   id: string;
   type: string;
@@ -90,5 +92,6 @@ type IcLevels = Record<string, BinaryLevel>;
 interface IcCircuitApi {
   chips: readonly IcComponent[];
   levels(cpu: CpuState, clock: boolean): IcLevels;
+  layout(chip: IcComponent): IcLayout;
 }
 interface Window { TD4Circuit: IcCircuitApi }
