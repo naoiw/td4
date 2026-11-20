@@ -1,0 +1,17 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const {CPU,assemble,disassemble,isStandard,romToSource}=require('../td4-core.js');
+const cpu=bytes=>new CPU([...bytes,...Array(16).fill(0)].slice(0,16));
+test('MOV and transfer',()=>{const x=cpu([0x3C,0x40,0x70,0x10]);x.step();assert.equal(x.a,12);x.step();assert.equal(x.b,12);x.step();assert.equal(x.b,0);x.step();assert.equal(x.a,0);});
+test('4bit carry',()=>{const x=cpu([0x3F,0x01,0x70]);x.step();x.step();assert.equal(x.a,0);assert.equal(x.carry,1);x.step();assert.equal(x.carry,0);});
+test('JNC old carry',()=>{const x=cpu([0x3F,0x01,0xE7]);x.step();x.step();assert.equal(x.step().branchTaken,false);assert.equal(x.pc,3);x.pc=2;assert.equal(x.step().branchTaken,true);assert.equal(x.pc,7);});
+test('switches and output',()=>{const x=cpu([0x60,0x90,0xF0]);x.setInput(10);x.step();x.step();assert.equal(x.out,10);x.step();assert.equal(x.pc,0);x.setInput(5);x.step();x.step();assert.equal(x.out,5);});
+test('PC wraps',()=>{const x=cpu([]);x.pc=15;x.step();assert.equal(x.pc,0);});
+test('output latch retained',()=>{const x=cpu([0xBD,0x31,0xB2]);x.step();assert.equal(x.out,13);x.step();assert.equal(x.out,13);x.step();assert.equal(x.out,2);});
+test('unofficial opcodes',()=>{const x=cpu([0x77,0x83,0xDF,0x1F]);x.step();x.step();assert.equal(x.out,10);x.step();assert.equal(x.pc,6);x.pc=3;x.step();assert.equal(x.a,6);});
+test('all 256 opcodes: MUX model',()=>{for(let b=0;b<256;b++){const x=cpu([b]);x.a=11;x.b=9;x.setInput(7);x.carry=1;const op=b>>4,im=b&15,s=((op>>3)&1)|(op&1),t=(op>>1)&1,v=[11,9,7,0][(t<<1)|s]+im,d=op>>2;x.step();assert.equal(x.carry,+(v>15),'C '+b);if(d===0)assert.equal(x.a,v&15,'A '+b);if(d===1)assert.equal(x.b,v&15,'B '+b);if(d===2)assert.equal(x.out,v&15,'OUT '+b);if(d===3)assert.equal(x.pc,op&1?v&15:1,'PC '+b);}});
+test('assembler labels',()=>{const x=assemble('a: MOV B, 0xA\nOUT B\nADD B, 1\nJNC a\nJMP 0');assert.deepEqual(x.rom.slice(0,5),[0x7A,0x90,0x51,0xE0,0xF0]);});
+test('ORG raw bytes',()=>{const x=assemble('.ORG 0xE\n10110011\nF0');assert.equal(x.rom[14],0xB3);assert.equal(x.rom[15],0xF0);});
+test('ROM source round-trip',()=>{const b=Array.from({length:16},(_,i)=>(i*17+9)&255);assert.deepEqual(assemble(romToSource(b)).rom,b);});
+test('instruction validation',()=>{assert.throws(()=>assemble('MOV A, 16'),/範囲外/);assert.throws(()=>assemble('MOV Z, 1'),/未対応/);assert.throws(()=>assemble('JMP nowhere'),/ラベル/);});
+test('standard opcode flags',()=>{assert.equal(isStandard(0x90),true);assert.equal(isStandard(0x91),false);assert.equal(isStandard(0x8F),false);assert.match(disassemble(0xD3),/\*/);});
