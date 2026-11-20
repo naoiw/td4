@@ -76,3 +76,24 @@ interface Window {
   TD4Samples: SampleProgram[];
 }
 declare const module: {exports?: unknown};
+
+/** Named IC functional probes; not literal package pin numbers. */
+interface IcPin { name: string; net: string }
+interface IcSection {label?: string; left: IcPin[][]; right: IcPin[][]}
+interface IcLayout {packagePins: number; leftLabel: string; rightLabel: string; sections: IcSection[]}
+interface IcPhysicalPin {number: number; name: string; net?: string}
+interface IcComponent {
+  id: string;
+  type: string;
+  description: string;
+  group: 'rom' | 'select' | 'decode' | 'register' | 'clock';
+  pins: readonly IcPin[];
+}
+type IcLevels = Record<string, BinaryLevel>;
+interface IcCircuitApi {
+  chips: readonly IcComponent[];
+  levels(cpu: CpuState, clock: boolean): IcLevels;
+  layout(chip: IcComponent): IcLayout;
+  physicalPins(chip: IcComponent): IcPhysicalPin[];
+}
+interface Window { TD4Circuit: IcCircuitApi }
