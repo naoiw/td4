@@ -50,8 +50,9 @@ test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>
 });
 
 test('IC detail is outside board and large enough to inspect H/L probes',()=>{
-  const boardEnd=html.indexOf('</div>\n      </div>\n      <section id="icDetailPanel"');
-  assert.ok(boardEnd>0,'external detail section must follow schematic-scroll');
+  const boardEnd=html.indexOf('</div>\n      <div class="board-notes"');
+  assert.ok(boardEnd>0,'external notes must follow schematic-scroll');
+  assert.ok(html.indexOf('id="icDetailPanel"')>boardEnd,'detail panel must follow notes outside PCB');
   assert.match(js,/function toggleIcDetails\(chipId\)/);
   assert.match(js,/host\.append\(head,\s*pins\)/);
   assert.match(js,/oldCard\.append\(oldPins\)/);
@@ -72,9 +73,10 @@ test('IC physical pins, net coloring and click toggles are preserved',()=>{
 test('the PCB has a green solder mask and a white surrounding background',()=>{
   const surround=lastRule('schematic-scroll');
   assert.match(surround,/background:\s*#ffffff/);
-  const board=lastRule('schematic-board');
-  assert.match(board,/background-color:\s*#166342/);
-  assert.match(board,/border:\s*6px solid #0d4b32/);
+  const board=css.match(/\/\* PCB placement:[\s\S]*?\.schematic-board\s*\{([^}]*)\}/);
+  assert.ok(board,'main board rule must exist');
+  assert.match(board[1],/background-color:\s*#166342/);
+  assert.match(board[1],/border:\s*6px solid #0d4b32/);
 });
 test('four circular mounting holes occupy the PCB corners',()=>{
   const hole=lastRule('pcb-mount-hole');
