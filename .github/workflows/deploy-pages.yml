@@ -1,0 +1,94 @@
+name: Deploy GitHub Pages
+
+# Both branches are published as a single Pages artifact:
+# main -> /td4/ and develop -> /td4/develop/.
+# Runs in the main branch context so the github-pages environment may restrict deployments to main.
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: [Validate develop]
+    types: [completed]
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: td4-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.ref_name == 'main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (production)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: production
+
+      - name: Checkout develop (preview)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'develop' }}
+          path: preview
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+
+      - name: Verify production
+        working-directory: production
+        run: |
+          npm install --no-audit --no-fund
+          npm run verify
+
+      - name: Verify preview
+        working-directory: preview
+        run: |
+          npm install --no-audit --no-fund
+          npm run verify
+
+      - name: Compose production and preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publish/develop
+          cp production/index.html publish/index.html
+          cp -a production/assets publish/assets
+          cp preview/index.html publish/develop/index.html
+          cp -a preview/assets publish/develop/assets
+          touch publish/.nojekyll
+          test -s publish/index.html
+          test -s publish/develop/index.html
+          test -f publish/assets/js/ui/app.js
+          test -f publish/develop/assets/js/ui/app.js
+          echo "production: /td4/ ; preview: /td4/develop/"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
