@@ -106,7 +106,7 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .ic-probe-control b{padding:4px 8px;border-radius:5px;background:#2a5248;color:#caffd6}
 .ic-probe-control b.lo{background:#dce4e8;color:#425964}
 .schematic-scroll{overflow-x:auto;overflow-y:hidden;background:#0d2d28;border-radius:14px;padding:4px;scrollbar-color:#69998b #203f39}
-.schematic-board{position:relative;width:1330px;min-height:980px;display:grid;grid-template-columns:760px 520px;gap:20px;padding:22px 16px 26px;margin:auto;border:6px solid #315d4c;border-radius:10px;overflow:hidden;background-color:#12372f;background-image:repeating-linear-gradient(0deg,transparent 0 39px,#a1dfb70a 40px),repeating-linear-gradient(90deg,transparent 0 39px,#a1dfb70a 40px);box-shadow:inset 0 0 0 2px #508d6c, inset 0 0 40px #071e1c}
+.schematic-board{position:relative;width:1330px;min-height:980px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;padding:22px 16px 26px;margin:auto;border:6px solid #315d4c;border-radius:10px;overflow:hidden;background-color:#12372f;background-image:repeating-linear-gradient(0deg,transparent 0 39px,#a1dfb70a 40px),repeating-linear-gradient(90deg,transparent 0 39px,#a1dfb70a 40px);box-shadow:inset 0 0 0 2px #508d6c, inset 0 0 40px #071e1c}
 .schematic-zone-head{display:flex;justify-content:space-between;align-items:center;color:#dbecd6;font:800 15px ui-monospace,monospace;letter-spacing:.7px;margin:0 0 12px}
 .schematic-zone-head span{font:600 10px ui-monospace,monospace;color:#92bca9;letter-spacing:0}
 .ic-zone,.rom-zone{position:relative;z-index:3;min-width:0}
@@ -125,7 +125,8 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .ic-probe.is-high{border-color:#378563;background:#20493d;color:#d4f7e5}.ic-probe.is-high b{color:#143b2a;background:#baf9ce}
 .ic-probe.net-selected{outline:2px solid #ffc36f;outline-offset:-1px;box-shadow:0 0 6px #eebf6265}
 .ic-probe:hover,.rom-select-lamp:hover{filter:brightness(1.2)}
-.rom-dip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+/* 0–7 in the left column, 8–F in the right column (DOM order is 0..15). */
+.rom-dip-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(8,max-content);grid-auto-flow:column;gap:10px}
 .rom-slot{background:#15443c;border:1px solid #527969;border-radius:6px;padding:9px 7px 10px;box-shadow:0 4px 0 #092c29;min-width:0}
 .rom-slot.is-current{border-color:#f5c86b;background:#245a43;box-shadow:0 0 0 1px #8cba73,0 4px 0 #092c29,0 0 22px #e8e26535}
 .rom-slot-head{display:flex;align-items:center;gap:7px;margin-bottom:9px;font:850 13px ui-monospace,monospace;color:#f5e8bf}
@@ -139,7 +140,7 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .dip-handle{width:72%;height:12px;background:linear-gradient(100deg,#b9cbd9,#f9fcff 45%,#c8d4e3);border-radius:2px;box-shadow:0 1px 2px #072747}
 .rom-dip:focus-visible,.ic-probe:focus-visible{outline:2px solid #ffd672;outline-offset:2px}
 .rom-slot-bits{font:600 8px ui-monospace,monospace;color:#accabf;text-align:center;margin-top:8px;white-space:nowrap;letter-spacing:-.3px}
-.schematic-io-strip{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:19px}
+.schematic-io-strip{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:19px}
 .schematic-io{background:#173c36;border:1px solid #537f6c;border-radius:8px;padding:11px;min-width:0}
 .schematic-io strong{display:block;color:#c9e1d3;font:800 11px ui-monospace,monospace;margin-bottom:12px}
 .schematic-input-bits,.schematic-output-leds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
