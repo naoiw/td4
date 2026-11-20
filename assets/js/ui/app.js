@@ -197,8 +197,18 @@
       card.dataset.packagePins = String(layout.packagePins);
       const badge = document.createElement('small');
       badge.className = 'ic-package-label';
-      badge.textContent = `DIP-${layout.packagePins} · ${layout.packagePins / 2} pins/side`;
+      badge.textContent = `DIP-${layout.packagePins} · 2.54 mm PITCH`;
       title.append(badge);
+      const footprint = document.createElement('div');
+      footprint.className = 'ic-footprint';
+      footprint.setAttribute('aria-hidden', 'true');
+      const packageBody = document.createElement('div');
+      packageBody.className = 'ic-footprint-body';
+      const packageMark = document.createElement('span');
+      packageMark.className = 'ic-footprint-mark';
+      packageMark.textContent = chip.type;
+      packageBody.append(packageMark);
+      footprint.append(packageBody);
       const createLegs = (side) => {
         const bank = document.createElement('div');
         bank.className = `ic-leg-bank ic-leg-${side}`;
@@ -211,7 +221,7 @@
           leg.dataset.pinNumber=String(pinNumber);
           bank.append(leg);
         }
-        card.append(bank);
+        footprint.append(bank);
       };
       createLegs('left');
       createLegs('right');
@@ -261,7 +271,7 @@
         unit.append(columns);
         pinList.append(unit);
       }
-      card.append(title,desc,pinList);
+      card.append(title,desc,footprint,pinList);
             chips.append(card);
         }
         const grid = $('romDipGrid');

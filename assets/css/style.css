@@ -182,3 +182,118 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .ic-dip .ic-probe{flex:1;min-width:0;padding:3px 4px;min-height:23px}
 .ic-dip .ic-probe-compact{font-size:8px;padding:3px 2px}
 .ic-dip .ic-probe-compact b{font-size:9px;padding:1px 2px}
+/* Compact DIP footprints.
+ * Drawing scale is 18px per 2.54mm; dimension ratios are schematic, not actual
+ * on-screen millimetres. Narrow DIP: 7.62mm row-centre span (=54px).
+ * 74HC154 DIP-24 wide: 15.24mm span (=108px). Functional H/L probes below
+ * are deliberately separate from the numbered physical legs.
+ */
+.ic-chip-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
+.ic-dip{
+  --dip-pitch:18px;
+  --dip-height:126px;
+  --dip-span:54px;
+  --dip-body-width:44px;
+  padding:8px 9px 10px;
+  min-width:0;
+  overflow:visible
+}
+.ic-dip[data-package-pins="14"]{--dip-height:126px}
+.ic-dip[data-package-pins="16"]{--dip-height:144px}
+.ic-dip[data-package-pins="20"]{--dip-height:180px}
+.ic-dip[data-package-pins="24"]{
+  --dip-height:216px;
+  --dip-span:108px;
+  --dip-body-width:98px
+}
+.ic-dip .ic-head{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;padding:1px 1px 0}
+.ic-dip .ic-head strong{font-size:12px}
+.ic-dip .ic-head span{font-size:10px}
+.ic-dip .ic-package-label{font-size:8px;letter-spacing:-.2px}
+.ic-dip .ic-description{font-size:8px;min-height:20px;margin:4px 1px 5px;overflow-wrap:anywhere}
+.ic-footprint{position:relative;width:var(--dip-span);height:var(--dip-height);margin:7px auto 10px;isolation:isolate}
+.ic-footprint-body{
+  position:absolute;
+  z-index:1;
+  width:var(--dip-body-width);
+  height:100%;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  border-radius:4px;
+  border:1px solid #48595b;
+  background:linear-gradient(100deg,#161b20 0%,#30363e 20%,#181d23 65%,#0f1419 100%);
+  box-shadow:inset 1px 0 1px #576168, inset -2px 0 4px #080d11, 0 4px 6px #061813a8;
+}
+.ic-footprint-body:before{
+  content:'';
+  position:absolute;
+  top:-1px;
+  left:50%;
+  transform:translateX(-50%);
+  width:14px;
+  height:8px;
+  border-radius:0 0 9px 9px;
+  border:1px solid #4e5d64;
+  background:#14322c;
+}
+.ic-footprint-mark{
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  font:750 11px ui-monospace,monospace;
+  letter-spacing:1px;
+  color:#adb9b6;
+  text-shadow:0 1px 2px #030708;
+}
+.ic-footprint .ic-leg-bank{
+  position:absolute;
+  z-index:2;
+  top:0;
+  bottom:auto;
+  height:var(--dip-height);
+  width:8px;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  justify-content:flex-start;
+  pointer-events:none;
+}
+.ic-footprint .ic-leg-left{left:-4px;right:auto}
+.ic-footprint .ic-leg-right{right:-4px;left:auto}
+.ic-footprint .ic-leg{
+  position:relative;
+  display:block;
+  flex:0 0 var(--dip-pitch);
+  width:8px;
+  height:var(--dip-pitch);
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent;
+}
+.ic-footprint .ic-leg:before{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:calc((var(--dip-pitch) - 6px) / 2);
+  height:6px;
+  border-radius:2px;
+  border:1px solid #bcc9cb;
+  background:linear-gradient(90deg,#e0e7e6,#849a9b);
+  box-shadow:0 1px 1px #07110e;
+}
+.ic-functional-layout{gap:5px}
+.ic-dip .ic-function-section{padding:4px 3px}
+.ic-dip .ic-function-title{font-size:9px;margin-bottom:3px;padding-bottom:3px}
+.ic-dip .ic-function-headings,.ic-dip .ic-function-columns{gap:5px}
+.ic-dip .ic-function-headings{font-size:7px;line-height:1.3;overflow-wrap:anywhere}
+.ic-dip .ic-function-column{gap:2px}
+.ic-dip .ic-function-row{gap:2px;min-height:19px}
+.ic-dip .ic-probe{min-height:19px;padding:2px 2px;font-size:8px;gap:2px}
+.ic-dip .ic-probe b{font-size:9px;padding:1px 2px}
+.ic-dip .ic-probe-compact{font-size:7px;padding:2px 1px;gap:1px}
+.ic-dip .ic-probe-compact b{font-size:8px;padding:1px}
