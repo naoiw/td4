@@ -215,7 +215,7 @@
     }
 
       function render(options) {
-    const {cpu, clockHigh, selectedNet, circuit}=options;
+    const {cpu, clockHigh, selectedNet, circuit, HEX}=options;
         const board = document.getElementById('schematicBoard');
         if (!board)
             return;

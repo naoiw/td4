@@ -110,6 +110,7 @@ interface BoardViewOptions {
 
 interface BoardRenderOptions {
   circuit: IcCircuitApi;
+  HEX: (value: number) => string;
   cpu: CpuState;
   clockHigh: boolean;
   selectedNet: string;

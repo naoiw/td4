@@ -196,7 +196,7 @@
   }
 
   function render(options: BoardRenderOptions):void {
-    const {cpu, clockHigh, selectedNet, circuit}=options;
+    const {cpu, clockHigh, selectedNet, circuit, HEX}=options;
     const board=document.getElementById('schematicBoard');
     if(!board)return;
     const values=circuit.levels(cpu,clockHigh);

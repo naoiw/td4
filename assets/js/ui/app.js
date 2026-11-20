@@ -251,7 +251,7 @@
     }
     /** Keep CPU state in the application; delegate all board DOM updates. */
     function updateCircuitBoard() {
-        window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit});
+        window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit, HEX});
     }
     function drawSelectedWires() {
         window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit});
