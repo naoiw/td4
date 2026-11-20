@@ -121,7 +121,8 @@ test('DOM construction is delegated to stateless board renderer',()=>{
   assert.match(boardJs,/function mount\(options\)/);
   assert.match(boardJs,/onRomBitToggle\(addr, bit\)/);
   assert.match(boardJs,/onInputBitToggle\(bit\)/);
-  assert.ok(!boardJs.includes('cpu.rom['), 'renderer must not own CPU mutations');
+  assert.doesNotMatch(boardJs,/cpu\.rom\[[^\]]+\]\s*(?:\^=|=)/,'renderer must not mutate ROM');
+  assert.ok(!boardJs.includes('cpu.setInput('),'renderer must not mutate input');
 });
 
 test('board H/L and selected-net SVG renderers stay separate from CPU state',()=>{
