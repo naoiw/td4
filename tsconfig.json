@@ -8,7 +8,7 @@
       "DOM.Iterable"
     ],
     "rootDir": "src",
-    "outDir": ".",
+    "outDir": "assets/js",
     "strict": true,
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,

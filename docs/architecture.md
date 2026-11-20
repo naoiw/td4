@@ -25,7 +25,7 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 クロックは低レベルLと高レベルHを交互に切り替えます。**L→H**で`cpu.step()`が1回呼び出されます。H→Lではレジスタ・LED出力は変化しません。手動ステップはHを約180ms表示してからLに戻します。
 
-`signals.js` の `snapshot(cpu, clockHigh)` が次の論理値を取得します。
+`src/core/signals.ts` の `snapshot(cpu, clockHigh)` が次の論理値を取得します。
 
 - CLK、C
 - A0〜A3、B0〜B3、PC0〜PC3
@@ -39,19 +39,23 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 ## サンプルプログラム
 
-`sample.js` ではなく `samples.js` にROMに収まる8種類のサンプルを収録しています。画面上部の6カードはROMロードと実行をワンクリックで行います。プログラムエディタのプルダウンから8種類すべてを選択できます。
+`src/data/samples.ts` にROMに収まる8種類のサンプルを収録しています。画面上部の6カードはROMロードと実行をワンクリックで行います。プログラムエディタのプルダウンから8種類すべてを選択できます。
 
 ## ファイル依存
 
-読み込み順は`td4-core.js` → `samples.js` → `signals.js` → `app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
+読み込み順は`assets/js/core/td4-core.js` → `assets/js/data/samples.js` → `assets/js/core/signals.js` → `assets/js/ui/app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
 
 ## TypeScript移行・GitHub Pagesデプロイ
 
-開発用ソースは `src/*.ts`、公開用アセットはリポジトリ直下の `.js` です。
+開発用ソースは `src/{core,data,ui,types}/`、公開用JavaScriptは `assets/js/`、スタイルは `assets/css/` です。
 
-- `npm run build` で `tsc` が `src/td4-core.ts`、`src/signals.ts`、`src/samples.ts`、`src/app.ts` をルートの同名 `.js` にコンパイルします。
+- `npm run build` で `tsc` が `src/` 配下のTypeScriptを対応する `assets/js/` 配下へコンパイルします。
 - 既存HTMLの `<script defer>` 参照と CommonJS互換（Nodeの `require()` でテスト）は変更しません。
 - `strict` な型チェックにより、4bit CPU状態・命令履歴・ROM・アセンブル結果・各種H/L信号・ブラウザDOM操作を検証します。
 - 実行時依存ゼロ、DOM/SVGレイアウト・LED・スイッチ・波形・サンプルの動作を維持します。
-- GitHub Pagesは `main` の `/` から生成済みJavaScriptを配信するため、GitHub ActionsやViteの設定変更は不要です。
+- GitHub Pagesは `main` の `/` に置いた `index.html` と `assets/` から生成済みJavaScriptを配信するため、GitHub ActionsやViteの設定変更は不要です。
 - `.js` は生成物なので直接編集せず、TypeScriptを更新して `npm run verify` 後にソースと生成物を一緒にコミットします。
+
+## ディレクトリ変更時の注意
+
+`tsconfig.json` の `rootDir` は `src`、`outDir` は `assets/js` です。TypeScriptの階層が公開用JSにも反映されます。HTMLの4つの `<script defer>` は依存順を維持してください。生成物は手作業で変更せず、`npm run verify` で再生成します。
