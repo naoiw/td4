@@ -3,7 +3,9 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const css=fs.readFileSync(path.join(root,'assets/css/style.css'),'utf8');
+// Keep assertions on the composed CSS in the exact browser import order.
+const cssFiles=['foundation.css','workbench.css','circuit-board.css'];
+const css=cssFiles.map(name=>fs.readFileSync(path.join(root,'assets/css',name),'utf8')).join('\n');
 const js=fs.readFileSync(path.join(root,'assets/js/ui/app.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const lastRule=(selector)=>{

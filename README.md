@@ -57,7 +57,7 @@ npm test           # TypeScript型チェック + Node.jsの全テスト
 npm run verify     # ビルド + 型チェック + テスト
 ```
 
-`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。Pagesの公開アーティファクトにはmain/developそれぞれの `index.html` と `assets/` が含まれます。`assets/css/style.css` は直接編集するCSSです。`LICENSE`は変更しません。
+`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。Pagesの公開アーティファクトにはmain/developそれぞれの `index.html` と `assets/` が含まれます。`assets/css/style.css` は読み込み順だけを定義するエントリーポイントで、実際のCSSは `foundation.css`（共通）、`workbench.css`（画面構成）、`circuit-board.css`（DIP・ROM・基板）に分離しています。`LICENSE`は変更しません。
 
 Vite/Reactは導入していません。公開は `.github/workflows/deploy-pages.yml` で両ブランチを合わせて実行します。開発時は `index.html` を直接開いても動作を確認できます。
 
@@ -67,7 +67,7 @@ Vite/Reactは導入していません。公開は `.github/workflows/deploy-page
 .
 ├── index.html              # GitHub Pagesのエントリーポイント（main / root）
 ├── assets/
-│   ├── css/style.css       # スタイル（直接編集）
+│   ├── css/                # style.css → foundation / workbench / circuit-board
 │   └── js/                 # tscで生成、編集禁止・Git管理対象
 │       ├── core/           # td4-core.js, signals.js, ic-circuit.js
 │       ├── data/           # samples.js
