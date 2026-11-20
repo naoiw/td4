@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f6f8">
+  <meta name="description" content="TD4 4-bit CPU emulator — 実機の命令デコードを再現するオフライン対応Webエミュレータ。">
+  <title>TD4 Emulator — 4-bit CPU Lab</title>
+  <link rel="stylesheet" href="style.css">
+
+
+  <script src="td4-core.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="branding">
+        <div class="chip-mark" aria-hidden="true"><span>4</span></div>
+        <div>
+          <div class="brand-title">TD4 <span>Emulator</span></div>
+          <p class="brand-subtitle">とりあえず動作するだけの4bit CPU</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="spec-badge">8-BIT INSTRUCTION</span>
+        <span class="spec-badge">16-BYTE ROM</span>
+        <span class="connection" id="runStatus"><span class="status-dot"></span>停止中</span>
+      </div>
+    </header>
+
+    <section class="runbar" aria-label="実行操作">
+      <div class="run-buttons">
+        <button type="button" class="btn btn-primary" id="runBtn"><span aria-hidden="true">▶</span> 実行</button>
+        <button type="button" class="btn" id="stopBtn" disabled><span aria-hidden="true">Ⅱ</span> 停止</button>
+        <button type="button" class="btn" id="stepBtn"><span aria-hidden="true">⤷</span> 1クロック</button>
+        <button type="button" class="btn btn-ghost" id="resetBtn"><span aria-hidden="true">↻</span> リセット</button>
+      </div>
+      <div class="run-settings">
+        <label for="speed" class="small-label">クロック速度</label>
+        <select id="speed" aria-label="クロック速度">
+          <option value="1">1 Hz</option>
+          <option value="2" selected>2 Hz</option>
+          <option value="5">5 Hz</option>
+          <option value="10">10 Hz</option>
+          <option value="20">20 Hz</option>
+          <option value="50">50 Hz</option>
+        </select>
+        <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
+      </div>
+    </section>
+
+    <main class="app-grid">
+      <section class="panel board-panel" aria-labelledby="boardTitle">
+        <div class="panel-heading">
+          <div><p class="eyebrow">CPU BOARD</p><h1 id="boardTitle">レジスタと入出力</h1></div>
+          <span class="panel-tag">4-BIT</span>
+        </div>
+        <div class="board-card">
+          <div class="board-row-title"><span>REGISTER MONITOR</span><span class="board-detail">HEX / BINARY</span></div>
+          <div class="register-grid">
+            <div class="register-box" id="reg-a"><div class="register-top"><span>A <small>汎用レジスタ</small></span><strong id="a-value">0</strong></div><div class="bit-lamps" id="a-bits"></div></div>
+            <div class="register-box" id="reg-b"><div class="register-top"><span>B <small>汎用レジスタ</small></span><strong id="b-value">0</strong></div><div class="bit-lamps" id="b-bits"></div></div>
+            <div class="register-box" id="reg-pc"><div class="register-top"><span>PC <small>命令アドレス</small></span><strong id="pc-value">0</strong></div><div class="bit-lamps" id="pc-bits"></div></div>
+            <div class="register-box" id="reg-c"><div class="register-top"><span>C <small>キャリーフラグ</small></span><strong id="c-value">0</strong></div><div class="carry-display"><span class="carry-lamp" id="carryLamp"></span><span id="carryText">NO CARRY</span></div></div>
+          </div>
+          <div class="board-row-title board-divider"><span>OUTPUT PORT</span><span class="board-detail">LED · 4-BIT</span></div>
+          <div class="output-housing"><div id="outputLeds" class="led-bank"></div><div class="output-number">OUT <strong id="out-value">0</strong><span id="out-decimal">DEC 0</span></div></div>
+          <div class="board-row-title board-divider"><span>INPUT PORT</span><span class="board-detail">SWITCH · 4-BIT</span></div>
+          <div class="switch-bank" id="inputSwitches"></div>
+          <p class="board-hint">スイッチは実行中にも切り替えられます。<code>IN A</code> / <code>IN B</code> で読み込みます。</p>
+        </div>
+        <div class="fetch-panel">
+          <div class="fetch-header"><span>FETCH / EXECUTE</span><span class="fetch-tag" id="fetchState">NEXT</span></div>
+          <div class="fetch-main"><strong id="fetchAsm">OUT 3</strong><span id="fetchHex">B3</span></div>
+          <p id="fetchDetail">PC = 0 · 次に実行する命令</p>
+        </div>
+        <div class="trace-panel">
+          <div class="trace-header"><span>実行履歴</span><button type="button" id="clearLogBtn" class="text-button">クリア</button></div>
+          <ol id="traceList" aria-live="off"><li class="placeholder">まだ命令を実行していません</li></ol>
+        </div>
+      </section>
+
+      <section class="panel rom-panel" aria-labelledby="romTitle">
+        <div class="panel-heading">
+          <div><p class="eyebrow">PROGRAM ROM</p><h2 id="romTitle">16バイト ROM</h2></div>
+          <span class="panel-tag">16 × 8-BIT</span>
+        </div>
+        <div class="rom-info">実行中の命令がハイライトされます。<strong>0 / 1</strong> を押すとビットを反転できます。</div>
+        <div class="rom-table-wrap">
+          <table class="rom-table" aria-label="プログラムROM">
+            <thead><tr><th>ADDR <small>BP</small></th><th>DATA <small>D7 → D0</small></th><th>HEX</th><th>ASSEMBLY</th></tr></thead>
+            <tbody id="romRows"></tbody>
+          </table>
+        </div>
+        <div class="rom-footer"><span><i class="legend-marker"></i> PC（次の命令）</span><span><i class="legend-marker breakpoint"></i> ブレークポイント</span><button id="clearBpBtn" type="button" class="text-button">BPを解除</button></div>
+      </section>
+
+      <section class="panel editor-panel" aria-labelledby="editorTitle">
+        <div class="panel-heading">
+          <div><p class="eyebrow">PROGRAM EDITOR</p><h2 id="editorTitle">プログラムを書く</h2></div>
+          <span class="panel-tag">ASSEMBLER</span>
+        </div>
+        <label for="examples" class="field-label">サンプルプログラム</label>
+        <select id="examples" class="wide-select">
+          <option value="led">LED パターン表示</option>
+          <option value="counter">4bit カウンタ</option>
+          <option value="echo">入力スイッチをLEDに反映</option>
+          <option value="carry">キャリーと条件ジャンプ</option>
+        </select>
+        <div class="editor-header"><span>ASM / RAW HEX</span><span id="lineCount">0 / 16 instructions</span></div>
+        <textarea id="source" class="code-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="TD4アセンブリソースコード"></textarea>
+        <div id="editorMessage" class="editor-message" role="status" aria-live="polite">プログラムを編集してROMに書き込めます</div>
+        <div class="editor-actions"><button id="assembleBtn" type="button" class="btn btn-primary btn-wide">ROMに書き込む</button><button id="fromRomBtn" type="button" class="btn btn-ghost">ROM → ソース</button></div>
+        <div class="editor-divider"></div>
+        <div class="file-actions"><button id="exportBtn" type="button" class="btn btn-small">ROM保存 (.bin)</button><button id="importBtn" type="button" class="btn btn-small">ROM読込 (.bin)</button><input type="file" id="importFile" hidden accept=".bin,application/octet-stream"></div>
+        <div class="hint-box"><strong>書き方の例</strong><code>MOV B, 3<br>OUT B<br>ADD B, 1<br>JMP 1</code><p>1行1命令。即値は10進数、<code>0xF</code> 形式の16進数、<code>F</code> 形式の16進1桁に対応。ラベル、<code>DB</code>、<code>ORG</code>、<code>; コメント</code> も使えます。</p></div>
+      </section>
+    </main>
+
+    <details class="reference-card">
+      <summary><span><strong>TD4 命令セット</strong><small>オリジナルの12命令と機械語の対応を確認</small></span><span class="chevron">⌄</span></summary>
+      <div class="reference-content">
+        <table class="isa-table">
+          <thead><tr><th>命令</th><th>オペコード</th><th>処理</th></tr></thead>
+          <tbody>
+            <tr><td>ADD A, Im</td><td>0x0n</td><td>A ← A + Im</td></tr>
+            <tr><td>MOV A, B</td><td>0x10</td><td>A ← B</td></tr>
+            <tr><td>IN A</td><td>0x20</td><td>A ← IN</td></tr>
+            <tr><td>MOV A, Im</td><td>0x3n</td><td>A ← Im</td></tr>
+            <tr><td>MOV B, A</td><td>0x40</td><td>B ← A</td></tr>
+            <tr><td>ADD B, Im</td><td>0x5n</td><td>B ← B + Im</td></tr>
+            <tr><td>IN B</td><td>0x60</td><td>B ← IN</td></tr>
+            <tr><td>MOV B, Im</td><td>0x7n</td><td>B ← Im</td></tr>
+            <tr><td>OUT B</td><td>0x90</td><td>OUT ← B</td></tr>
+            <tr><td>OUT Im</td><td>0xBn</td><td>OUT ← Im</td></tr>
+            <tr><td>JNC Im</td><td>0xEn</td><td>C=0ならPC ← Im</td></tr>
+            <tr><td>JMP Im</td><td>0xFn</td><td>PC ← Im</td></tr>
+          </tbody>
+        </table>
+        <p class="footnote">Imは4bit即値（0〜F）。キャリーは全命令でALUの加算結果から更新されます。<code>*</code>付き表示はオリジナルの12命令に含まれない機械語で、実機のデコード回路に従って動作します。シミュレーションは命令単位であり、74HC素子の伝搬遅延や接点チャタリングは模擬しません。</p>
+      </div>
+    </details>
+    <footer>TD4 4-BIT CPU LAB <span>ローカル実行対応 · バックエンド不要</span></footer>
+  </div>
+</body>
+</html>
