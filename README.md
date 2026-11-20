@@ -6,7 +6,7 @@
 - **GitHub**: https://github.com/naoiw/td4
 - **開発ブランチ**: `develop`
 
-追加のビルドツールや外部ライブラリは不要です。`index.html` をローカルで開いても動作します。GitHub Pagesでは `main` のルートディレクトリから公開します。
+公開済みの `index.html` はバックエンド・外部ライブラリなしで動作します。**開発用ソースはTypeScript**です。公開時はリポジトリ直下のコンパイル済みJavaScriptを読み込むため、GitHub PagesでのNode.jsビルドやActionsは不要です。Pagesの設定は引き続き `main` / `(root)` を使用します。
 
 ## 機能
 
@@ -34,16 +34,34 @@
 
 詳細は [`docs/architecture.md`](docs/architecture.md) にあります。
 
+## 開発方法（TypeScript）
+
+Node.js 22以降とnpmが必要です。ブラウザ表示だけなら依存パッケージのインストールは不要です。
+
+```bash
+npm install
+npm run build      # src/*.ts を型チェックして、直下の *.js を生成
+npm test           # TypeScript型チェック + Node.jsの全テスト
+npm run verify     # ビルド + 型チェック + テスト
+```
+
+`src/` の `.ts` / `.d.ts` を**唯一の編集元**とし、ルートの `app.js`、`td4-core.js`、`signals.js`、`samples.js` は生成物です。生成したJavaScriptもcommitしてください。GitHub Pagesはそれらを直接読み込みます。`index.html`、`style.css`、`LICENSE`は既存の静的ファイルを維持します。
+
+Vite/ReactやGitHub Actionsを追加していないため、以前のPages公開設定を変更する必要はありません。ビルド後も `index.html` を直接開いて動作を確認できます。
+
 ## ファイル構成
 
 | ファイル | 用途 |
 | --- | --- |
 | `index.html` | ボード・プログラム・波形ビュー |
 | `style.css` | PC/スマホの画面レイアウト、ボード描画、信号色 |
-| `app.js` | UI操作、クロック周期、波形・配線の更新 |
-| `td4-core.js` | CPUエミュレーションとアセンブラ |
-| `signals.js` | 現在の信号スナップショット、ALUプレビュー、波形生成 |
-| `samples.js` | 8種類のサンプルプログラム |
+| `src/app.ts` | UI操作、クロック周期、波形・配線の更新（TypeScriptソース） |
+| `src/td4-core.ts` | CPUエミュレーションとアセンブラ（TypeScriptソース） |
+| `src/signals.ts` | 現在の信号スナップショット、ALUプレビュー、波形生成（TypeScriptソース） |
+| `src/samples.ts` | 8種類のサンプルプログラム（TypeScriptソース） |
+| `src/globals.d.ts` | CPU状態・ステップ結果・信号・サンプル・ブラウザAPI型定義 |
+| `*.js` (ルート) | `npm run build` で生成するGitHub Pages向けJavaScript |
+| `tsconfig.json` / `package.json` | TypeScript型チェック・ビルド・テスト設定 |
 | `tests/*.cjs` | CPU、命令デコード、信号処理のNode.jsテスト |
 | `docs/architecture.md` | 内部動作の補足 |
 
@@ -52,7 +70,8 @@
 Node.js 22以降で：
 
 ```bash
-node --test tests/*.cjs
+npm install
+npm test
 ```
 
 新規の信号・サンプルを含む計18件のテストを用意しています。ブラウザ操作はサンプル選択、スイッチ切替、LED表示、波形チャンネル切替、ステップを確認しました。
