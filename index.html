@@ -73,20 +73,20 @@
           <span class="pcb-mount-hole pcb-mount-br" aria-hidden="true"></span>
           <svg class="ic-wire-layer" id="icWireLayer" aria-hidden="true"></svg>
           <section class="ic-zone" aria-label="TD4の個別ロジックIC">
-            <div class="schematic-zone-head"><strong>LOGIC ICs</strong><span>74HC SERIES · 13 PACKAGES</span></div>
             <div class="ic-chip-grid" id="icChipGrid"></div>
           </section>
           <section class="rom-zone" aria-label="DIPスイッチROM">
-            <div class="schematic-zone-head"><strong>ROM · 16 × 8-bit</strong><span>74HC154でアドレスを選択</span></div>
             <div class="rom-dip-grid" id="romDipGrid"></div>
             <div class="schematic-io-strip">
               <div class="schematic-io"><strong>INPUT · 4bit</strong><div id="schematicInput" class="schematic-input-bits"></div></div>
               <div class="schematic-io"><strong>OUTPUT LED · 4bit</strong><div id="schematicOutput" class="schematic-output-leds"></div></div>
             </div>
-            <div class="schematic-explain"><span class="signal-key high"></span> HIGH 1 <span class="signal-key low"></span> LOW 0 <span class="rom-select-lamp is-on"></span> アドレス選択中（/Y=L）</div>
-            <p class="schematic-caution">74HC系列の部品構成と論理接続を示しています。各ICは機能信号単位で表示しており、パッケージの実ピン番号や基板配線の完全再現ではありません。配線は選択信号のみを描画します。</p>
           </section>
         </div>
+      </div>
+      <div class="board-notes" aria-label="信号表示の凡例と注意事項">
+        <div class="schematic-explain"><span class="signal-key high"></span> HIGH 1 <span class="signal-key low"></span> LOW 0 <span class="rom-select-lamp is-on"></span> アドレス選択中（/Y=L）</div>
+        <p class="schematic-caution">74HC系列の部品構成と論理接続を示しています。各ICは機能信号単位で表示しており、パッケージの実ピン番号や基板配線の完全再現ではありません。配線は選択信号のみを描画します。</p>
       </div>
       <section id="icDetailPanel" class="ic-detail-panel" data-chip="" aria-label="IC入出力の詳細" hidden></section>
       <details class="overview-collapse"><summary>従来のCPU機能ブロック図を表示</summary>

@@ -684,3 +684,98 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
   border-radius:2px
 }
 .rom-slot-bits{margin-top:6px;letter-spacing:.3px}
+
+/* PCB placement: three logic blocks on the left, and exactly two
+   vertically oriented DIP packages in the narrow FETCH/ROM middle column.
+   ROM remains a 4x4 array on the right. */
+.schematic-board{
+  width:1135px;
+  min-height:0;
+  grid-template-columns:490px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+  background-color:#166342;
+  border:6px solid #0d4b32;
+  padding:28px 24px 30px;
+}
+.schematic-zone-head{display:none}
+.ic-chip-grid{
+  display:grid;
+  grid-template-columns:minmax(0,332px) 126px;
+  grid-template-rows:auto auto auto;
+  column-gap:10px;
+  row-gap:9px;
+  align-items:start;
+}
+.ic-role-alu{grid-column:1;grid-row:1}
+.ic-role-registers{grid-column:1;grid-row:2}
+.ic-role-control{grid-column:1;grid-row:3}
+.ic-role-fetch{
+  grid-column:2;
+  grid-row:1 / span 3;
+  align-self:stretch;
+}
+.ic-role-fetch .ic-role-head{margin-bottom:10px}
+.ic-role-fetch .ic-role-head strong{font-size:10px}
+.ic-role-fetch .ic-role-head span{font-size:8px}
+.ic-role-fetch .ic-role-rack{
+  display:flex;
+  flex-direction:column;
+  flex-wrap:nowrap;
+  align-items:center;
+  justify-content:flex-start;
+  gap:12px;
+}
+.ic-role-rack>.ic-chip{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.ic-role-rack>.ic-chip:before,
+.ic-role-rack>.ic-chip:after{display:none}
+.ic-role-rack .ic-dip .ic-footprint{
+  width:var(--dip-span);
+  margin:1px auto 0;
+}
+/* Explicitly keep DIP (two long pin banks, not four-sided QFP). */
+.ic-footprint .ic-leg-left{left:-4px;right:auto}
+.ic-footprint .ic-leg-right{right:-4px;left:auto}
+.ic-footprint .ic-leg-bank{flex-direction:column}
+/* Switch bank is a row-major 4x4 grid, each 8-bit DIP is horizontal. */
+.rom-dip-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:repeat(4,max-content);
+  grid-auto-flow:row;
+  gap:8px;
+}
+.rom-dip-switches{display:flex;flex-direction:row}
+.rom-dip{flex-direction:column}
+.schematic-io-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pcb-mount-hole{width:22px;height:22px;border-radius:50%}
+.pcb-mount-tl{top:6px;left:6px}
+.pcb-mount-tr{top:6px;right:6px}
+.pcb-mount-bl{bottom:6px;left:6px}
+.pcb-mount-br{bottom:6px;right:6px}
+/* Explanatory material belongs below the PCB, never inside its ROM zone. */
+.board-notes{
+  max-width:1135px;
+  margin:12px auto 0;
+  padding:0 8px 12px;
+  color:#355849;
+}
+.board-notes .schematic-explain{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:0;
+  color:#315844;
+}
+.board-notes .schematic-caution{
+  margin:8px 0 0;
+  color:#526f61;
+  font:500 11px/1.6 sans-serif;
+}
+@media(max-width:650px){.schematic-board{width:1135px}}
