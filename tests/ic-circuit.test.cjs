@@ -100,3 +100,39 @@ test('DIP pin counts and functional signal orientation', () => {
   assert.deepEqual(adder.sections[0].right.flat().map(x=>x.name),['SUM0','SUM1','SUM2','SUM3','COUT']);
   assert.deepEqual(adder.sections[0].left.flat().map(x=>x.name),['A0','B0','A1','B1','A2','B2','A3','B3','CIN']);
 });
+
+
+test('physical pinouts have correct leg counts and all simulated nets resolve', () => {
+  const {physicalPins,layout}=require('../assets/js/core/ic-circuit.js');
+  const cpu=new CPU();
+  for(const chip of chips) {
+    const pins=physicalPins(chip);
+    assert.equal(pins.length,layout(chip).packagePins,chip.id);
+    assert.deepEqual(pins.map(p=>p.number),Array.from({length:pins.length},(_,i)=>i+1));
+    for(const pin of pins) if(pin.net) assert.ok([0,1].includes(levels(cpu,false)[pin.net]),chip.id+' pin '+pin.number+': '+pin.net);
+    assert.equal(pins.at(-1).net,'VCC');
+    assert.equal(pins[pins.length/2-1].net,'GND');
+  }
+});
+
+test('physical pins of decoder, ROM buffer, MUX and adder match their DIP pinouts', () => {
+  const {physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const byId=Object.fromEntries(chips.map(c=>[c.id,c]));
+  const dec=physicalPins(byId.U13);
+  assert.equal(dec[0].net,'ROM_SEL_0');
+  assert.equal(dec[12].net,'ROM_SEL_11');
+  assert.equal(dec[16].net,'ROM_SEL_15');
+  assert.equal(dec[22].net,'PC0');
+  const buf=physicalPins(byId.U12);
+  assert.equal(buf[1].net,'ROM_RAW0');assert.equal(buf[8].net,'ROM_RAW7');
+  assert.equal(buf[17].net,'D0');assert.equal(buf[10].net,'D7');
+  for(const [id,lbit,hbit] of [['U7',0,1],['U8',2,3]]) {
+    const mux=physicalPins(byId[id]);
+    assert.equal(mux[1].net,'SEL_B');
+    assert.equal(mux[13].net,'SEL_A');
+    assert.equal(mux[6].net,'MUX'+lbit);
+    assert.equal(mux[8].net,'MUX'+hbit);
+  }
+  const add=physicalPins(byId.U9);
+  assert.equal(add[8].net,'COUT');assert.equal(add[3].net,'ALU0');
+});
