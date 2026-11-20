@@ -115,3 +115,5 @@ ICカードは4列表示とし、物理パッケージは**2.54mmを18px**に換
 `src/ui/board.ts` はDIP脚・機能別エリア・ROM 4×4スイッチ・Input/Outputの**DOM生成とH/L・SVG配線の更新**を担当します。`src/ui/app.ts` はCPU状態・ROM編集・実行制御・IC詳細を管理します。イベントは `BoardViewOptions` のコールバックを通してアプリ側で処理します。公開JSの読み込み順は `ic-circuit.js` → `board.js` → `app.js` です。
 
 基板表示モジュールの `render({cpu, circuit, clockHigh, selectedNet})` はIC脚・ROMスイッチ・入出力LED・選択信号ラベルを同期し、`drawWires()` は選択ネットのSVG配線を描画します。CPU状態の読み取りは行いますが、CPU命令実行やROM書換えは行いません。
+
+基板CSSの整理では、同一セレクタ／同一条件で**後続の宣言に完全に上書きされる宣言**だけを削除しています。適用される最終プロパティと値が一致することを機械的に照合し、カスケード順・DIP寸法・ROMの4×4配置・配線色は変更していません。
