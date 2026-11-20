@@ -37,7 +37,8 @@ test('DIP drawing uses fixed 2.54mm lead pitch and proportional package lengths'
   const body = rule('ic-footprint-body');
   assert.match(body, /width:\s*var\(--dip-body-width\)/);
   for (const [pins, height] of [[14,126],[16,144],[20,180],[24,216]]) {
-    assert.match(css, new RegExp('\\\\.ic-dip\\\\[data-package-pins="' + pins + '"\\\\]\\\\s*\\\\{[^}]*--dip-height:' + height + 'px'));
+    const compactCss = css.replace(/\s+/g, '');
+    assert.ok(compactCss.includes('.ic-dip[data-package-pins="' + pins + '"]{--dip-height:' + height + 'px'), 'DIP-' + pins + ' footprint height');
   }
   assert.match(css, /--dip-pitch:\s*18px/);
   assert.match(css, /--dip-span:\s*54px/);
