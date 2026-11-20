@@ -240,14 +240,7 @@
       pinList.className = 'ic-functional-layout';
       pinList.id = 'ic-details-' + chip.id;
       pinList.hidden = true;
-      chipToggle.addEventListener('click', () => {
-        const expanded = pinList.hidden;
-        pinList.hidden = !expanded;
-        card.classList.toggle('is-expanded', expanded);
-        chipToggle.setAttribute('aria-expanded', String(expanded));
-        chipToggle.setAttribute('aria-label', chip.id + ' ' + chip.type + ' の入出力詳細を' + (expanded ? '閉じる' : '表示'));
-        drawSelectedWires();
-      });
+      chipToggle.addEventListener('click', () => toggleIcDetails(chip.id));
       const createProbe=(pin,compact)=>{
         const button=document.createElement('button');
         button.type='button';
@@ -366,7 +359,7 @@
             }
             const footer = document.createElement('div');
             footer.className = 'rom-slot-bits';
-            footer.textContent = 'D7 · · · · · · · D0';
+            footer.textContent = 'D7 ↓ D0';
             cell.append(head, bits, footer);
             grid.append(cell);
         }
@@ -401,6 +394,52 @@
         window.addEventListener('resize', drawSelectedWires);
         setSelectedNet('CLK');
     }
+
+  /** Full-width, below-board detail panel. Existing signal probes are preserved. */
+  function toggleIcDetails(chipId) {
+    const host = $('icDetailPanel');
+    const previous = host.dataset.chip || '';
+    if (previous) {
+      const oldCard = document.querySelector('.ic-chip[data-chip="' + previous + '"]');
+      const oldPins = document.getElementById('ic-details-' + previous);
+      if (oldCard && oldPins) {
+        oldPins.hidden = true;
+        oldCard.append(oldPins);
+        oldCard.classList.remove('is-expanded');
+        oldCard.querySelector('.ic-open-details')?.setAttribute('aria-expanded', 'false');
+      }
+    }
+    host.replaceChildren();
+    const next = previous === chipId ? '' : chipId;
+    host.dataset.chip = next;
+    host.hidden = !next;
+    if (!next) { updateCircuitBoard(); return; }
+    const card = document.querySelector('.ic-chip[data-chip="' + next + '"]');
+    const pins = document.getElementById('ic-details-' + next);
+    const chip = circuit.chips.find(item => item.id === next);
+    if (!card || !pins || !chip) return;
+    const head = document.createElement('div');
+    head.className = 'ic-detail-panel-head';
+    const heading = document.createElement('div');
+    const title = document.createElement('h3');
+    title.textContent = chip.id + ' · ' + chip.type;
+    const description = document.createElement('p');
+    description.textContent = chip.description + ' · DIP-' + circuit.layout(chip).packagePins;
+    heading.append(title, description);
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'btn btn-small ic-detail-close';
+    close.textContent = '閉じる ×';
+    close.addEventListener('click', () => toggleIcDetails(next));
+    head.append(heading, close);
+    pins.hidden = false;
+    card.classList.add('is-expanded');
+    card.querySelector('.ic-open-details')?.setAttribute('aria-expanded', 'true');
+    host.append(head, pins);
+    updateCircuitBoard();
+    host.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }
+
     function setSelectedNet(net) {
         selectedNet = net;
         updateCircuitBoard();
@@ -411,7 +450,7 @@
         if (!board)
             return;
         const values = circuit.levels(cpu, clockHigh);
-        for (const element of board.querySelectorAll('.ic-probe')) {
+        for (const element of document.querySelectorAll('.ic-probe')) {
             const net = element.dataset.net || '';
             const level = values[net];
             element.classList.toggle('is-high', level === 1);
@@ -467,7 +506,7 @@
         const level = values[selectedNet];
         $('selectedNetLevel').textContent = level ? 'H' : 'L';
         $('selectedNetLevel').className = level ? 'hi' : 'lo';
-        for (const el of board.querySelectorAll('[data-net]')) {
+        for (const el of document.querySelectorAll('[data-net]')) {
             el.classList.toggle('net-selected', !!el.dataset.net && el.dataset.net === selectedNet);
         }
         // ROM switch connections change with PC. Re-draw only when required.

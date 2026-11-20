@@ -62,7 +62,7 @@
         <span class="panel-tag">4-BIT / 16 BYTE ROM</span>
       </div>
       <div class="ic-toolbar">
-        <div><strong>実ICロジック・ROM基板</strong><span>機能ごとの区画にICを集約しました。ICを押すとH/L詳細を開きます。脚はH=緑 / L=灰色</span></div>
+        <div><strong>実ICロジック・ROM基板</strong><span>ICを押すと基板の下に大きな詳細が開きます。脚はH=緑 / L=灰色</span></div>
         <div class="ic-probe-control"><span>追跡中</span><code id="selectedNetName">CLK</code><b id="selectedNetLevel">L</b><button type="button" id="resetNetBtn" class="btn btn-small">CLKに戻す</button></div>
       </div>
       <div class="schematic-scroll" tabindex="0" aria-label="IC単位の論理回路と16個のROM DIPスイッチ">
@@ -84,6 +84,7 @@
           </section>
         </div>
       </div>
+      <section id="icDetailPanel" class="ic-detail-panel" data-chip="" aria-label="IC入出力の詳細" hidden></section>
       <details class="overview-collapse"><summary>従来のCPU機能ブロック図を表示</summary>
       <div class="pcb-scroll" tabindex="0" aria-label="TD4ボード。幅が狭い画面では横スクロールできます">
         <div class="pcb-board" id="pcbBoard">
