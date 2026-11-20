@@ -31,7 +31,7 @@ test('runtime JS stays in assets and loads in dependency order', () => {
 
 test('CSS imports resolve in the intended cascade order', () => {
   const entry = fs.readFileSync(path.join(root, 'assets/css/style.css'), 'utf8');
-  const imports = [...entry.matchAll(/@import\\s+url\\(["']?\\.\\/([^"')]+)["']?\\)/g)].map(match => match[1]);
+  const imports = [...entry.matchAll(/@import\s+url\(["']?\.\/([^"')]+)["']?\)/g)].map(match => match[1]);
   assert.deepEqual(imports, ['foundation.css', 'workbench.css', 'circuit-board.css']);
   for (const file of imports) {
     const css = fs.readFileSync(path.join(root, 'assets/css', file), 'utf8');
