@@ -43,7 +43,7 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 ## ファイル依存
 
-読み込み順は`assets/js/core/td4-core.js` → `assets/js/data/samples.js` → `assets/js/core/signals.js` → `assets/js/ui/app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
+読み込み順は`assets/js/core/td4-core.js` → `assets/js/data/samples.js` → `assets/js/core/signals.js` → `assets/js/core/ic-circuit.js` → `assets/js/ui/board.js` → `assets/js/ui/app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
 
 ## TypeScript移行・GitHub Pagesデプロイ
 
@@ -109,3 +109,7 @@ ICカードは4列表示とし、物理パッケージは**2.54mmを18px**に換
 ## スタイルシートの責務
 
 `assets/css/style.css` は `foundation.css` → `workbench.css` → `circuit-board.css` を順番に `@import` するだけの入口です。共通デザイン／画面・エディタ／IC基板・DIP・ROM配置を別ファイルで管理します。**CSSのカスケード順序は従来の単一ファイルと同一**であり、レイアウトや色の変更を目的とした分割ではありません。基板関連CSSの追加・変更は `circuit-board.css` にまとめてください。
+
+## 基板DOMの分離
+
+`src/ui/board.ts` はDIP脚・機能別エリア・ROM 4×4スイッチ・Input/Outputの**DOM生成のみ**を担当します。`src/ui/app.ts` はCPU状態・ROM編集・実行制御・H/L反映・IC詳細を管理します。イベントは `BoardViewOptions` のコールバックを通してアプリ側で処理します。公開JSの読み込み順は `ic-circuit.js` → `board.js` → `app.js` です。

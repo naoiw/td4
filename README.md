@@ -71,11 +71,11 @@ Vite/Reactは導入していません。公開は `.github/workflows/deploy-page
 │   └── js/                 # tscで生成、編集禁止・Git管理対象
 │       ├── core/           # td4-core.js, signals.js, ic-circuit.js
 │       ├── data/           # samples.js
-│       └── ui/             # app.js
+│       └── ui/             # board.js (基板DOM), app.js (アプリ制御)
 ├── src/                    # TypeScriptの編集対象
 │   ├── core/               # CPU、アセンブラ、信号モデル、IC回路モデル
 │   ├── data/               # サンプルプログラム
-│   ├── ui/                 # DOM・SVG画面制御
+│   ├── ui/                 # board.ts: DOM生成、app.ts: CPU状態・波形
 │   └── types/              # グローバル型定義
 ├── tests/                  # Node.jsのテスト
 ├── docs/                   # 設計資料
