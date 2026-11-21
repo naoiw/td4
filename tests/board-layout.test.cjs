@@ -528,7 +528,7 @@ test('oscilloscope sampling is fast enough for 10Hz while CPU clock remains 2Hz 
 
 
 test('PCB functional-area silk contains only English headings and no Japanese descriptions',()=>{
-  const expected=['ROM / FETCH','MUX / ALU','REGISTER','CLOCK / CONTROL'];
+  const expected=['ROM / FETCH','MUX / ALU','REGISTERS','CLOCK / CONTROL'];
   for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
     const begin=source.indexOf('const roleAreas = [');
     const end=source.indexOf('];',begin);
