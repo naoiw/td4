@@ -1,7 +1,7 @@
 /* Interactive TD4 front end. Requires td4-core.js in the same directory. */
 (function () {
   'use strict';
-  const {CPU, assemble, HEX, BINARY, disassemble, isStandard, romToSource} = window.TD4;
+  const {CPU, assemble, HEX, disassemble, isStandard, romToSource} = window.TD4;
   function $<T extends HTMLElement = HTMLElement>(id: string): T {
     const element = document.getElementById(id);
     if (!element) throw new Error(`Required UI element not found: ${id}`);
@@ -9,7 +9,7 @@
   }
   const SAMPLES = window.TD4Samples;
   const SAMPLE_PROGRAMS: Record<string, string> = Object.fromEntries(SAMPLES.map(sample => [sample.id, sample.source]));
-  const {GROUPS, preview, snapshot, appendSample, waveformPath} = window.TD4Signals;
+  const {GROUPS, snapshot, appendSample, waveformPath} = window.TD4Signals;
   const circuit = window.TD4Circuit;
   const cpu = new CPU();
   let selectedNet = 'CLK';
@@ -22,65 +22,6 @@
   const waveSamples: SignalLevels[] = [];
   const MAX_WAVE_SAMPLES = 80;
   let lastWaveDrawAt = 0;
-
-  function renderBits(value: number, container: HTMLElement): void {
-    container.innerHTML = '';
-    for (let bit = 3; bit >= 0; bit--) {
-      const node = document.createElement('span');
-      const active = !!(value & (1 << bit));
-      node.className = 'reg-bit' + (active ? ' on' : '');
-      node.title = `bit ${bit}: ${Number(active)}`;
-      container.append(node);
-    }
-  }
-
-  function renderRegister(name: string, value: number): void {
-    $(name + '-value').textContent = HEX(value);
-    if (name !== 'c') renderBits(value, $(name + '-bits'));
-  }
-
-  function renderOutputs(): void {
-    $('outputLeds').replaceChildren();
-    for (let bit = 3; bit >= 0; bit--) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'led-unit';
-      const bulb = document.createElement('div');
-      bulb.className = 'led' + (cpu.out & (1 << bit) ? ' on' : '');
-      bulb.setAttribute('aria-label', `出力LED ${bit}: ${cpu.out >> bit & 1 ? 'ON' : 'OFF'}`);
-      wrapper.append(bulb, document.createTextNode('LED' + bit));
-      $('outputLeds').append(wrapper);
-    }
-    $('out-value').textContent = HEX(cpu.out);
-    $('out-decimal').textContent = 'DEC ' + cpu.out;
-  }
-
-  function renderSwitches(): void {
-    $('inputSwitches').replaceChildren();
-    for (let bit = 3; bit >= 0; bit--) {
-      const unit = document.createElement('div');
-      unit.className = 'switch-unit';
-      const label = document.createElement('span');
-      label.textContent = 'SW' + bit;
-      const button = document.createElement('button');
-      const on = !!(cpu.input & (1 << bit));
-      button.className = 'toggle-switch';
-      button.type = 'button';
-      button.textContent = on ? 'ON' : 'OFF';
-      button.setAttribute('aria-label', `入力スイッチ ${bit}`);
-      button.setAttribute('aria-pressed', String(on));
-      button.title = `SW${bit} : ${on ? 1 : 0}（クリックで反転）`;
-      button.addEventListener('click', () => {
-        cpu.setInput(cpu.input ^ (1 << bit));
-        renderSwitches();
-        renderCPU(); recordSignals();
-        showMessage(`入力ポート = 0x${HEX(cpu.input)} (${BINARY(cpu.input,4)})`);
-      });
-      const index = document.createElement('small');
-      index.textContent = 'BIT ' + bit;
-      unit.append(label, button, index);
-      $('inputSwitches').append(unit);
-    }
-  }
 
   function buildRomRows(): void {
     const tbody = $<HTMLTableSectionElement>('romRows');
@@ -152,22 +93,7 @@
   }
 
   function renderCPU(): void {
-    renderRegister('a', cpu.a);
-    renderRegister('b', cpu.b);
-    renderRegister('pc', cpu.pc);
-    $('c-value').textContent = String(cpu.carry);
-    $('carryLamp').classList.toggle('on', !!cpu.carry);
-    $('carryText').textContent = cpu.carry ? 'CARRY = 1' : 'NO CARRY';
-    renderOutputs();
     $('cycles').textContent = String(cpu.cycles).padStart(6, '0');
-    const instruction = cpu.rom[cpu.pc];
-    $('fetchAsm').textContent = disassemble(instruction);
-    $('fetchHex').textContent = instruction.toString(16).toUpperCase().padStart(2, '0');
-    $('fetchDetail').textContent = `PC = ${HEX(cpu.pc)} · 次に実行する命令`;
-    $('fetchState').textContent = intervalId ? 'RUN' : 'NEXT';
-    const alu = preview(cpu);
-    $('aluValue').textContent = HEX(alu.result);
-    $('aluEquation').textContent = `${HEX(alu.source)} + ${HEX(alu.imm)} = ${HEX(alu.result)}${alu.carry ? ' (C=1)' : ''}`;
     renderROM();
     updateCircuitBoard();
   }
@@ -189,7 +115,7 @@
       },
       onInputBitToggle(bit) {
         cpu.setInput(cpu.input ^ (1 << bit));
-        renderSwitches(); renderCPU(); recordSignals();
+        renderCPU(); recordSignals();
       }
     });
     $('resetNetBtn').addEventListener('click', () => setSelectedNet('CLK'));
@@ -293,18 +219,6 @@
     }
   }
 
-  function renderWireLevels(levels: SignalLevels): void {
-    for (const wire of document.querySelectorAll<SVGElement>('[data-wire]')) {
-      const high = levels[wire.dataset.wire ?? ''] === 1;
-      wire.classList.toggle('wire-high', high);
-      wire.classList.toggle('wire-low', !high);
-    }
-    $('clockLamp').classList.toggle('on', !!levels.CLK);
-    $('clockLevel').textContent = levels.CLK ? 'H' : 'L';
-    $('clockStateLabel').textContent = levels.CLK ? 'HIGH' : 'LOW';
-    updateCircuitBoard();
-  }
-
   function renderWaveforms(levels: SignalLevels): void {
     const area = $('scopeView');
     area.replaceChildren();
@@ -343,7 +257,7 @@
   function recordSignals(): void {
     const levels = snapshot(cpu, clockHigh);
     appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
-    renderWireLevels(levels);
+    updateCircuitBoard();
     renderLiveSignals(levels);
     const now = performance.now();
     if (intervalId === null || now - lastWaveDrawAt > 35) {
@@ -411,7 +325,6 @@
     $<HTMLButtonElement>('stepBtn').disabled = false;
     $('runStatus').classList.remove('running');
     $('runStatus').lastChild!.textContent = '停止中';
-    $('fetchState').textContent = 'NEXT';
     renderWaveforms(snapshot(cpu, clockHigh));
     if (reason) showMessage(reason);
   }
@@ -452,7 +365,6 @@
     $<HTMLButtonElement>('stepBtn').disabled = true;
     $('runStatus').classList.add('running');
     $('runStatus').lastChild!.textContent = '実行中';
-    $('fetchState').textContent = 'RUN';
     const halfPeriod = 500 / Number($<HTMLSelectElement>('speed').value);
     intervalId = setInterval(() => {
       if (clockHigh) { setClockLow(); return; }
@@ -589,7 +501,6 @@
   buildRomRows();
   buildSamples();
   buildCircuitBoard();
-  renderSwitches();
   connectActions();
   switchExample('led');
   window.addEventListener('pagehide', () => stop());

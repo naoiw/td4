@@ -25,8 +25,6 @@
         </div>
       </div>
       <div class="header-right">
-        <span class="spec-badge">8-BIT INSTRUCTION</span>
-        <span class="spec-badge">16-BYTE ROM</span>
         <span class="connection" id="runStatus"><span class="status-dot"></span>停止中</span>
       </div>
     </header>
@@ -90,47 +88,6 @@
         <p class="schematic-caution">74HC系列の部品構成と論理接続を示しています。各ICは機能信号単位で表示しており、パッケージの実ピン番号や基板配線の完全再現ではありません。配線は選択信号のみを描画します。</p>
       </div>
       <section id="icDetailPanel" class="ic-detail-panel" data-chip="" aria-label="IC入出力の詳細" hidden></section>
-      <details class="overview-collapse"><summary>従来のCPU機能ブロック図を表示</summary>
-      <div class="pcb-scroll" tabindex="0" aria-label="TD4ボード。幅が狭い画面では横スクロールできます">
-        <div class="pcb-board" id="pcbBoard">
-          <span class="pcb-model">TD4 / LOGIC BOARD <span>REV. 01</span></span>
-          <span class="pcb-print pcb-print-bottom">4-BIT CPU • INSTRUCTION-LEVEL SIMULATION</span>
-          <svg class="pcb-traces" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
-            <path data-wire="PC0" d="M248 161 H322" />
-            <path data-wire="D0" d="M493 239 V270 H573 V291" />
-            <path data-wire="IN0" d="M270 422 H516 V359 H533" />
-            <path data-wire="A0" d="M481 352 H515 V325 H534" />
-            <path data-wire="B0" d="M484 473 H520 V386 H536" />
-            <path data-wire="OUT0" d="M730 338 H750 V412 H760" />
-            <path data-wire="OUT0" d="M861 362 V246" />
-            <path data-wire="C" d="M632 451 V426 H663 V391" />
-            <path data-wire="CLK" d="M273 549 H295 V284 H128 V252" />
-            <path data-wire="CLK" d="M295 549 V521 H514 V482" />
-          </svg>
-          <div class="board-component component-pc" id="reg-pc">
-            <div class="chip-kicker">PROGRAM COUNTER</div><div class="chip-value-row"><strong>PC</strong><b id="pc-value">0</b></div>
-            <div class="bit-lamps" id="pc-bits"></div><span class="chip-note">NEXT ADDRESS / 4 BIT</span>
-          </div>
-          <div class="board-component component-rom">
-            <div class="chip-kicker">FETCH / ROM</div><div class="fetch-header"><span>16 × 8-BIT</span><span class="fetch-tag" id="fetchState">NEXT</span></div>
-            <div class="fetch-main"><strong id="fetchAsm">OUT 3</strong><span id="fetchHex">B3</span></div>
-            <p class="chip-note" id="fetchDetail">PC = 0 · 次に実行する命令</p>
-          </div>
-          <div class="board-component component-output">
-            <div class="chip-kicker">OUTPUT PORT</div><div class="output-number"><span>4-BIT LED</span><strong id="out-value">0</strong><span id="out-decimal">DEC 0</span></div>
-            <div class="led-bank" id="outputLeds"></div><div class="chip-note">OUTPUT LATCH / LED3 → LED0</div>
-          </div>
-          <div class="board-component component-reg-a" id="reg-a"><div class="chip-kicker">REGISTER A</div><div class="chip-value-row"><strong>REG A</strong><b id="a-value">0</b></div><div class="bit-lamps" id="a-bits"></div></div>
-          <div class="board-component component-alu"><div class="chip-kicker">4-BIT ADDER</div><div class="chip-value-row"><strong>ALU</strong><b id="aluValue">0</b></div><p class="alu-equation" id="aluEquation">0 + 0 = 0</p><div class="chip-note">現在の命令の組み合わせ出力</div></div>
-          <div class="board-component component-reg-b" id="reg-b"><div class="chip-kicker">REGISTER B</div><div class="chip-value-row"><strong>REG B</strong><b id="b-value">0</b></div><div class="bit-lamps" id="b-bits"></div></div>
-          <div class="board-component component-switches"><div class="chip-kicker">INPUT PORT</div><div class="switch-bank" id="inputSwitches"></div><p class="chip-note">ON = H / OFF = L</p></div>
-          <div class="board-component component-out-latch"><div class="chip-kicker">OUTPUT LATCH</div><p class="latch-title">OUT</p><p class="chip-note">クロックの立ち上がりで更新</p></div>
-          <div class="board-component component-clock"><div class="chip-kicker">CLOCK OSCILLATOR</div><div class="clock-state"><span class="clock-lamp" id="clockLamp"></span><strong id="clockLevel">L</strong><small id="clockStateLabel">LOW</small></div><span class="chip-note">命令実行は L → H で発生</span></div>
-          <div class="board-component component-carry" id="reg-c"><div class="chip-kicker">CARRY FLAG</div><div class="clock-state"><span class="carry-lamp" id="carryLamp"></span><strong id="c-value">0</strong><small id="carryText">NO CARRY</small></div></div>
-        </div>
-      </div>
-      </details>
-      <div class="board-bottom"><p><span class="signal-key high"></span> H / 1 <span class="signal-key low"></span> L / 0 <span class="signal-key led-key"></span> LED点灯</p><p>信号線は選択した<strong>1bit</strong>の論理値を表します。IC配置・配線は理解しやすくした概念図です。</p></div>
       <div class="live-signals" id="liveSignals" aria-label="現在の主要信号レベル"></div>
     </section>
 
@@ -211,7 +168,6 @@
         <p class="footnote">Imは4bit即値（0〜F）。キャリーは全命令でALUの加算結果から更新されます。<code>*</code>付き表示はオリジナルの12命令に含まれない機械語で、実機のデコード回路に従って動作します。シミュレーションは命令単位であり、74HC素子の伝搬遅延や接点チャタリングは模擬しません。</p>
       </div>
     </details>
-    <footer>TD4 4-BIT CPU LAB <span>ローカル実行対応 · バックエンド不要</span></footer>
   </div>
 </body>
 </html>

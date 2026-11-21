@@ -17,41 +17,6 @@
 .sample-card strong{font-size:11px}.sample-card small{font-size:9px;color:#7a8998;margin-top:4px}
 .board-panel{padding:18px 20px 15px}
 .board-heading{margin-bottom:14px}.board-subtitle{margin:5px 0 0;color:#7d8b9b;font-size:11px}
-.pcb-scroll{overflow-x:auto;border-radius:14px;background:#0a2425;padding:4px;scrollbar-color:#638b86 #1b3638}
-.pcb-board{position:relative;width:100%;min-width:990px;max-width:1350px;aspect-ratio:1000/620;margin:auto;overflow:hidden;border:7px solid #163f3b;border-radius:11px;isolation:isolate;background-color:#12322f;background-image:radial-gradient(circle at 40% 45%,#1d50453e 0 4px,transparent 6px),repeating-linear-gradient(90deg,transparent 0 37px,#a4d0b20c 38px 39px),repeating-linear-gradient(0deg,transparent 0 37px,#a4d0b20c 38px 39px);box-shadow:inset 0 0 0 2px #497d6d,inset 0 0 50px #051a1c9c}
-.pcb-board:before,.pcb-board:after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle,#101c20 0 28%,#b1b9a3 33% 45%,#394e48 48% 100%);z-index:3}
-.pcb-board:before{left:14px;top:14px}.pcb-board:after{right:14px;bottom:14px}
-.pcb-model,.pcb-print{position:absolute;z-index:3;pointer-events:none;color:#c2d7a2;font:800 11px ui-monospace,monospace;letter-spacing:2px;opacity:.79}
-.pcb-model{left:4.5%;top:4%}.pcb-model span{font-size:9px;margin-left:7px;opacity:.55}
-.pcb-print-bottom{bottom:2.6%;right:4%;font-size:9px;letter-spacing:1.5px;color:#83a69a}
-.pcb-traces{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
-.pcb-traces path{fill:none;stroke:#436359;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;opacity:.9;transition:stroke .1s,filter .1s}
-.pcb-traces path.wire-high{stroke:#83efaa;filter:drop-shadow(0 0 6px #9cffb872)}
-.pcb-traces path.wire-low{stroke:#3d6864}
-.board-component{position:absolute;z-index:2;overflow:hidden;padding:12px 13px;border:1px solid #607e7c;border-radius:9px;background:linear-gradient(150deg,#23363d,#192730);box-shadow:0 6px 13px #06131580,inset 0 1px 0 #56717065;color:#edf5ed}
-.board-component:before,.board-component:after{content:"";position:absolute;top:8px;bottom:8px;width:4px;background:repeating-linear-gradient(to bottom,#718a88 0 6px,transparent 6px 13px);opacity:.62}
-.board-component:before{left:1px}.board-component:after{right:1px}
-.chip-kicker{font:800 10px ui-monospace,Consolas,monospace;letter-spacing:1.2px;color:#a1c7bd;margin-bottom:12px}
-.chip-value-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.chip-value-row strong{font:850 14px ui-monospace,monospace;color:#d2e5dc}.chip-value-row b{font:850 29px ui-monospace,monospace;color:#c3f8a2;line-height:1}
-.chip-note{display:block;margin:10px 0 0;font:650 9px/1.5 ui-monospace,monospace;color:#94b4ad;letter-spacing:.2px}
-.board-component .bit-lamps{margin-top:14px;gap:11px}.board-component .bit-lamps .reg-bit{width:12px;height:12px;border-radius:3px}
-.component-pc{left:4.5%;top:16%;width:20%;height:22%}.component-rom{left:32.4%;top:12%;width:34%;height:27%}.component-output{left:73%;top:11%;width:24%;height:30%}
-.component-reg-a{left:30%;top:44%;width:18%;height:17%}.component-alu{left:53%;top:46%;width:20%;height:20%}.component-reg-b{left:30%;top:69%;width:18%;height:17%}
-.component-switches{left:4%;top:57%;width:23%;height:19%}.component-out-latch{left:75%;top:58%;width:20%;height:15%}.component-clock{left:5%;top:80%;width:22%;height:16%}.component-carry{left:53%;top:73%;width:20%;height:17%}
-.component-rom .fetch-header{color:#9cbbbc;font-size:10px}.component-rom .fetch-tag{color:#bbf5cc;background:#375148}.component-rom .fetch-main{margin-top:15px}.component-rom .fetch-main strong{color:#d2f1d4;font-size:20px}.component-rom .fetch-main span{color:#b3f7bd;background:#314b49}
-.component-rom .chip-note{margin-top:11px}
-.component-output .output-number{flex-direction:row;align-items:baseline;justify-content:space-between;text-align:left;margin:-2px 0 16px}
-.component-output .output-number strong{font-size:30px;color:#ffb969}.component-output .output-number span{font-size:10px}
-.component-output .led-bank{gap:clamp(8px,1.4vw,22px);justify-content:center;margin:8px 0}.component-output .led{width:32px;height:32px;border-radius:50%;margin:0 auto 7px}.component-output .led-unit{font-size:10px}
-.component-switches .switch-bank{gap:7px;margin-top:8px}.component-switches .switch-unit{font-size:10px}.component-switches .toggle-switch{width:41px;height:41px}.component-switches .chip-note{margin-top:6px}
-.component-alu .alu-equation{color:#a2f2dc;font:750 15px ui-monospace,monospace;margin:9px 0 0;white-space:nowrap}
-.component-out-latch .latch-title{font:850 23px ui-monospace,monospace;letter-spacing:1px;margin:4px 0}
-.clock-state{display:flex;align-items:center;gap:10px}.clock-state strong{font:900 27px ui-monospace,monospace;color:#a2eab6}.clock-state small{font:750 11px ui-monospace,monospace;color:#9fb9b4}
-.clock-lamp{display:inline-block;height:17px;width:17px;border-radius:50%;background:#2e4b4b;box-shadow:inset 0 0 0 2px #64837c}
-.clock-lamp.on{background:#87f3bb;box-shadow:0 0 13px #9cfbbc9c,inset 0 0 0 2px #c5ffe2}
-.component-carry .carry-lamp{width:17px;height:17px}.component-carry .carry-lamp.on{background:#ffad65;box-shadow:0 0 13px #ffc983ae}
-.board-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:12px 3px;color:#748595;font-size:10px}
-.board-bottom p{margin:0}.board-bottom p:first-child{display:flex;align-items:center;gap:6px}
 .signal-key{display:inline-block;width:20px;height:4px;border-radius:4px}.signal-key.high{background:#83efaa}.signal-key.low{background:#3d6864}.signal-key.led-key{background:#ffac54;margin-left:10px}
 .live-signals{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 .signal-pill{padding:6px 8px;border:1px solid;border-radius:5px;font:800 11px ui-monospace,Consolas,monospace;letter-spacing:.25px}
