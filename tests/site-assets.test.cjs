@@ -39,3 +39,20 @@ test('CSS imports resolve in the intended cascade order', () => {
     assert.ok(css.length > 200, 'nonempty stylesheet: ' + file);
   }
 });
+
+
+test('footer uses shared Pages layout and points to this repository', () => {
+  const footerMatch = html.match(/<footer class="site-footer">([\s\S]*?)<\/footer>/);
+  assert.ok(footerMatch, 'dedicated footer must exist');
+  const footer = footerMatch[1];
+  assert.match(footer, /© 2026 naoiw/);
+  assert.match(footer, /href="https:\/\/github\.com\/naoiw\/td4"/);
+  assert.match(footer, /GitHub\s*<span aria-hidden="true">↗<\/span>/);
+  assert.match(footer, /target="_blank"/);
+  assert.match(footer, /rel="noopener noreferrer"/);
+  const css = fs.readFileSync(path.join(root, 'assets/css/foundation.css'), 'utf8');
+  assert.match(css, /\.site-footer\s*\{[^}]*display:\s*flex/);
+  assert.match(css, /\.site-footer\s*\{[^}]*justify-content:\s*space-between/);
+  assert.match(css, /\.site-footer\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
+  assert.match(css, /\.site-footer a\s*\{[^}]*margin-left:\s*auto/);
+});
