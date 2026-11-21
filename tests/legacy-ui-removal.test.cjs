@@ -62,7 +62,9 @@ test('PCB heading is minimal while interactive net tracking still works', () => 
   assert.match(boardTs, /setSelectedNet\(`ROM_SEL_\$\{addr\}`\)/, 'ROM address selection remains');
   assert.match(boardTs, /setSelectedNet\(`OUT\$\{bit\}`\)/, 'output selection remains');
   assert.match(boardTs, /classList\.toggle\('net-selected'/, 'selected signal highlighting remains');
-  assert.match(boardTs, /function drawWires\(options: BoardRenderOptions\)/);
+  assert.doesNotMatch(boardTs, /function drawWires\(/);
+  assert.doesNotMatch(html, /id="icWireLayer"/);
+  assert.match(boardTs, /leg\.classList\.toggle\('net-selected'/, 'matching physical pins glow orange');
 });
 
 test('PROGRAM ROM and PROGRAM EDITOR keep headings without redundant top-right tags', () => {

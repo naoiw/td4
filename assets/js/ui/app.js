@@ -198,7 +198,6 @@
     function setSelectedNet(net) {
         selectedNet = net;
         updateCircuitBoard();
-        drawSelectedWires();
     }
     /** Keep CPU state in the application; delegate all board DOM updates. */
     function boardRenderOptions() {
@@ -206,9 +205,6 @@
     }
     function updateCircuitBoard() {
         window.TD4BoardView.render(boardRenderOptions());
-    }
-    function drawSelectedWires() {
-        window.TD4BoardView.drawWires(boardRenderOptions());
     }
     /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
     function fitCircuitBoard() {
@@ -225,7 +221,6 @@
         const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
             parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
         viewport.style.height = Math.ceil(board.offsetHeight * scale + verticalSpace) + 'px';
-        drawSelectedWires();
     }
     function renderHistory() {
         const list = $('traceList');

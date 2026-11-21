@@ -15,7 +15,6 @@
     tracked: HTMLElement[];
   }
   let boardNodes: BoardNodes | null = null;
-  let currentLevels: IcLevels | null = null;
 
   function $<T extends HTMLElement = HTMLElement>(id: string): T {
     const element = document.getElementById(id);
@@ -229,7 +228,6 @@
       // ROM data-net values change with the PC, so include every DIP upfront.
       tracked: [...board.querySelectorAll<HTMLElement>('[data-net], .rom-dip')]
     };
-    currentLevels = null;
   }
 
   function render(options: BoardRenderOptions):void {
@@ -251,13 +249,13 @@
     frequencySwitch.setAttribute('aria-pressed', String(boardClockHz === 10));
     frequencySwitch.setAttribute('aria-label', 'クロック周波数 ' + boardClockHz + 'Hz、クリックで' + (boardClockHz === 2 ? '10' : '2') + 'Hzに変更');
     const values=circuit.levels(cpu,clockHigh);
-    currentLevels = values;
     for(const element of nodes.probes) {
       const net=element.dataset.net||'';
       const level=values[net];
       element.classList.toggle('is-high',level===1);
       element.classList.toggle('is-low',level===0);
       element.classList.toggle('is-selected',net===selectedNet);
+      element.classList.toggle('net-selected', powerOn && net === selectedNet);
       const value=element.querySelector<HTMLElement>('.ic-pin-level');
       if(value)value.textContent=powerOn ? (level?'H':'L') : '—';
       element.title=`${net}: ${level?'HIGH (1)':'LOW (0)'}`;
@@ -269,6 +267,7 @@
       leg.classList.toggle('is-high', role === 'signal' && level === 1);
       leg.classList.toggle('is-low', role === 'signal' && level === 0);
       leg.classList.toggle('is-unmodelled', role === 'nc');
+      leg.classList.toggle('net-selected', powerOn && !!net && net === selectedNet);
       leg.title = '#' + leg.dataset.pinNumber + ' ' + leg.dataset.pinName + ': ' +
         (level === undefined ? '未モデル化' : level === 1 ? 'H (1)' : 'L (0)');
     }
@@ -279,7 +278,7 @@
       cell.classList.toggle('is-current',selected && powerOn);
       const lamp=cell.querySelector<HTMLElement>('.rom-select-lamp')!;
       lamp.classList.toggle('is-on',selected && powerOn);
-      lamp.classList.toggle('is-selected',selectedNet===`ROM_SEL_${addr}`);
+      lamp.classList.toggle('is-selected',powerOn && selectedNet === `ROM_SEL_${addr}`);
       cell.querySelector<HTMLElement>('.rom-slot-value')!.textContent=byte.toString(16).toUpperCase().padStart(2,'0');
       for(const btn of cell.querySelectorAll<HTMLButtonElement>('.rom-dip')){
         const bit=Number(btn.dataset.bit);
@@ -307,44 +306,9 @@
       btn.title=`OUT${bit} = ${+on}（クリックで信号を追跡）`;
     });
     for(const el of nodes.tracked){
-      el.classList.toggle('net-selected',!!el.dataset.net&&el.dataset.net===selectedNet);
-    }
-    // ROM switch connections change with PC. Re-draw only when required.
-    drawWires(options);
-  }
-
-  function drawWires(options: BoardRenderOptions):void {
-    const {cpu, clockHigh, selectedNet, circuit}=options;
-    const board=document.getElementById('schematicBoard');
-    if(!board)return;
-    const svg=document.getElementById('icWireLayer') as unknown as SVGSVGElement;
-    if (!options.powerOn) { svg.replaceChildren(); return; }
-    const bounds=board.getBoundingClientRect();
-    if(!bounds.width||!bounds.height)return;
-    // Normalise pointer/element rectangles into the unscaled board's SVG space.
-    // A CSS transform changes getBoundingClientRect(), not offsetWidth/Height.
-    const width=board.offsetWidth, height=board.offsetHeight;
-    if(!width||!height)return;
-    const scaleX=width/bounds.width, scaleY=height/bounds.height;
-    svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-    svg.replaceChildren();
-    const matches=(boardNodes?.tracked || []).filter(el=>el.dataset.net===selectedNet && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0);
-    if(matches.length<2)return;
-    const point=(node:HTMLElement)=>{
-      const r=node.getBoundingClientRect();
-      return {x:(r.left-bounds.left+r.width/2)*scaleX,y:(r.top-bounds.top+r.height/2)*scaleY};
-    };
-    const anchor=point(matches[0]);
-    const level=(currentLevels || circuit.levels(cpu,clockHigh))[selectedNet];
-    for(const node of matches.slice(1)){
-      const dest=point(node);
-      const bend=(anchor.x+dest.x)/2;
-      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-      path.setAttribute('d',`M${anchor.x} ${anchor.y} H${bend} V${dest.y} H${dest.x}`);
-      path.setAttribute('class',level?'ic-wire hi':'ic-wire lo');
-      svg.append(path);
+      el.classList.toggle('net-selected', powerOn && !!el.dataset.net && el.dataset.net === selectedNet);
     }
   }
 
-  window.TD4BoardView = {mount, render, drawWires};
+  window.TD4BoardView = {mount, render};
 })();

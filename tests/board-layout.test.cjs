@@ -128,14 +128,21 @@ test('DOM construction is delegated to stateless board renderer',()=>{
   assert.ok(!boardJs.includes('cpu.setInput('),'renderer must not mutate input');
 });
 
-test('board H/L and selected-net SVG renderers stay separate from CPU state',()=>{
+test('selected-net highlighting uses orange terminals instead of SVG wires',()=>{
   assert.match(js,/TD4BoardView\.render\(/);
-  assert.match(js,/TD4BoardView\.drawWires\(/);
   assert.match(boardJs,/function render\(options\)/);
-  assert.match(boardJs,/function drawWires\(options\)/);
-  assert.match(boardJs,/drawWires\(options\)/);
-  assert.match(boardJs,/classList\.toggle\('net-selected'/);
-  assert.match(boardJs,/getBoundingClientRect\(\)/);
+  assert.doesNotMatch(js,/TD4BoardView\.drawWires\(/);
+  assert.doesNotMatch(boardJs,/drawWires\(|createElementNS\(/);
+  assert.doesNotMatch(html,/icWireLayer/);
+  assert.doesNotMatch(css,/\.ic-wire(?:-layer|\.hi|\.lo|\{)/);
+  assert.match(boardJs,/leg\.classList\.toggle\('net-selected', powerOn && !!net && net === selectedNet\)/);
+  assert.match(boardJs,/element\.classList\.toggle\('net-selected', powerOn && net === selectedNet\)/);
+  assert.match(boardJs,/el\.classList\.toggle\('net-selected', powerOn && !!el\.dataset\.net && el\.dataset\.net === selectedNet\)/);
+  assert.match(css,/\.ic-footprint \.ic-leg\.net-selected:before/);
+  assert.match(css,/\.rom-select-lamp\.net-selected/);
+  assert.match(css,/\.schematic-io-switch\.net-selected/);
+  assert.match(css,/\.schematic-io-led\.net-selected/);
+  assert.match(css,/\.rom-dip\.net-selected/);
   assert.match(boardJs,/classList\.toggle\('is-high'/);
   assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');
 });
@@ -190,14 +197,10 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
     assert.match(source,/board\.style\.setProperty\('--board-fit-scale'/);
   }
 });
-test('scaled board keeps signal wires aligned in logical SVG coordinates',()=>{
-  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
-    assert.match(source,/width\s*\/\s*bounds\.width/);
-    assert.match(source,/height\s*\/\s*bounds\.height/);
-    assert.match(source,/\*\s*scaleX/);
-    assert.match(source,/\*\s*scaleY/);
-    assert.match(source,/setAttribute\('viewBox'/);
-    assert.match(source,/getBoundingClientRect\(\)/);
+test('board auto-fit no longer draws selection-dependent wires',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.doesNotMatch(source,/drawSelectedWires|TD4BoardView\.drawWires/);
   }
 });
 
