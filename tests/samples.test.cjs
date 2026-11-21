@@ -65,18 +65,27 @@ test('LED scanner returns to LED0 and holds it through the jump',()=>{
   assert.ok(!states.includes(0),'scanner never blanks its LEDs');
 });
 
-test('binary LED pattern ends at LED0 and holds it while jumping',()=>{
+test('binary pattern plays left and right waves over all 16 ROM addresses',()=>{
   const {rom,count}=assemble(byId.bounce.source);
-  assert.equal(count,8);
+  const expected=[0xB1,0xB3,0xB7,0xBF,0xB7,0xB3,0xB1,0xB0,
+                  0xB8,0xBC,0xBE,0xBF,0xBE,0xBC,0xB8,0xB0];
+  assert.equal(count,16,'all 16 ROM bytes are used without padding or JMP');
+  assert.deepEqual(rom,expected,'ROM must exactly match the specified DB bytes');
+  assert.ok(rom.every(byte=>(byte&0xF0)===0xB0),'every instruction is an OUT immediate');
   const cpu=new CPU(rom);
-  const period=[1,3,7,15,7,3,1,1];
-  const states=Array.from({length:16},()=>{cpu.step();return cpu.out;});
-  assert.deepEqual(states,[...period,...period]);
+  const output=expected.map(byte=>byte&0x0F);
+  for(let i=0;i<32;i++){
+    const current=cpu.pc;
+    const step=cpu.step();
+    assert.equal(step.pc,i%16,'PC advances sequentially across the ROM');
+    assert.equal(step.destination,'OUT');
+    assert.equal(cpu.out,output[i%16],`output after instruction ${i}`);
+    assert.equal(cpu.pc,(current+1)&0x0F,'PC wraps from F to 0 without JMP');
+  }
   assert.equal(cpu.pc,0);
-  // Last OUT 1, the JMP, and first OUT 1 all keep LED0 on
-  // across the cycle boundary (three instruction cycles).
-  assert.deepEqual(states.slice(6,9),[1,1,1]);
-  assert.ok(!states.includes(0),'no all-LED-off frame');
+  assert.equal(cpu.cycles,32);
+  assert.deepEqual(output.slice(0,8),[1,3,7,15,7,3,1,0],'leftward wave');
+  assert.deepEqual(output.slice(8),[8,12,14,15,14,12,8,0],'rightward wave');
 });
 
 test('16-byte adder computes all SW01 + SW23 input combinations and uses all addresses',()=>{

@@ -70,16 +70,25 @@ loop:  OUT 15
       id: 'bounce',
       icon: '◆',
       title: '2進パターン',
-      description: '1→3→7→F→7→3→1',
-      source: `; 1, 3, 7, F, 7, 3, 1 の2進パターン
-loop:  OUT 1
-       OUT 3
-       OUT 7
-       OUT 15
-       OUT 7
-       OUT 3
-       OUT 1
-       JMP loop`
+      description: '左向き→右向きウェーブ（16バイト）',
+      source: `; 左向きウェーブ8命令 → 右向きウェーブ8命令
+; 16バイトの最後からPC=0x0へ自然に戻る
+DB 0xB1
+DB 0xB3
+DB 0xB7
+DB 0xBF
+DB 0xB7
+DB 0xB3
+DB 0xB1
+DB 0xB0
+DB 0xB8
+DB 0xBC
+DB 0xBE
+DB 0xBF
+DB 0xBE
+DB 0xBC
+DB 0xB8
+DB 0xB0`
     },
     {
       id: 'sum2',
