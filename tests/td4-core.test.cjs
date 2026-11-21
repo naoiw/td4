@@ -15,3 +15,13 @@ test('ORG raw bytes',()=>{const x=assemble('.ORG 0xE\n10110011\nF0');assert.equa
 test('ROM source round-trip',()=>{const b=Array.from({length:16},(_,i)=>(i*17+9)&255);assert.deepEqual(assemble(romToSource(b)).rom,b);});
 test('instruction validation',()=>{assert.throws(()=>assemble('MOV A, 16'),/範囲外/);assert.throws(()=>assemble('MOV Z, 1'),/未対応/);assert.throws(()=>assemble('JMP nowhere'),/ラベル/);});
 test('standard opcode flags',()=>{assert.equal(isStandard(0x90),true);assert.equal(isStandard(0x91),false);assert.equal(isStandard(0x8F),false);assert.match(disassemble(0xD3),/\*/);});
+
+test('cycle count continues beyond six digits without wrapping', () => {
+  const x = cpu([0x00]);
+  x.cycles = 999999;
+  x.step();
+  assert.equal(x.cycles, 1000000);
+  assert.equal(String(x.cycles).padStart(6, '0'), '1000000');
+  x.step();
+  assert.equal(x.cycles, 1000001);
+});
