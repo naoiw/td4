@@ -57,7 +57,7 @@ pnpm run verify
 - `src/` がTypeScriptの編集元、`assets/js/` は生成物です。**生成JavaScriptを直接編集せず**、ビルド後に生成物もコミットしてください。
 - スタイルは `assets/css/style.css` から `foundation.css`・`workbench.css`・`circuit-board.css` を順に読み込みます。
 - `src/ui/app.ts` はCPU状態・実行制御、`src/ui/board.ts` はDIP・ROMのDOM生成とH/L・配線描画を担当します。
-- `pnpm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。`pnpm run lint` はTypeScript編集元の改行・末尾空白・インデントタブを確認します（ESLint / Prettierによる全ファイルの自動整形は導入していません）。
+- `pnpm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。`pnpm run lint` はTypeScript編集元の改行・末尾空白・インデントタブと、Prettierによるコア・データ・型定義の書式を確認します。`pnpm run format` で同範囲を整形できます。DOM/CSSを含む既存コードの全面整形は、テストが具体的なソース表記を検査しているため対象外です。
 
 ## 公開と開発フロー
 
