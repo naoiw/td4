@@ -5,6 +5,18 @@
 (function () {
   'use strict';
 
+  /** DOM references that remain stable between CPU clock edges. */
+  interface BoardNodes {
+    probes: HTMLElement[];
+    legs: HTMLElement[];
+    slots: HTMLElement[];
+    switches: HTMLButtonElement[];
+    leds: HTMLButtonElement[];
+    tracked: HTMLElement[];
+  }
+  let boardNodes: BoardNodes | null = null;
+  let currentLevels: IcLevels | null = null;
+
   function $<T extends HTMLElement = HTMLElement>(id: string): T {
     const element = document.getElementById(id);
     if (!element) throw new Error(`Required UI element not found: ${id}`);
@@ -15,7 +27,7 @@
     const {circuit, HEX, toggleIcDetails, setSelectedNet, onRomBitToggle, onInputBitToggle, onPowerToggle, onFrequencyToggle} = options;
     const chips = $('icChipGrid');
     chips.replaceChildren();
-    for (const chip of circuit.chips) {
+    function createChipCard(chip: IcComponent): HTMLElement {
       const card = document.createElement('article');
       card.className = `ic-chip ic-group-${chip.group}`;
       card.dataset.chip = chip.id;
@@ -125,12 +137,12 @@
         pinList.append(unit);
       }
       card.append(title,desc,chipToggle,pinList);
-      chips.append(card);
+      return card;
     }
     
+    const mountedChips = circuit.chips.map(createChipCard);
       // Keep the existing interactive DIP elements, but group them by function
       // like parts on a PCB rather than showing one framed card per IC.
-      const mountedChips = [...chips.children];
       chips.replaceChildren();
       const roleAreas = [
         {key:'control',title:'CLOCK / CONTROL',types:['clock','decode']},
@@ -154,6 +166,7 @@
         chips.append(area);
       }
 
+    function mountRomDipGrid(): void {
     const grid = $('romDipGrid');
     grid.replaceChildren();
     for(let addr=0;addr<16;addr++) {
@@ -185,6 +198,8 @@
       cell.append(head,bits,footer);
       grid.append(cell);
     }
+    }
+    function mountInputOutput(): void {
     const input=$('schematicInput');input.replaceChildren();
     const output=$('schematicOutput');output.replaceChildren();
     for(let bit=3;bit>=0;bit--){
@@ -199,14 +214,30 @@
       diode.setAttribute('aria-label',`出力LED${bit}の信号線を追跡`);
       output.append(diode);
     }
+    }
+    mountRomDipGrid();
+    mountInputOutput();
     $('boardPowerSwitch').addEventListener('click', onPowerToggle);
     $('boardClockSwitch').addEventListener('click', onFrequencyToggle);
+    const board = $('schematicBoard');
+    boardNodes = {
+      probes: [...document.querySelectorAll<HTMLElement>('.ic-probe')],
+      legs: [...board.querySelectorAll<HTMLElement>('.ic-leg')],
+      slots: [...board.querySelectorAll<HTMLElement>('.rom-slot')],
+      switches: [...board.querySelectorAll<HTMLButtonElement>('.schematic-io-switch')],
+      leds: [...board.querySelectorAll<HTMLButtonElement>('.schematic-io-led')],
+      // ROM data-net values change with the PC, so include every DIP upfront.
+      tracked: [...board.querySelectorAll<HTMLElement>('[data-net], .rom-dip')]
+    };
+    currentLevels = null;
   }
 
   function render(options: BoardRenderOptions):void {
     const {cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz}=options;
     const board=document.getElementById('schematicBoard');
     if(!board)return;
+    const nodes = boardNodes;
+    if (!nodes) return;
     board.classList.toggle('is-powered-off', !powerOn);
     const powerSwitch = $('boardPowerSwitch') as HTMLButtonElement;
     powerSwitch.classList.toggle('is-on', powerOn);
@@ -220,7 +251,8 @@
     frequencySwitch.setAttribute('aria-pressed', String(boardClockHz === 10));
     frequencySwitch.setAttribute('aria-label', 'クロック周波数 ' + boardClockHz + 'Hz、クリックで' + (boardClockHz === 2 ? '10' : '2') + 'Hzに変更');
     const values=circuit.levels(cpu,clockHigh);
-    for(const element of document.querySelectorAll<HTMLElement>('.ic-probe')) {
+    currentLevels = values;
+    for(const element of nodes.probes) {
       const net=element.dataset.net||'';
       const level=values[net];
       element.classList.toggle('is-high',level===1);
@@ -230,7 +262,7 @@
       if(value)value.textContent=powerOn ? (level?'H':'L') : '—';
       element.title=`${net}: ${level?'HIGH (1)':'LOW (0)'}`;
     }
-    for (const leg of board.querySelectorAll<HTMLElement>('.ic-leg')) {
+    for (const leg of nodes.legs) {
       const net = leg.dataset.net;
       const level = net ? values[net] : undefined;
       const role = leg.dataset.pinRole;
@@ -240,7 +272,7 @@
       leg.title = '#' + leg.dataset.pinNumber + ' ' + leg.dataset.pinName + ': ' +
         (level === undefined ? '未モデル化' : level === 1 ? 'H (1)' : 'L (0)');
     }
-    for(const cell of board.querySelectorAll<HTMLElement>('.rom-slot')){
+    for(const cell of nodes.slots){
       const addr=Number(cell.dataset.addr);
       const selected=cpu.pc===addr;
       const byte=cpu.rom[addr];
@@ -259,20 +291,20 @@
         btn.setAttribute('aria-label',`ROM ${HEX(addr)}番地 D${bit} を${on?'OFF':'ON'}にする`);
       }
     }
-    board.querySelectorAll<HTMLButtonElement>('.schematic-io-switch').forEach(btn=>{
+    nodes.switches.forEach(btn=>{
       const bit=Number(btn.dataset.bit),on=!!(cpu.input&(1<<bit));
       btn.textContent=`SW${bit} ${on?'ON':'OFF'}`;
       btn.classList.toggle('is-on',on);
       btn.setAttribute('aria-pressed',String(on));
       btn.title=`IN${bit} = ${+on}`;
     });
-    board.querySelectorAll<HTMLButtonElement>('.schematic-io-led').forEach(btn=>{
+    nodes.leds.forEach(btn=>{
       const bit=Number(btn.dataset.bit),on=powerOn && !!(cpu.out&(1<<bit));
       btn.classList.toggle('is-on',on);
       btn.textContent=`LED${bit}`;
       btn.title=`OUT${bit} = ${+on}（クリックで信号を追跡）`;
     });
-    for(const el of document.querySelectorAll<HTMLElement>('[data-net]')){
+    for(const el of nodes.tracked){
       el.classList.toggle('net-selected',!!el.dataset.net&&el.dataset.net===selectedNet);
     }
     // ROM switch connections change with PC. Re-draw only when required.
@@ -294,14 +326,14 @@
     const scaleX=width/bounds.width, scaleY=height/bounds.height;
     svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
     svg.replaceChildren();
-    const matches=[...board.querySelectorAll<HTMLElement>('[data-net]')].filter(el=>el.dataset.net===selectedNet && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0);
+    const matches=(boardNodes?.tracked || []).filter(el=>el.dataset.net===selectedNet && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0);
     if(matches.length<2)return;
     const point=(node:HTMLElement)=>{
       const r=node.getBoundingClientRect();
       return {x:(r.left-bounds.left+r.width/2)*scaleX,y:(r.top-bounds.top+r.height/2)*scaleY};
     };
     const anchor=point(matches[0]);
-    const level=circuit.levels(cpu,clockHigh)[selectedNet];
+    const level=(currentLevels || circuit.levels(cpu,clockHigh))[selectedNet];
     for(const node of matches.slice(1)){
       const dest=point(node);
       const bend=(anchor.x+dest.x)/2;
