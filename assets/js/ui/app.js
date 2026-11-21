@@ -270,6 +270,14 @@
             area.append(row);
         }
     }
+    /** Start a fresh capture at the currently selected probe group. */
+    function restartWaveCapture() {
+        waveSamples.splice(0);
+        const levels = snapshot(cpu, clockHigh);
+        appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        renderWaveforms(levels);
+        lastWaveDrawAt = performance.now();
+    }
     function recordSignals() {
         const levels = snapshot(cpu, clockHigh);
         appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
@@ -491,8 +499,8 @@
         });
         $('clearLogBtn').addEventListener('click', () => { history.splice(0); renderHistory(); });
         $('clearBpBtn').addEventListener('click', () => { breakpoints.clear(); renderROM(); });
-        $('clearWaveBtn').addEventListener('click', () => { waveSamples.splice(0); recordSignals(); });
-        $('signalGroup').addEventListener('change', () => renderWaveforms(snapshot(cpu, clockHigh)));
+        $('clearWaveBtn').addEventListener('click', restartWaveCapture);
+        $('signalGroup').addEventListener('change', restartWaveCapture);
         $('assembleBtn').addEventListener('click', compileSource);
         $('fromRomBtn').addEventListener('click', () => {
             $('source').value = romToSource(cpu.rom);
