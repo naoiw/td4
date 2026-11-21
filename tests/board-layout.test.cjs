@@ -668,3 +668,52 @@ test('POWER / CLOCK remains without the redundant TD4 CONTROL CIRCUIT caption',(
   assert.doesNotMatch(html,/TD4 CONTROL CIRCUIT/);
   assert.doesNotMatch(css,/\.pcb-control-heading span\s*\{/);
 });
+
+
+test('all IC detail signals share the same box size, type, and spacing',()=>{
+  const panel=css.match(/\.ic-detail-panel\s*\{([^}]*)\}/)?.[1];
+  assert.ok(panel,'IC detail container exists');
+  assert.match(panel,/--ic-detail-probe-width:112px/);
+  assert.match(panel,/--ic-detail-probe-height:42px/);
+  assert.match(panel,/--ic-detail-probe-gap:8px/);
+  const shared=css.match(/\.ic-detail-panel \.ic-probe,\s*\.ic-detail-panel \.ic-probe-compact\s*\{([^}]*)\}/)?.[1];
+  assert.ok(shared,'all signal cards must use one shared sizing rule');
+  assert.match(shared,/flex:1 1 0/);
+  assert.match(shared,/max-width:var\(--ic-detail-probe-width\)/);
+  assert.match(shared,/min-height:var\(--ic-detail-probe-height\)/);
+  assert.match(shared,/padding:8px 10px/);
+  assert.match(shared,/font-size:12px/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-row\{min-height:var\(--ic-detail-probe-height\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-column\{gap:var\(--ic-detail-probe-gap\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-subcolumn\{[^}]*gap:var\(--ic-detail-probe-gap\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-section:only-child\{grid-column:1 \/ -1\}/);
+  assert.doesNotMatch(css,/\.ic-detail-panel\[data-chip="U13"\] \.ic-probe-compact\s*\{/);
+});
+
+test('uniform detail styles do not change IC-specific probe arrangements',()=>{
+  require('../assets/js/data/netlist.js');
+  const {chips,layout}=require('../assets/js/core/ic-circuit.js');
+  assert.equal(chips.length,13);
+  const hc154=layout(chips.find(c=>c.type==='74HC154')).sections[0];
+  assert.deepEqual(hc154.right.map(row=>row.map(pin=>pin.name)),[
+    ['Y0#','Y1#','Y2#','Y3#'],
+    ['Y4#','Y5#','Y6#','Y7#'],
+    ['Y8#','Y9#','YA#','YB#'],
+    ['YC#','YD#','YE#','YF#']
+  ]);
+  const hc540=layout(chips.find(c=>c.type==='74HC540')).sections[0];
+  assert.deepEqual(hc540.left.map(row=>row.map(pin=>pin.name)),[
+    ['A0','A4'],['A1','A5'],['A2','A6'],['A3','A7']
+  ]);
+  assert.deepEqual(hc540.right.map(row=>row.map(pin=>pin.name)),[
+    ['Y0','Y4'],['Y1','Y5'],['Y2','Y6'],['Y3','Y7']
+  ]);
+  for(const c of chips.filter(c=>c.type==='74HC153')){
+    const sections=layout(c).sections;
+    assert.equal(sections.length,2);
+    for(const section of sections)assert.equal(section.leftColumnBreak,2);
+  }
+  for(const [type,expected] of [['74HC32',4],['74HC10',3]])
+    assert.equal(layout(chips.find(c=>c.type===type)).sections.length,expected);
+  assert.equal(layout(chips.find(c=>c.type==='74HC283')).sections[0].rightColumnBreak,4);
+});
