@@ -51,7 +51,6 @@
 .schematic-io-led{min-width:0;border:0;background:none;color:#a7c7b1;font:700 9px ui-monospace,monospace;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
 .schematic-io-led:before{content:'';display:block;border-radius:50%;background:#4d3b26;border:2px solid #a07a4c;box-shadow:inset 0 0 6px #100e0b}
 .schematic-io-led.is-on:before{background:#ffbc51;box-shadow:0 0 18px #ffb343,0 0 7px #fda636,inset 0 0 6px #fff2c6}
-.schematic-explain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#c0d6c8;font:750 10px ui-monospace,monospace}
 .ic-wire-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .ic-wire{fill:none;stroke-linejoin:round;stroke-linecap:round;stroke-width:3.5;vector-effect:non-scaling-stroke;opacity:.9}
 .ic-wire.hi{stroke:#a8ffb7;filter:drop-shadow(0 0 5px #98ffc7)}.ic-wire.lo{stroke:#718ea3;stroke-dasharray:7 5;opacity:.72}
@@ -311,7 +310,6 @@
 .schematic-io-strip{}
 .schematic-io{}
 .schematic-io strong{margin-bottom:6px}
-.schematic-explain{margin-top:12px}
 @media(max-width:650px){
   .schematic-board{}
 }
@@ -569,21 +567,6 @@
 .pcb-mount-tr{top:6px;right:6px}
 .pcb-mount-bl{bottom:6px;left:6px}
 .pcb-mount-br{bottom:6px;right:6px}
-/* Explanatory material belongs below the PCB, never inside its ROM zone. */
-.board-notes{
-  max-width:1135px;
-  margin:12px auto 0;
-  padding:0 8px 12px;
-  color:#355849;
-}
-.board-notes .schematic-explain{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-  margin:0;
-  color:#315844;
-}
 @media(max-width:650px){.schematic-board{width:1135px}}
 
 

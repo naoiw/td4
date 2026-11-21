@@ -17,7 +17,6 @@
 .sample-card strong{font-size:11px}.sample-card small{font-size:9px;color:#7a8998;margin-top:4px}
 .board-panel{padding:18px 20px 15px}
 .board-heading{margin-bottom:14px}.board-subtitle{margin:5px 0 0;color:#7d8b9b;font-size:11px}
-.signal-key{display:inline-block;width:20px;height:4px;border-radius:4px}.signal-key.high{background:#83efaa}.signal-key.low{background:#3d6864}.signal-key.led-key{background:#ffac54;margin-left:10px}
 .scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);gap:15px;align-items:start}
 .scope-panel{padding:17px 20px}.scope-group-label{font-size:10px;color:#7c8792;display:flex;align-items:center;gap:8px}
 .scope-group-label select{background:#f8fafc;border:1px solid #dce5ed;border-radius:6px;color:#314c68;padding:7px 9px;font-size:11px}

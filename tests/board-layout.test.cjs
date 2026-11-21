@@ -55,9 +55,9 @@ test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>
 });
 
 test('IC detail is outside board and large enough to inspect H/L probes',()=>{
-  const boardEnd=html.indexOf('</div>\n      <div class="board-notes"');
-  assert.ok(boardEnd>0,'external notes must follow schematic-scroll');
-  assert.ok(html.indexOf('id="icDetailPanel"')>boardEnd,'detail panel must follow notes outside PCB');
+  const boardEnd=html.indexOf('      <section id="icDetailPanel"');
+  assert.ok(boardEnd>html.indexOf('id="romDipGrid"'),'external IC detail must follow board');
+  assert.ok(html.indexOf('id="schematicBoard"')<boardEnd,'IC detail panel must stay outside PCB');
   assert.match(js,/function toggleIcDetails\(chipId\)/);
   assert.match(js,/host\.append\(head,\s*pins\)/);
   assert.match(js,/oldCard\.append\(oldPins\)/);
@@ -105,17 +105,14 @@ test('DIP footprints retain two opposing pin banks and functional signal colors'
   assert.match(lastRule('ic-footprint .ic-leg-left'),/left:\s*-4px/);
   assert.match(lastRule('ic-footprint .ic-leg-right'),/right:\s*-4px/);
 });
-test('board legend stays below PCB without the removed disclaimer',()=>{
-  const board=html.slice(html.indexOf('id="schematicBoard"'),html.indexOf('id="icDetailPanel"'));
+test('board legend and disclaimer are absent while PCB and details remain',()=>{
   for(const title of ['LOGIC ICs','74HC SERIES · 13 PACKAGES','ROM · 16 × 8-bit','74HC154でアドレスを選択']){
-    assert.ok(!board.includes(title),title+' must be removed');
+    assert.ok(!html.includes(title),title+' must be removed');
   }
-  assert.equal((html.match(/class="schematic-explain"/g)||[]).length,1);
-  assert.doesNotMatch(html,/schematic-caution/);
-  const boardClose=html.indexOf('      <div class="board-notes"');
-  assert.ok(boardClose>html.indexOf('id="romDipGrid"'));
-  assert.ok(boardClose<html.indexOf('id="icDetailPanel"'));
-  assert.ok(!html.slice(html.indexOf('id="schematicBoard"'),boardClose).includes('class="schematic-explain"'));
+  assert.doesNotMatch(html,/board-notes|schematic-explain|schematic-caution|アドレス選択中（\/Y=L）/);
+  assert.doesNotMatch(html,/HIGH 1|LOW 0/);
+  assert.match(html,/id="schematicBoard"/);
+  assert.match(html,/id="icDetailPanel"/);
 });
 
 test('DOM construction is delegated to stateless board renderer',()=>{
