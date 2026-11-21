@@ -118,7 +118,6 @@ interface BoardRenderOptions {
   selectedNet: string;
   powerOn: boolean;
   boardClockHz: 2 | 10;
-  actualClockHz: number;
 }
 interface BoardViewApi {
   mount(options: BoardViewOptions): void;
