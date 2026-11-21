@@ -130,3 +130,19 @@ test('ROM legend and breakpoint clear are above table, with help text removed', 
   assert.match(css, /\.rom-panel \.rom-footer\{margin:0 0 11px/);
   assert.match(ts, /\$\('clearBpBtn'\)\.addEventListener\('click'/);
 });
+
+test('logic analyzer and execution trace match heights with ten visible waveform rows', () => {
+  const groups = [...html.matchAll(/<option value="(basic|io|registers|pc|rom|alu)">([^<]+)<\/option>/g)];
+  assert.deepEqual(groups.map(x => x[1]), ['basic', 'io', 'registers', 'pc', 'rom', 'alu']);
+  assert.deepEqual(groups.slice(2).map(x => x[2]), ['レジスタ A/B', 'PC', 'ROM', 'ALU']);
+  const workbench = fs.readFileSync(path.join(root,'assets/css/workbench.css'),'utf8');
+  assert.match(workbench, /\.scope-layout\{[^}]*align-items:stretch/);
+  assert.match(workbench, /\.scope-layout>\.panel\{height:550px\}/);
+  assert.match(workbench, /\.scope-panel\{display:flex;flex-direction:column/);
+  assert.match(workbench, /\.scope-view\{[^}]*min-height:412px[^}]*overflow:hidden/);
+  assert.match(workbench, /\.scope-layout \.trace-panel ol\{[^}]*flex:1;min-height:0;max-height:none;overflow-y:auto/);
+  assert.match(workbench, /\.scope-row\{[^}]*height:39px/);
+  for (const source of [ts, js]) {
+    assert.match(source, /for \(const signal of group\.slice\(0, 10\)\)/);
+  }
+});

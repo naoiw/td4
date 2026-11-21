@@ -238,7 +238,7 @@
         area.replaceChildren();
         const group = GROUPS[$('signalGroup').value] || GROUPS.basic;
         const svgNS = 'http://www.w3.org/2000/svg';
-        for (const signal of group) {
+        for (const signal of group.slice(0, 10)) {
             const row = document.createElement('div');
             row.className = 'scope-row';
             const name = document.createElement('span');
