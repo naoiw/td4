@@ -284,7 +284,7 @@ test('power OFF hides the highlighted ROM module without losing ROM bits',()=>{
   for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
     assert.match(source,/cell\.classList\.toggle\('is-current',\s*selected && powerOn\)/);
     assert.match(source,/lamp\.classList\.toggle\('is-on',\s*selected && powerOn\)/);
-    assert.match(source,/cell\.querySelector[^\n]*'rom-slot-value'[^\n]*textContent=/);
+    assert.match(source,/cell\.querySelector[^\n]*'\.rom-slot-value'[^\n]*textContent/);
   }
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
     const start=source.indexOf('function setPower(');
