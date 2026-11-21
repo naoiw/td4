@@ -139,7 +139,7 @@
       card.append(title,desc,chipToggle,pinList);
       return card;
     }
-    
+
     const mountedChips = circuit.chips.map(createChipCard);
       // Keep the existing interactive DIP elements, but group them by function
       // like parts on a PCB rather than showing one framed card per IC.

@@ -48,6 +48,7 @@ pnpm run build
 変更時のチェック：
 
 ```bash
+pnpm run lint
 pnpm run typecheck
 pnpm test
 pnpm run verify
@@ -56,7 +57,7 @@ pnpm run verify
 - `src/` がTypeScriptの編集元、`assets/js/` は生成物です。**生成JavaScriptを直接編集せず**、ビルド後に生成物もコミットしてください。
 - スタイルは `assets/css/style.css` から `foundation.css`・`workbench.css`・`circuit-board.css` を順に読み込みます。
 - `src/ui/app.ts` はCPU状態・実行制御、`src/ui/board.ts` はDIP・ROMのDOM生成とH/L・配線描画を担当します。
-- `pnpm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。
+- `pnpm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。`pnpm run lint` はTypeScript編集元の改行・末尾空白・インデントタブを確認します（ESLint / Prettierによる全ファイルの自動整形は導入していません）。
 
 ## 公開と開発フロー
 
@@ -67,7 +68,7 @@ pnpm run verify
 
 GitHub Pagesの公開元は **Settings → Pages → Build and deployment → GitHub Actions** です。デプロイは `main` へのpush、または `develop` のpush検証成功後に実行され、`/td4/` と `/td4/develop/` を1つの公開アーティファクトへまとめます。
 
-- CI：`.github/workflows/validate-develop.yml`（`naoiw/.github` の共通Node.js CIをSHA固定で利用）
+- CI：`.github/workflows/validate-develop.yml`（`naoiw/.github` の共通Node.js CIをSHA固定で利用し、生成 `assets/js/` とTypeScript編集元の差分もチェック）
 - Pages：`.github/workflows/deploy-pages.yml`
 - 詳細：[デプロイ手順](docs/deployment.md)
 

@@ -4,7 +4,7 @@
 .schematic-zone-head{justify-content:space-between;align-items:center;color:#dbecd6;font:800 15px ui-monospace,monospace;letter-spacing:.7px;margin:0 0 12px}
 .schematic-zone-head span{font:600 10px ui-monospace,monospace;color:#92bca9;letter-spacing:0}
 .ic-zone,.rom-zone{position:relative;z-index:3;min-width:0}
-.ic-chip-grid{}
+
 .ic-chip{min-width:0;padding:10px 9px 12px;border:1px solid #66877f;background:linear-gradient(140deg,#253238,#16242b);box-shadow:0 3px 0 #0c1b21,0 8px 14px #051c1969;border-radius:7px;color:#daece4;position:relative}
 .ic-chip:before,.ic-chip:after{content:'';position:absolute;top:5px;bottom:5px;width:4px;background:repeating-linear-gradient(to bottom,#9bb6aa 0 5px,transparent 5px 11px);opacity:.6}
 .ic-chip:before{left:0}.ic-chip:after{right:0}
@@ -20,7 +20,7 @@
 .ic-probe.net-selected{outline:2px solid #ffc36f;outline-offset:-1px;box-shadow:0 0 6px #eebf6265}
 .ic-probe:hover,.rom-select-lamp:hover{filter:brightness(1.2)}
 /* Earlier ROM layout; final 4×4 grid follows later in this stylesheet. */
-.rom-dip-grid{}
+
 .rom-slot{background:#15443c;border:1px solid #527969;border-radius:6px;box-shadow:0 4px 0 #092c29;min-width:0}
 .rom-slot.is-current{border-color:#f5c86b;background:#245a43;box-shadow:0 0 0 1px #8cba73,0 4px 0 #092c29,0 0 22px #e8e26535}
 .rom-slot-head{display:flex;align-items:center;font:850 13px ui-monospace,monospace;color:#f5e8bf}
@@ -30,11 +30,11 @@
 .rom-select-lamp.net-selected{outline:2px solid #fff;outline-offset:3px}
 .rom-dip-switches{border:1px solid #4689dc;box-shadow:0 4px 0 #073569;}
 .rom-dip{border:0;border-radius:2px;cursor:pointer}
-.rom-dip.is-on{}
+
 .dip-handle{width:72%;background:linear-gradient(100deg,#b9cbd9,#f9fcff 45%,#c8d4e3);border-radius:2px;box-shadow:0 1px 2px #072747}
 .rom-dip:focus-visible,.ic-probe:focus-visible{outline:2px solid #ffd672;outline-offset:2px}
 .rom-slot-bits{font:600 8px ui-monospace,monospace;color:#accabf;text-align:center;white-space:nowrap;}
-.schematic-io-strip{}
+
 .schematic-io{background:#173c36;border:1px solid #537f6c;border-radius:8px;min-width:0}
 .schematic-io strong{display:block;color:#c9e1d3;font:800 11px ui-monospace,monospace;}
 .schematic-input-bits,.schematic-output-leds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
@@ -48,18 +48,15 @@
 .ic-wire.hi{stroke:#a8ffb7;filter:drop-shadow(0 0 5px #98ffc7)}.ic-wire.lo{stroke:#718ea3;stroke-dasharray:7 5;opacity:.72}
 @media(max-width:650px){.schematic-board{margin:0}}
 
-
 /* Functional pin-oriented IC layout. Physical DIP leg count is precise but
    displayed functional terminals are NOT asserted to be package pin positions. */
-.ic-chip-grid{}
-.ic-dip{}
+
 .ic-dip:before,.ic-dip:after{display:none}
 .ic-leg-bank{position:absolute;z-index:2;top:30px;bottom:14px;width:8px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none}
 .ic-leg-left{left:-4px}.ic-leg-right{right:-4px}
 .ic-leg{display:block;height:6px;border:1px solid #a3b0b3;border-radius:2px;background:linear-gradient(90deg,#d8dce0,#71868c);box-shadow:0 1px 1px #081414}
 .ic-package-label{font:700 8px ui-monospace,monospace;color:#8bacac;white-space:nowrap}
-.ic-dip .ic-head{}
-.ic-dip .ic-head strong{}
+
 .ic-functional-layout{display:flex;flex-direction:column;}
 .ic-function-section{min-width:0;padding:6px;background:#14262c;border:1px solid #38575a;border-radius:5px}
 .ic-function-section+.ic-function-section{border-top:2px solid #87ae9d}
@@ -70,15 +67,14 @@
 .ic-function-column{min-width:0;display:flex;flex-direction:column;gap:4px}
 .ic-function-row{display:flex;gap:3px;min-width:0;min-height:23px}
 .ic-dip .ic-probe{flex:1;min-width:0;}
-.ic-dip .ic-probe-compact{}
-.ic-dip .ic-probe-compact b{}
+
 /* Compact DIP footprints.
  * Drawing scale is 18px per 2.54mm; dimension ratios are schematic, not actual
  * on-screen millimetres. Narrow DIP: 7.62mm row-centre span (=54px).
  * The on-screen DIP-24 uses the same row-centre span as other DIPs. Functional H/L probes below
  * are deliberately separate from the numbered physical legs.
  */
-.ic-chip-grid{}
+
 .ic-dip{
   --dip-pitch:18px;
   --dip-height:126px;
@@ -91,7 +87,7 @@
 .ic-dip[data-package-pins="14"]{--dip-height:126px}
 .ic-dip[data-package-pins="16"]{--dip-height:144px}
 .ic-dip[data-package-pins="20"]{--dip-height:180px}
-.ic-dip[data-package-pins="24"]{}
+
 .ic-dip .ic-head{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;padding:1px 1px 0}
 .ic-dip .ic-head strong{font-size:12px}
 .ic-dip .ic-head span{font-size:10px}
@@ -146,8 +142,7 @@
   justify-content:flex-start;
   pointer-events:none;
 }
-.ic-footprint .ic-leg-left{}
-.ic-footprint .ic-leg-right{}
+
 .ic-footprint .ic-leg{
   position:relative;
   display:block;
@@ -232,8 +227,7 @@
 
 /* PCB-like packed presentation. DIP pitch, per-pin logic colors and
  * click-to-expand details continue to use the existing element structure. */
-.schematic-board{
-}
+
 .schematic-zone-head{font-size:13px;margin-bottom:9px}
 .schematic-zone-head span{font-size:9px}
 .ic-chip-grid{
@@ -247,7 +241,7 @@
   background:rgba(13,42,36,.47);
   z-index:1;
 }
-.ic-role-group:has(.is-expanded){}
+
 .ic-role-fetch{border-top:2px solid #f0cb7e}
 .ic-role-alu{border-top:2px solid #8bddb6}
 .ic-role-registers{border-top:2px solid #92c7ef}
@@ -267,7 +261,7 @@
   overflow:visible;
 }
 .ic-role-rack>.ic-chip:before,
-.ic-role-rack>.ic-chip:after{}
+
 .ic-role-rack .ic-dip .ic-head{
   display:block;
   height:13px;
@@ -279,7 +273,7 @@
 .ic-role-rack .ic-dip .ic-head strong,
 .ic-role-rack .ic-package-label,
 .ic-role-rack .ic-description{display:none!important}
-.ic-role-rack .ic-dip .ic-footprint{}
+
 .ic-role-rack>.ic-chip.is-expanded{grid-column:auto;}
 .ic-role-rack .ic-functional-layout{
   z-index:30;
@@ -290,23 +284,20 @@
 .ic-role-alu .ic-functional-layout,
 .ic-role-registers .ic-functional-layout{top:auto;bottom:calc(100% - 1px)}
 .ic-role-rack .ic-functional-layout[hidden]{display:none!important}
-.rom-dip-grid{}
-.rom-slot{}
+
 .rom-slot-head{font-size:11px;}
 .rom-select-lamp{width:12px;height:12px;border-width:2px}
-.rom-dip-switches{}
-.rom-dip{}
+
 .dip-handle{height:9px}
 .rom-slot-bits{font-size:7px}
-.schematic-io-strip{}
-.schematic-io{}
+
 .schematic-io strong{margin-bottom:6px}
 @media(max-width:650px){
-  .schematic-board{}
+  
 }
 
 /* Legacy ROM sizing; current horizontal 4×4 presentation is defined later. */
-.schematic-board {}
+
 .ic-chip-grid {gap:7px}
 .ic-role-group{padding:7px 8px 9px}
 .ic-role-rack {
@@ -337,11 +328,10 @@
 .rom-slot-head{gap:5px;text-align:left;margin-bottom:5px;justify-content:space-around}
 .rom-dip-switches {
   border-radius:3px;}
-.rom-dip {}
-.rom-dip.is-on{}
+
 .rom-dip .dip-handle {
   display:block;}
-.rom-slot-bits{}
+
 .schematic-io-strip{
   display:grid;
   gap:9px;
@@ -407,7 +397,7 @@
 .ic-detail-panel .ic-probe-compact{font-size:11px}
 .ic-detail-panel .ic-probe b{font-size:12px;padding:3px 7px}
 @media(max-width:650px){
-  .schematic-board{}
+  
   .ic-detail-panel{padding:15px}
   .ic-detail-panel .ic-functional-layout{grid-template-columns:1fr}
   .ic-detail-panel-head h3{font-size:18px}
@@ -446,10 +436,6 @@
     #145a3e 11px);
   box-shadow:0 0 0 1px #8dac94,0 1px 2px rgba(0,0,0,.35)
 }
-.pcb-mount-tl{}
-.pcb-mount-tr{}
-.pcb-mount-bl{}
-.pcb-mount-br{}
 
 /* 16 horizontal 8-position DIP packages remain in the 4×4 ROM matrix.
    Within each package D7–D0 run left-to-right and the handles slide up/down. */
@@ -565,7 +551,6 @@
 .pcb-mount-bl{bottom:6px;left:6px}
 .pcb-mount-br{bottom:6px;right:6px}
 @media(max-width:650px){.schematic-board{width:1135px}}
-
 
 /* Pin roles override H/L: actual supply pins use fixed colors, unmodelled/NC
    pads stay charcoal, and only logic signals use the live green/grey palette. */
