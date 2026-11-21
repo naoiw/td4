@@ -346,7 +346,10 @@
   border:1px solid #54836e;
   background:linear-gradient(160deg,#172e2a,#101f27);
   color:#e0f0e7;
-  box-shadow:0 8px 24px rgba(16,34,30,.16)
+  box-shadow:0 8px 24px rgba(16,34,30,.16);
+  --ic-detail-probe-width:112px;
+  --ic-detail-probe-height:42px;
+  --ic-detail-probe-gap:8px
 }
 .ic-detail-panel[hidden]{display:none!important}
 .ic-detail-panel-head {
@@ -383,32 +386,34 @@
   border:1px solid #476c69;
   background:#1b3339
 }
+/* One-section ICs use the available panel width; probe order is unchanged. */
+.ic-detail-panel .ic-function-section:only-child{grid-column:1 / -1}
 .ic-detail-panel .ic-function-headings,
-.ic-detail-panel .ic-function-columns{gap:15px}
+.ic-detail-panel .ic-function-columns{gap:16px}
 .ic-detail-panel .ic-function-title{margin-bottom:12px;padding-bottom:10px;font-size:14px}
 .ic-detail-panel .ic-function-headings{font-size:12px;margin-bottom:10px}
-.ic-detail-panel .ic-function-column{gap:7px}
+.ic-detail-panel .ic-function-column{gap:var(--ic-detail-probe-gap)}
 /* Separate selector/data or SUM/carry probes within a single signal side. */
 .ic-detail-panel .ic-function-subcolumns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
-.ic-detail-panel .ic-function-subcolumn{display:flex;flex-direction:column;min-width:0;gap:7px}
-.ic-detail-panel .ic-function-row{min-height:37px;gap:8px}
-.ic-detail-panel .ic-probe{min-height:37px;padding:7px 10px;font-size:12px}
-.ic-detail-panel .ic-probe-compact{font-size:11px}
+.ic-detail-panel .ic-function-subcolumn{display:flex;flex-direction:column;min-width:0;gap:var(--ic-detail-probe-gap)}
+.ic-detail-panel .ic-function-row{min-height:var(--ic-detail-probe-height);gap:var(--ic-detail-probe-gap)}
+/* Identical probe boxes for all 13 ICs; multi-probe rows shrink to fit. */
+.ic-detail-panel .ic-probe,
+.ic-detail-panel .ic-probe-compact{
+  flex:1 1 0;
+  width:0;
+  max-width:var(--ic-detail-probe-width);
+  min-height:var(--ic-detail-probe-height);
+  padding:8px 10px;
+  gap:5px;
+  font-size:12px
+}
 .ic-detail-panel .ic-probe b{font-size:12px;padding:3px 7px}
 
 /* HC154 address outputs: four rows of four probes, left-to-right 0–F. */
 .ic-detail-panel[data-chip="U13"] .ic-function-headings,
 .ic-detail-panel[data-chip="U13"] .ic-function-columns{
   grid-template-columns:minmax(0,1fr) minmax(0,2.4fr)
-}
-.ic-detail-panel[data-chip="U13"] .ic-probe-compact{
-  font-size:10px;
-  padding:5px 5px;
-  gap:3px
-}
-.ic-detail-panel[data-chip="U13"] .ic-probe-compact b{
-  font-size:10px;
-  padding:2px 4px
 }
 @media(max-width:650px){
   .ic-detail-panel[data-chip="U13"] .ic-function-columns{
@@ -421,14 +426,18 @@
     font:700 11px/1.4 ui-monospace,monospace;
     color:#8abdad
   }
-  .ic-detail-panel[data-chip="U13"] .ic-function-column:first-child::before{content:"INPUT · A / G#"}
+  .ic-detail-panel[data-chip="U13"] .ic-function-column:first-child::before{content:"INPUT · A"}
   .ic-detail-panel[data-chip="U13"] .ic-function-column:last-child::before{content:"OUTPUT · Y"}
 }
 
 @media(max-width:650px){
-  
   .ic-detail-panel{padding:15px}
   .ic-detail-panel .ic-functional-layout{grid-template-columns:1fr}
+  .ic-detail-panel .ic-function-section{padding:12px}
+  .ic-detail-panel .ic-function-row{gap:4px}
+  .ic-detail-panel .ic-probe,
+  .ic-detail-panel .ic-probe-compact{padding:6px 4px;gap:3px}
+  .ic-detail-panel .ic-probe b{padding:3px 4px}
   .ic-detail-panel-head h3{font-size:18px}
 }
 
