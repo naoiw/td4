@@ -49,9 +49,12 @@ interface TD4Api {
   romToSource(rom: readonly number[]): string;
   HEX(n: number): string;
   BINARY(n: number, width: number): string;
+  decodeALU(byte: number, a: number, b: number, input: number): ALUPreview;
 }
 interface ALUPreview {
   byte: number;
+  selectA: BinaryLevel;
+  selectB: BinaryLevel;
   source: number;
   imm: number;
   sum: number;
@@ -84,15 +87,18 @@ interface Window {
   TD4Samples: SampleProgram[];
 }
 declare const module: {exports?: unknown};
+declare function require(path: string): TD4Api;
 
 /** Named IC functional probes; not literal package pin numbers. */
 interface IcPin { name: string; net: string }
 interface IcSection {label?: string; left: IcPin[][]; right: IcPin[][]}
 interface IcLayout {packagePins: number; leftLabel: string; rightLabel: string; sections: IcSection[]}
 interface IcPhysicalPin {number: number; name: string; net?: string}
+type IcPackageType = '74HC154' | '74HC540' | '74HC161' | '74HC153' |
+  '74HC283' | '74HC74' | '74HC32' | '74HC10' | '74HC14';
 interface IcComponent {
   id: string;
-  type: string;
+  type: IcPackageType;
   description: string;
   group: 'rom' | 'select' | 'decode' | 'register' | 'clock';
   pins: readonly IcPin[];

@@ -8,6 +8,9 @@
   else (root as typeof globalThis & {TD4Circuit: IcCircuitApi}).TD4Circuit = exported;
 })(globalThis, function (): IcCircuitApi {
   'use strict';
+  const decodeALU: TD4Api['decodeALU'] = (typeof module === 'object' && module.exports
+    ? require('./td4-core.js')
+    : (globalThis as typeof globalThis & {TD4: TD4Api}).TD4).decodeALU;
   const bit = (value: number, i: number): BinaryLevel => ((value >> i) & 1) as BinaryLevel;
   const p = (name: string, net: string): IcPin => ({name, net});
   const nibble = (name: string, net: string): IcPin[] => [0,1,2,3].map(i => p(`${name}${i}`, `${net}${i}`));
@@ -41,7 +44,7 @@
       '74HC154': 24, '74HC540': 20,
       '74HC161': 16, '74HC153': 16, '74HC283': 16,
       '74HC74': 14, '74HC32': 14, '74HC10': 14, '74HC14': 14
-    } as Record<string, number>)[component.type]};
+    } satisfies Record<IcPackageType, number>)[component.type]};
     const make = (leftLabel: string, rightLabel: string, sections: IcSection[]): IcLayout =>
       ({...common, leftLabel, rightLabel, sections});
     if(component.type === '74HC154') {
@@ -181,15 +184,13 @@
 
   function levels(cpu: CpuState, clock: boolean): IcLevels {
     const instruction = cpu.rom[cpu.pc];
-    const d4 = bit(instruction,4), d5=bit(instruction,5), d6=bit(instruction,6), d7=bit(instruction,7);
-    const selA = (d4 | d7) as BinaryLevel, selB = d5;
-    const input = [cpu.a,cpu.b,cpu.input,0][(selB << 1)|selA];
-    const imm = instruction & 15;
-    const sum = input + imm;
+    const d4 = bit(instruction,4), d6=bit(instruction,6), d7=bit(instruction,7);
+    const {selectA: selA, selectB: selB, source: input, sum, carry} =
+      decodeALU(instruction, cpu.a, cpu.b, cpu.input);
     const nets: IcLevels = {
       CLK: clock?1:0, RST_N:1, GND:0, VCC:1, OE_N:0,
       C:cpu.carry as BinaryLevel,C_N:(1-cpu.carry) as BinaryLevel,
-      COUT:Number(sum>15) as BinaryLevel,
+      COUT: carry as BinaryLevel,
       SEL_A:selA,SEL_B:selB,
       LOAD_A_N:(d6|d7) as BinaryLevel,
       LOAD_B_N:((1-d6)|d7) as BinaryLevel,

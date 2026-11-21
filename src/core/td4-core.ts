@@ -44,6 +44,17 @@
     }
   }
 
+  /** Combinational ALU/MUX view shared by execution, probe logic and waveforms. */
+  function decodeALU(byte: number, a: number, b: number, input: number): ALUPreview {
+    const opcode = byte >>> 4;
+    const imm = byte & 15;
+    const selectA = (((opcode >>> 3) & 1) | (opcode & 1)) as BinaryLevel;
+    const selectB = ((opcode >>> 1) & 1) as BinaryLevel;
+    const source = [a, b, input, 0][(selectB << 1) | selectA];
+    const sum = source + imm;
+    return {byte, selectA, selectB, source, imm, sum, result: sum & 15, carry: Number(sum > 15)};
+  }
+
   class CPU implements CpuState {
     a = 0;
     b = 0;
@@ -90,14 +101,8 @@
       const pcBefore = this.pc;
       const instruction = this.rom[pcBefore];
       const opcode = instruction >>> 4;
-      const imm = instruction & 15;
+      const {imm, source, sum, result, carry: nextCarry} = decodeALU(instruction, this.a, this.b, this.input);
       const oldCarry = this.carry;
-      const sourceSelect0 = ((opcode >>> 3) & 1) | (opcode & 1);
-      const sourceSelect1 = (opcode >>> 1) & 1;
-      const source = [this.a, this.b, this.input, 0][(sourceSelect1 << 1) | sourceSelect0];
-      const sum = source + imm;
-      const result = sum & 15;
-      const nextCarry = sum > 15 ? 1 : 0;
       const destination = opcode >>> 2;
       let branchTaken = false;
 
@@ -214,5 +219,5 @@
     return rom.map((byte, addr) => `DB 0x${byte.toString(16).toUpperCase().padStart(2, '0')}  ; ${HEX(addr)} ${disassemble(byte)}`).join('\n');
   }
 
-  return { CPU, assemble, disassemble, isStandard, romToSource, HEX, BINARY };
+  return { CPU, assemble, disassemble, isStandard, romToSource, HEX, BINARY, decodeALU };
 });
