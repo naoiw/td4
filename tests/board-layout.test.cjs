@@ -530,7 +530,7 @@ test('PCB functional-area silk contains only English headings and no Japanese de
     const end=source.indexOf('];',begin);
     assert.ok(begin>=0 && end>begin,'role area headings must be present');
     const headings=source.slice(begin,end+2);
-    for(const title of expected)assert.ok(headings.includes("title:'"+title+"'"),title);
+    for(const title of expected)assert.match(headings,new RegExp("title:\\s*'"+title+"'"),title);
     assert.doesNotMatch(headings,/[\u3040-\u30ff\u3400-\u9fff]/,'PCB headings must not include Japanese characters');
     assert.doesNotMatch(headings,/subtitle:/);
     assert.doesNotMatch(source,/role\.subtitle/);
