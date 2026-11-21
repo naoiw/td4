@@ -419,8 +419,8 @@ test('power ON, power OFF and one dynamic CPU stop/run button represent three st
     assert.match(source,/\('powerOnBtn'\)\.disabled = powerOn/);
     assert.match(source,/\('powerOffBtn'\)\.disabled = !powerOn/);
     assert.match(source,/toggle\.disabled = !powerOn/);
-    assert.match(source,/if \(intervalId === null\) run\(\)/);
-    assert.match(source,/else stop\(\)/);
+    assert.match(source,/if \(intervalId === null\)\s*run\(\)/);
+    assert.match(source,/else\s*stop\(\)/);
     assert.match(source,/\('runPauseLabel'\)\.textContent = running \? '停止' : '実行'/);
     assert.match(source,/running \? 'CPUを停止する' : 'CPUを実行する'/);
     assert.match(source,/!powerOn \? '電源OFF' : running \? '電源ON · 実行中' : '電源ON · CPU停止中'/);
