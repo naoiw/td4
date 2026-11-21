@@ -238,30 +238,34 @@
         area.replaceChildren();
         const group = GROUPS[$('signalGroup').value] || GROUPS.basic;
         const svgNS = 'http://www.w3.org/2000/svg';
-        for (const signal of group.slice(0, 10)) {
+        // Keep a stable ten-row analyzer; unused slots contain no waveform data.
+        for (let index = 0; index < 10; index++) {
+            const signal = group[index];
             const row = document.createElement('div');
-            row.className = 'scope-row';
+            row.className = signal ? 'scope-row' : 'scope-row is-unused';
             const name = document.createElement('span');
             name.className = 'scope-name';
-            name.textContent = signal;
+            name.textContent = signal || '-';
             const graph = document.createElementNS(svgNS, 'svg');
             graph.setAttribute('viewBox', '0 0 640 36');
             graph.setAttribute('preserveAspectRatio', 'none');
             graph.classList.add('scope-graph');
             graph.setAttribute('aria-hidden', 'true');
-            for (let x = 0; x <= 640; x += 80) {
-                const grid = document.createElementNS(svgNS, 'path');
-                grid.setAttribute('d', `M${x} 0 V36`);
-                grid.setAttribute('class', 'scope-gridline');
-                graph.append(grid);
+            if (signal) {
+                for (let x = 0; x <= 640; x += 80) {
+                    const grid = document.createElementNS(svgNS, 'path');
+                    grid.setAttribute('d', `M${x} 0 V36`);
+                    grid.setAttribute('class', 'scope-gridline');
+                    graph.append(grid);
+                }
+                const high = document.createElementNS(svgNS, 'path');
+                high.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
+                high.setAttribute('class', 'wave-trace');
+                graph.append(high);
             }
-            const high = document.createElementNS(svgNS, 'path');
-            high.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
-            high.setAttribute('class', 'wave-trace');
-            graph.append(high);
             const status = document.createElement('strong');
-            status.className = 'scope-level ' + (levels[signal] ? 'hi' : 'lo');
-            status.textContent = levels[signal] ? 'H' : 'L';
+            status.className = signal ? 'scope-level ' + (levels[signal] ? 'hi' : 'lo') : 'scope-level unused';
+            status.textContent = signal ? (levels[signal] ? 'H' : 'L') : '×';
             row.append(name, graph, status);
             area.append(row);
         }

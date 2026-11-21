@@ -141,8 +141,25 @@ test('logic analyzer and execution trace match heights with ten visible waveform
   assert.match(workbench, /\.scope-panel\{display:flex;flex-direction:column/);
   assert.match(workbench, /\.scope-view\{[^}]*min-height:412px[^}]*overflow:hidden/);
   assert.match(workbench, /\.scope-layout \.trace-panel ol\{[^}]*flex:1;min-height:0;max-height:none;overflow-y:auto/);
-  assert.match(workbench, /\.scope-row\{[^}]*height:39px/);
+  assert.match(workbench, /\.scope-view\{display:grid;grid-template-rows:repeat\(10,minmax\(0,1fr\)\)/);
+  assert.match(workbench, /\.scope-row\{[^}]*min-height:0/);
+  assert.doesNotMatch(workbench, /\.scope-row\{[^}]*height:39px/);
   for (const source of [ts, js]) {
-    assert.match(source, /for \(const signal of group\.slice\(0, 10\)\)/);
+    assert.match(source, /for \(let index = 0; index < 10; index\+\+\)/);
   }
+});
+
+test('analyzer renders ten rows; unused slots have no trace and a neutral state', () => {
+  for (const source of [ts, js]) {
+    assert.match(source, /const signal = group\[index\]/);
+    assert.match(source, /signal \? 'scope-row' : 'scope-row is-unused'/);
+    assert.match(source, /name\.textContent = signal \|\| '-'/);
+    assert.match(source, /status\.textContent = signal \? \(levels\[signal\] \? 'H' : 'L'\) : '×'/);
+    assert.match(source, /if \(signal\) \{/);
+    assert.match(source, /waveformPath\(waveSamples, signal/);
+  }
+  const css = fs.readFileSync(path.join(root,'assets/css/workbench.css'),'utf8');
+  assert.match(css, /\.scope-row\.is-unused \.scope-graph\{background-image:none\}/);
+  assert.match(css, /\.scope-level\.unused\{background:/);
+  assert.match(css, /grid-template-rows:repeat\(10,minmax\(0,1fr\)\)/);
 });
