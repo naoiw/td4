@@ -205,10 +205,12 @@
     });
     if (component.type === '74HC154') {
       const left = [...lines('A', 'PC', 4), row(pin('G1#', 'GND')), row(pin('G2#', 'GND'))];
-      const right = Array.from({ length: 8 }, (_, index) =>
+      const right = Array.from({ length: 4 }, (_, index) =>
         row(
-          pin(`Y${(index * 2).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 2}`),
-          pin(`Y${(index * 2 + 1).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 2 + 1}`)
+          pin(`Y${(index * 4).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4}`),
+          pin(`Y${(index * 4 + 1).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 1}`),
+          pin(`Y${(index * 4 + 2).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 2}`),
+          pin(`Y${(index * 4 + 3).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 3}`)
         )
       );
       return make('INPUT · A / G#', 'OUTPUT · Y', [{ left, right }]);
