@@ -243,7 +243,7 @@
                 {
                     left: [
                         row(pin('CLK', 'CLK')),
-                        row(pin('CLR#', 'RST_N')),
+                        // CLR# stays HIGH in the model, so omit its functional probe.
                         ...component.pins.filter((x) => x.name === 'PE#').map((x) => row(x)),
                         ...lines('D', 'ALU', 4)
                     ],
@@ -254,7 +254,7 @@
         if (component.type === '74HC74') {
             return make('INPUT', 'OUTPUT', [
                 {
-                    left: component.pins.filter((x) => !/^Q/.test(x.name)).map((x) => row(x)),
+                    left: component.pins.filter((x) => x.name !== 'CLR#' && !/^Q/.test(x.name)).map((x) => row(x)),
                     right: component.pins.filter((x) => /^Q/.test(x.name)).map((x) => row(x))
                 }
             ]);

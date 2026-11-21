@@ -239,7 +239,19 @@ test('IC details omit fixed enable controls but retain dynamic and non-enable pi
   }
   for(const id of ['U3','U4','U5','U6']){
     assert.ok(names(id).includes('PE#'),id+' must retain dynamic parallel-load control');
+    assert.ok(!names(id).includes('CLR#'),id+' fixed-HIGH clear must be hidden');
+    assert.ok(names(id).includes('CLK'),id+' clock must remain visible');
+    assert.deepEqual(names(id).filter(name=>/^D[0-3]$/.test(name)),['D0','D1','D2','D3']);
+    assert.deepEqual(names(id).filter(name=>/^Q[0-3]$/.test(name)),['Q0','Q1','Q2','Q3']);
+    assert.equal(physicalPins(byId[id])[0].net,'RST_N',id+' physical clear must remain connected');
   }
+  assert.ok(!names('U1').includes('CLR#'),'74HC74 fixed-HIGH clear must be hidden');
+  assert.ok(names('U1').includes('CLK'),'74HC74 clock must remain visible');
+  assert.ok(names('U1').includes('D'),'74HC74 data input must remain visible');
+  assert.ok(names('U1').includes('Q'),'74HC74 data output must remain visible');
+  assert.ok(names('U1').includes('Q#'),'74HC74 inverted output must remain visible');
+  assert.equal(physicalPins(byId.U1)[12].net,'RST_N','physical 74HC74 clear must remain connected');
+  assert.equal(levels(new CPU(),false).RST_N,1,'clear remains deasserted HIGH in the model');
   assert.ok(!names('U9').includes('CIN'),'fixed LOW carry input hidden from detail view');
   assert.equal(physicalPins(byId.U9)[6].net,'GND','physical CIN remains tied LOW');
 
