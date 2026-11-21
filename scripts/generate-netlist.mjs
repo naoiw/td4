@@ -16,6 +16,17 @@ for (const [id, type] of Object.entries(data.components)) {
     if (Number(pin) < 1 || Number(pin) > count || !data.pinNames[id][pin])
       throw new Error('Invalid connection at ' + id + '.' + pin);
 }
+// Only the documented gate pin groups are used; validate every contact is connected.
+for (const [id, expectedCount] of [['U10', 4], ['U11', 3]]) {
+  const groups = data.gateGroups?.[id];
+  if (!Array.isArray(groups) || groups.length !== expectedCount)
+    throw new Error('Invalid PDF gate groups for ' + id);
+  for (const group of groups) {
+    for (const pin of [...group.inputPins, group.outputPin])
+      if (!data.pinNets[id]?.[pin] || !data.nets[data.pinNets[id][pin]]?.includes(id + '.' + pin))
+        throw new Error('Missing or untracked gate connection: ' + id + '.' + pin);
+  }
+}
 const header = "/* Generated from src/data/netlist.json — do not edit. */\n(function (root) {\n  'use strict';\n  const netlist = ";
 const footer = ";\n  root.TD4Netlist = netlist;\n  if (typeof module === 'object' && module.exports) module.exports = netlist;\n})(globalThis);\n";
 const output = header + JSON.stringify(data) + footer;
