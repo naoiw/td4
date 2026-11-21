@@ -139,3 +139,18 @@ interface BoardViewApi {
   drawWires(options: BoardRenderOptions): void;
 }
 interface Window { TD4BoardView: BoardViewApi }
+
+
+/** Schematic-derived pin and ROM matrix mapping, generated for browser use. */
+interface TD4NetlistData {
+  schemaVersion: number;
+  components: Record<string, IcPackageType>;
+  pinNets: Record<string, Record<string, string>>;
+  pinNames: Record<string, Record<string, string>>;
+  romSwitches: {
+    id: string;
+    address: number;
+    bits: {bit: number; upperNet: string; lowerNet: string; selectedRow: string}[];
+  }[];
+}
+interface Window { TD4Netlist: TD4NetlistData }
