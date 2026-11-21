@@ -9,7 +9,7 @@
     }
 
         function mount(options) {
-    const {circuit, HEX, toggleIcDetails, setSelectedNet, onRomBitToggle, onInputBitToggle} = options;
+    const {circuit, HEX, toggleIcDetails, setSelectedNet, onRomBitToggle, onInputBitToggle, onPowerToggle, onFrequencyToggle} = options;
         const chips = $('icChipGrid');
         chips.replaceChildren();
         for (const chip of circuit.chips) {
@@ -220,14 +220,30 @@
             diode.setAttribute('aria-label', `出力LED${bit}の信号線を追跡`);
             output.append(diode);
         }
-        
+        $('boardPowerSwitch').addEventListener('click', onPowerToggle);
+        $('boardClockSwitch').addEventListener('click', onFrequencyToggle);
     }
 
       function render(options) {
-    const {cpu, clockHigh, selectedNet, circuit, HEX}=options;
+    const {cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz, actualClockHz}=options;
         const board = document.getElementById('schematicBoard');
         if (!board)
             return;
+        board.classList.toggle('is-powered-off', !powerOn);
+        const powerSwitch = $('boardPowerSwitch');
+        powerSwitch.classList.toggle('is-on', powerOn);
+        powerSwitch.setAttribute('aria-pressed', String(powerOn));
+        powerSwitch.setAttribute('aria-label', powerOn ? '基板の電源をOFFにする' : '基板の電源をONにする');
+        const pilot = $('boardPowerLed');
+        pilot.classList.toggle('is-on', powerOn);
+        pilot.setAttribute('aria-label', powerOn ? 'パイロットランプ点灯' : 'パイロットランプ消灯');
+        const frequencySwitch = $('boardClockSwitch');
+        frequencySwitch.classList.toggle('is-ten-hz', boardClockHz === 10);
+        frequencySwitch.setAttribute('aria-pressed', String(boardClockHz === 10));
+        frequencySwitch.setAttribute('aria-label', 'クロック周波数 ' + boardClockHz + 'Hz、クリックで' + (boardClockHz === 2 ? '10' : '2') + 'Hzに変更');
+        const override = actualClockHz !== boardClockHz;
+        $('boardOscReadout').textContent = override ? 'PANEL OVERRIDE · ' + actualClockHz + ' Hz' : 'CLOCK · ' + boardClockHz + ' Hz';
+        frequencySwitch.closest('.pcb-osc-area')?.classList.toggle('is-override', override);
         const values = circuit.levels(cpu, clockHigh);
         for (const element of document.querySelectorAll('.ic-probe')) {
             const net = element.dataset.net || '';
@@ -237,7 +253,7 @@
             element.classList.toggle('is-selected', net === selectedNet);
             const value = element.querySelector('.ic-pin-level');
             if (value)
-                value.textContent = level ? 'H' : 'L';
+                value.textContent = powerOn ? (level ? 'H' : 'L') : '—';
             element.title = `${net}: ${level ? 'HIGH (1)' : 'LOW (0)'}`;
         }
         for (const leg of board.querySelectorAll('.ic-leg')) {
@@ -256,7 +272,7 @@
             const byte = cpu.rom[addr];
             cell.classList.toggle('is-current', selected);
             const lamp = cell.querySelector('.rom-select-lamp');
-            lamp.classList.toggle('is-on', selected);
+            lamp.classList.toggle('is-on', selected && powerOn);
             lamp.classList.toggle('is-selected', selectedNet === `ROM_SEL_${addr}`);
             cell.querySelector('.rom-slot-value').textContent = byte.toString(16).toUpperCase().padStart(2, '0');
             for (const btn of cell.querySelectorAll('.rom-dip')) {
@@ -277,7 +293,7 @@
             btn.title = `IN${bit} = ${+on}`;
         });
         board.querySelectorAll('.schematic-io-led').forEach(btn => {
-            const bit = Number(btn.dataset.bit), on = !!(cpu.out & (1 << bit));
+            const bit = Number(btn.dataset.bit), on = powerOn && !!(cpu.out & (1 << bit));
             btn.classList.toggle('is-on', on);
             btn.textContent = `LED${bit}`;
             btn.title = `OUT${bit} = ${+on}（クリックで信号を追跡）`;
@@ -294,6 +310,7 @@
         if (!board)
             return;
         const svg = document.getElementById('icWireLayer');
+        if (!options.powerOn) { svg.replaceChildren(); return; }
         const bounds = board.getBoundingClientRect();
         if (!bounds.width || !bounds.height)
             return;
