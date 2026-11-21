@@ -163,3 +163,20 @@ test('analyzer renders ten rows; unused slots have no trace and a neutral state'
   assert.match(css, /\.scope-level\.unused\{background:/);
   assert.match(css, /grid-template-rows:repeat\(10,minmax\(0,1fr\)\)/);
 });
+
+test('logic analyzer shows vertical gridlines even in unused rows without a middle guide line', () => {
+  const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.doesNotMatch(css, /\.scope-graph\{[^}]*background-image:linear-gradient/);
+  for (const source of [ts, js]) {
+    const begin = source.indexOf('function renderWaveforms(');
+    const end = source.indexOf('function recordSignals(', begin);
+    assert.ok(begin >= 0 && end > begin);
+    const render = source.slice(begin, end);
+    const grid = render.indexOf('for (let x = 0; x <= 640; x += 80)');
+    const guard = render.indexOf('if (signal) {');
+    const trace = render.indexOf('waveformPath(waveSamples, signal');
+    assert.ok(grid >= 0 && guard > grid, 'all ten rows must receive gridlines');
+    assert.match(render.slice(grid, guard), /graph\.append\(grid\)/);
+    assert.ok(trace > guard, 'only assigned signals should have a waveform');
+  }
+});
