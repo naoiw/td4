@@ -115,3 +115,20 @@ test('ISA reference fits its containing panel and reflows narrow screens without
   assert.equal((html.match(/<tr class="isa-instruction" data-opcode=/g)||[]).length,12,
     'all 12 rows are retained');
 });
+
+
+test('bit and control dividers do not extend into the white gap above an instruction',()=>{
+  const baseRule=css.match(/\.isa-detail-table tbody tr\.isa-instruction>\*\{([^}]*)\}/)?.[1];
+  assert.ok(baseRule,'base instruction cell style exists');
+  assert.doesNotMatch(baseRule,/border-top:/,
+    'the white gap must not be implemented as a per-cell top border');
+  assert.match(baseRule,/border-bottom:1px solid #e3ebf0/);
+  assert.match(css,/\.isa-detail-table \.isa-explanation td\{padding:4px 10px 18px/,
+    'the preceding white explanation row provides the visual gap');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-bit\{[^}]*border-right:1px dashed/,
+    'bit separators still mark bit boundaries');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-bit\[data-bit="4"\]\{border-right:2px solid/,
+    'the two 4-bit groups keep their divider');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-control\{border-right:1px dashed/,
+    'H/L control dividers remain intact');
+});
