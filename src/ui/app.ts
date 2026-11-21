@@ -219,7 +219,6 @@
     const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
       parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
     viewport.style.height = Math.ceil(board.offsetHeight * scale + verticalSpace) + 'px';
-    drawSelectedWires();
   }
 
 
