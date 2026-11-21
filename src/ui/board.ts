@@ -285,7 +285,9 @@
         const bit=Number(btn.dataset.bit);
         const on=!!(byte&(1<<bit));
         btn.classList.toggle('is-on',on);
-        btn.dataset.net=selected?`D${bit}`:'';
+        const romContact = (globalThis as typeof globalThis & {TD4Netlist: TD4NetlistData}).TD4Netlist.romSwitches[addr].bits[bit];
+        btn.dataset.net = romContact.upperNet;
+        btn.dataset.cellNet = romContact.lowerNet;
         btn.setAttribute('aria-pressed',String(on));
         btn.title=`ROM ${HEX(addr)} / D${bit} = ${+on}（クリックで反転）`;
         btn.setAttribute('aria-label',`ROM ${HEX(addr)}番地 D${bit} を${on?'OFF':'ON'}にする`);

@@ -34,7 +34,7 @@
             type: '74HC540',
             description: 'ROM inverting buffer / D0–D7',
             group: 'rom',
-            pins: [...byte('A', 'ROM_RAW'), ...byte('Y', 'D'), p('OE#', 'OE_N')]
+            pins: [...byte('A', 'ROM_RAW'), ...byte('Y', 'D'), p('OE#', 'GND')]
         },
         {
             id: 'U7',
@@ -205,7 +205,7 @@
         if (component.type === '74HC540') {
             return make('INPUT · A / OE#', 'OUTPUT · Y', [
                 {
-                    left: [...lines('A', 'ROM_RAW', 8), row(pin('OE1#', 'OE_N')), row(pin('OE2#', 'OE_N'))],
+                    left: [...lines('A', 'ROM_RAW', 8), row(pin('OE1#', 'GND')), row(pin('OE2#', 'GND'))],
                     right: lines('Y', 'D', 8)
                 }
             ]);
@@ -277,169 +277,24 @@
             }
         ]);
     };
-    // Only pins with a computable CPU-level net receive a live H/L state.
-    // Remaining gate pins retain their real pin names, but not a fabricated voltage.
+    /** Physical DIP pads use the PDF-derived JSON connection table. */
     const physicalPins = (component) => {
-        const count = layout(component).packagePins;
-        const pins = Array.from({ length: count }, (_, i) => ({
-            number: i + 1,
-            name: '未モデル化'
-        }));
-        const bind = (number, name, net) => {
-            pins[number - 1] = { number, name, ...(net ? { net } : {}) };
-        };
-        bind(count, 'VCC', 'VCC');
-        bind(count / 2, 'GND', 'GND');
-        switch (component.type) {
-            case '74HC154':
-                for (let i = 0; i <= 10; i++)
-                    bind(i + 1, 'Y' + i + '#', 'ROM_SEL_' + i);
-                for (let i = 11; i < 16; i++)
-                    bind(i + 2, 'Y' + i + '#', 'ROM_SEL_' + i);
-                bind(18, 'E0#', 'GND');
-                bind(19, 'E1#', 'GND');
-                for (let i = 0; i < 4; i++)
-                    bind(23 - i, 'A' + i, 'PC' + i);
-                break;
-            case '74HC540':
-                bind(1, 'OE1#', 'OE_N');
-                bind(19, 'OE2#', 'OE_N');
-                for (let i = 0; i < 8; i++) {
-                    bind(i + 2, 'A' + i, 'ROM_RAW' + i);
-                    bind(18 - i, 'Y' + i, 'D' + i);
-                }
-                break;
-            case '74HC153': {
-                const first = component.id === 'U8' ? 2 : 0;
-                const second = first + 1;
-                bind(1, '1E#', 'GND');
-                bind(2, 'S1', 'SEL_B');
-                bind(3, '1I3', 'GND');
-                bind(4, '1I2', 'IN' + first);
-                bind(5, '1I1', 'B' + first);
-                bind(6, '1I0', 'A' + first);
-                bind(7, '1Y', 'MUX' + first);
-                bind(9, '2Y', 'MUX' + second);
-                bind(10, '2I0', 'A' + second);
-                bind(11, '2I1', 'B' + second);
-                bind(12, '2I2', 'IN' + second);
-                bind(13, '2I3', 'GND');
-                bind(14, 'S0', 'SEL_A');
-                bind(15, '2E#', 'GND');
-                break;
-            }
-            case '74HC283': {
-                const mapping = [
-                    [1, 'S2', 'ALU1'],
-                    [2, 'B2', 'D1'],
-                    [3, 'A2', 'MUX1'],
-                    [4, 'S1', 'ALU0'],
-                    [5, 'A1', 'MUX0'],
-                    [6, 'B1', 'D0'],
-                    [7, 'CIN', 'GND'],
-                    [9, 'COUT', 'COUT'],
-                    [10, 'S4', 'ALU3'],
-                    [11, 'B4', 'D3'],
-                    [12, 'A4', 'MUX3'],
-                    [13, 'S3', 'ALU2'],
-                    [14, 'A3', 'MUX2'],
-                    [15, 'B3', 'D2']
-                ];
-                for (const [number, name, net] of mapping)
-                    bind(number, name, net);
-                break;
-            }
-            case '74HC161': {
-                const output = component.id === 'U3' ? 'A' : component.id === 'U4' ? 'B' : component.id === 'U5' ? 'OUT' : 'PC';
-                const load = component.id === 'U3'
-                    ? 'LOAD_A_N'
-                    : component.id === 'U4'
-                        ? 'LOAD_B_N'
-                        : component.id === 'U5'
-                            ? 'LOAD_OUT_N'
-                            : 'LOAD_PC_N';
-                bind(1, 'CLR#', 'RST_N');
-                bind(2, 'CLK', 'CLK');
-                for (let i = 0; i < 4; i++) {
-                    bind(i + 3, 'D' + i, 'ALU' + i);
-                    bind(14 - i, 'Q' + i, output + i);
-                }
-                bind(7, 'ENP');
-                bind(9, 'LOAD#', load);
-                bind(10, 'ENT');
-                bind(15, 'RCO');
-                break;
-            }
-            case '74HC74':
-                bind(1, '1CLR#', 'RST_N');
-                bind(2, '1D', 'COUT');
-                bind(3, '1CLK', 'CLK');
-                bind(4, '1PRE#');
-                bind(5, '1Q', 'C');
-                bind(6, '1Q#', 'C_N');
-                for (const [number, name] of [
-                    [8, '2Q#'],
-                    [9, '2Q'],
-                    [10, '2PRE#'],
-                    [11, '2CLK'],
-                    [12, '2D'],
-                    [13, '2CLR#']
-                ])
-                    bind(number, name);
-                break;
-            case '74HC32':
-                for (const [number, name] of [
-                    [1, '1A'],
-                    [2, '1B'],
-                    [3, '1Y'],
-                    [4, '2A'],
-                    [5, '2B'],
-                    [6, '2Y'],
-                    [8, '3Y'],
-                    [9, '3A'],
-                    [10, '3B'],
-                    [11, '4Y'],
-                    [12, '4A'],
-                    [13, '4B']
-                ])
-                    bind(number, name);
-                break;
-            case '74HC10':
-                for (const [number, name] of [
-                    [1, '1A'],
-                    [2, '1B'],
-                    [3, '2A'],
-                    [4, '2B'],
-                    [5, '2C'],
-                    [6, '2Y'],
-                    [8, '3Y'],
-                    [9, '3A'],
-                    [10, '3B'],
-                    [11, '3C'],
-                    [12, '1Y'],
-                    [13, '1C']
-                ])
-                    bind(number, name);
-                break;
-            case '74HC14':
-                for (const [number, name] of [
-                    [1, '1A'],
-                    [2, '1Y'],
-                    [3, '2A'],
-                    [4, '2Y'],
-                    [5, '3A'],
-                    [6, '3Y'],
-                    [8, '4Y'],
-                    [9, '4A'],
-                    [10, '5Y'],
-                    [11, '5A'],
-                    [12, '6Y'],
-                    [13, '6A']
-                ])
-                    bind(number, name);
-                break;
-        }
-        return pins;
+        const netlist = globalThis.TD4Netlist;
+        if (!netlist)
+            throw new Error('TD4 netlist is missing: load data/netlist.js first');
+        const connected = netlist.pinNets[component.id];
+        const names = netlist.pinNames[component.id];
+        if (!connected || !names)
+            throw new Error('Missing netlist component: ' + component.id);
+        return Array.from({ length: layout(component).packagePins }, (_, index) => {
+            const number = index + 1;
+            const net = connected[String(number)];
+            return {
+                number,
+                name: names[String(number)] ?? '未モデル化',
+                ...(net ? { net } : {})
+            };
+        });
     };
     function levels(cpu, clock) {
         const instruction = cpu.rom[cpu.pc];

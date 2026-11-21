@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {CPU} = require('../assets/js/core/td4-core.js');
+const netlist = require('../assets/js/data/netlist.js');
 const {chips, levels} = require('../assets/js/core/ic-circuit.js');
 const bit = (value, bitNumber) => (value >> bitNumber) & 1;
 
@@ -124,8 +125,8 @@ test('physical pins of decoder, ROM buffer, MUX and adder match their DIP pinout
   assert.equal(dec[16].net,'ROM_SEL_15');
   assert.equal(dec[22].net,'PC0');
   const buf=physicalPins(byId.U12);
-  assert.equal(buf[1].net,'ROM_RAW0');assert.equal(buf[8].net,'ROM_RAW7');
-  assert.equal(buf[17].net,'D0');assert.equal(buf[10].net,'D7');
+  assert.equal(buf[1].net,'ROM_RAW7');assert.equal(buf[8].net,'ROM_RAW0');
+  assert.equal(buf[17].net,'D7');assert.equal(buf[10].net,'D0');
   for(const [id,lbit,hbit] of [['U7',0,1],['U8',2,3]]) {
     const mux=physicalPins(byId[id]);
     assert.equal(mux[1].net,'SEL_B');
@@ -135,4 +136,36 @@ test('physical pins of decoder, ROM buffer, MUX and adder match their DIP pinout
   }
   const add=physicalPins(byId.U9);
   assert.equal(add[8].net,'COUT');assert.equal(add[3].net,'ALU0');
+});
+
+test('physical DIP pin nets match canonical JSON for all 13 chips', () => {
+  const {physicalPins}=require('../assets/js/core/ic-circuit.js');
+  for(const chip of chips){
+    const mapped=physicalPins(chip);
+    const defined=netlist.pinNets[chip.id];
+    const names=netlist.pinNames[chip.id];
+    for(const pin of mapped){
+      assert.equal(pin.net,defined[String(pin.number)],chip.id+'.'+pin.number+' net');
+      assert.equal(pin.name,names[String(pin.number)],chip.id+'.'+pin.number+' name');
+    }
+  }
+  assert.equal(physicalPins(chips.find(c=>c.id==='U1'))[7].net,'C_N');
+  assert.equal(physicalPins(chips.find(c=>c.id==='U1'))[8].net,undefined);
+  assert.equal(physicalPins(chips.find(c=>c.id==='U12'))[0].net,'GND');
+});
+
+test('ROM matrix has independent contact nets and common raw data columns', () => {
+  assert.equal(netlist.romSwitches.length,16);
+  const cells = new Set();
+  for (const [address, sw] of netlist.romSwitches.entries()) {
+    assert.equal(sw.address,address);
+    assert.equal(sw.bits.length,8);
+    for (const [bit,contact] of sw.bits.entries()) {
+      assert.equal(contact.upperNet,'ROM_RAW'+bit);
+      assert.equal(contact.selectedRow,'ROM_SEL_'+address);
+      assert.equal(contact.lowerNet,'ROM_CELL_'+address+'_'+bit);
+      cells.add(contact.lowerNet);
+    }
+  }
+  assert.equal(cells.size,128);
 });
