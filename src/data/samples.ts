@@ -68,30 +68,30 @@ loop:  OUT 1
        JMP loop`
     },
     {
-        id: 'sum2',
-        icon: '∑',
-        title: '2bit加算（16命令）',
-        description: 'SW01+SW23 → LED210（LED2は桁上がり）',
-        source: `; SW1:0 (下位2bit) + SW3:2 (上位2bit) -> LED2:0
+      id: 'sum2',
+      icon: '∑',
+      title: '2bit加算（16命令）',
+      description: 'SW01+SW23 → LED210（LED2は桁上がり）',
+      source: `; SW1:0 (下位2bit) + SW3:2 (上位2bit) -> LED2:0
 ; Aで入力範囲を判別し、Bを0〜6の結果に変換
 start:  IN A
-        MOV B, A
-        ADD A, 4
-        JNC under12
-        ADD B, 7
-        JMP show
+      MOV B, A
+      ADD A, 4
+      JNC under12
+      ADD B, 7
+      JMP show
 under12:
-        ADD A, 4
-        JNC under8
-        ADD B, 10
-        JMP show
+      ADD A, 4
+      JNC under8
+      ADD B, 10
+      JMP show
 under8:
-        ADD A, 4
-        JNC show
-        ADD B, 13
+      ADD A, 4
+      JNC show
+      ADD B, 13
 show:   OUT B
-        ADD B, 12    ; 1クロックの間、CPUのCにも桁上がりを表示
-        JMP start`
+      ADD B, 12    ; 1クロックの間、CPUのCにも桁上がりを表示
+      JMP start`
     },
     {
       id: 'countdown',
