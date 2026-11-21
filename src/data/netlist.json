@@ -673,6 +673,390 @@
     ],
     "ROM_SEL_15": [
       "U13.17"
+    ],
+    "ROM_CELL_0_0": [
+      "SW_ROM_0.8"
+    ],
+    "ROM_CELL_0_1": [
+      "SW_ROM_0.7"
+    ],
+    "ROM_CELL_0_2": [
+      "SW_ROM_0.6"
+    ],
+    "ROM_CELL_0_3": [
+      "SW_ROM_0.5"
+    ],
+    "ROM_CELL_0_4": [
+      "SW_ROM_0.4"
+    ],
+    "ROM_CELL_0_5": [
+      "SW_ROM_0.3"
+    ],
+    "ROM_CELL_0_6": [
+      "SW_ROM_0.2"
+    ],
+    "ROM_CELL_0_7": [
+      "SW_ROM_0.1"
+    ],
+    "ROM_CELL_1_0": [
+      "SW_ROM_1.8"
+    ],
+    "ROM_CELL_1_1": [
+      "SW_ROM_1.7"
+    ],
+    "ROM_CELL_1_2": [
+      "SW_ROM_1.6"
+    ],
+    "ROM_CELL_1_3": [
+      "SW_ROM_1.5"
+    ],
+    "ROM_CELL_1_4": [
+      "SW_ROM_1.4"
+    ],
+    "ROM_CELL_1_5": [
+      "SW_ROM_1.3"
+    ],
+    "ROM_CELL_1_6": [
+      "SW_ROM_1.2"
+    ],
+    "ROM_CELL_1_7": [
+      "SW_ROM_1.1"
+    ],
+    "ROM_CELL_2_0": [
+      "SW_ROM_2.8"
+    ],
+    "ROM_CELL_2_1": [
+      "SW_ROM_2.7"
+    ],
+    "ROM_CELL_2_2": [
+      "SW_ROM_2.6"
+    ],
+    "ROM_CELL_2_3": [
+      "SW_ROM_2.5"
+    ],
+    "ROM_CELL_2_4": [
+      "SW_ROM_2.4"
+    ],
+    "ROM_CELL_2_5": [
+      "SW_ROM_2.3"
+    ],
+    "ROM_CELL_2_6": [
+      "SW_ROM_2.2"
+    ],
+    "ROM_CELL_2_7": [
+      "SW_ROM_2.1"
+    ],
+    "ROM_CELL_3_0": [
+      "SW_ROM_3.8"
+    ],
+    "ROM_CELL_3_1": [
+      "SW_ROM_3.7"
+    ],
+    "ROM_CELL_3_2": [
+      "SW_ROM_3.6"
+    ],
+    "ROM_CELL_3_3": [
+      "SW_ROM_3.5"
+    ],
+    "ROM_CELL_3_4": [
+      "SW_ROM_3.4"
+    ],
+    "ROM_CELL_3_5": [
+      "SW_ROM_3.3"
+    ],
+    "ROM_CELL_3_6": [
+      "SW_ROM_3.2"
+    ],
+    "ROM_CELL_3_7": [
+      "SW_ROM_3.1"
+    ],
+    "ROM_CELL_4_0": [
+      "SW_ROM_4.8"
+    ],
+    "ROM_CELL_4_1": [
+      "SW_ROM_4.7"
+    ],
+    "ROM_CELL_4_2": [
+      "SW_ROM_4.6"
+    ],
+    "ROM_CELL_4_3": [
+      "SW_ROM_4.5"
+    ],
+    "ROM_CELL_4_4": [
+      "SW_ROM_4.4"
+    ],
+    "ROM_CELL_4_5": [
+      "SW_ROM_4.3"
+    ],
+    "ROM_CELL_4_6": [
+      "SW_ROM_4.2"
+    ],
+    "ROM_CELL_4_7": [
+      "SW_ROM_4.1"
+    ],
+    "ROM_CELL_5_0": [
+      "SW_ROM_5.8"
+    ],
+    "ROM_CELL_5_1": [
+      "SW_ROM_5.7"
+    ],
+    "ROM_CELL_5_2": [
+      "SW_ROM_5.6"
+    ],
+    "ROM_CELL_5_3": [
+      "SW_ROM_5.5"
+    ],
+    "ROM_CELL_5_4": [
+      "SW_ROM_5.4"
+    ],
+    "ROM_CELL_5_5": [
+      "SW_ROM_5.3"
+    ],
+    "ROM_CELL_5_6": [
+      "SW_ROM_5.2"
+    ],
+    "ROM_CELL_5_7": [
+      "SW_ROM_5.1"
+    ],
+    "ROM_CELL_6_0": [
+      "SW_ROM_6.8"
+    ],
+    "ROM_CELL_6_1": [
+      "SW_ROM_6.7"
+    ],
+    "ROM_CELL_6_2": [
+      "SW_ROM_6.6"
+    ],
+    "ROM_CELL_6_3": [
+      "SW_ROM_6.5"
+    ],
+    "ROM_CELL_6_4": [
+      "SW_ROM_6.4"
+    ],
+    "ROM_CELL_6_5": [
+      "SW_ROM_6.3"
+    ],
+    "ROM_CELL_6_6": [
+      "SW_ROM_6.2"
+    ],
+    "ROM_CELL_6_7": [
+      "SW_ROM_6.1"
+    ],
+    "ROM_CELL_7_0": [
+      "SW_ROM_7.8"
+    ],
+    "ROM_CELL_7_1": [
+      "SW_ROM_7.7"
+    ],
+    "ROM_CELL_7_2": [
+      "SW_ROM_7.6"
+    ],
+    "ROM_CELL_7_3": [
+      "SW_ROM_7.5"
+    ],
+    "ROM_CELL_7_4": [
+      "SW_ROM_7.4"
+    ],
+    "ROM_CELL_7_5": [
+      "SW_ROM_7.3"
+    ],
+    "ROM_CELL_7_6": [
+      "SW_ROM_7.2"
+    ],
+    "ROM_CELL_7_7": [
+      "SW_ROM_7.1"
+    ],
+    "ROM_CELL_8_0": [
+      "SW_ROM_8.8"
+    ],
+    "ROM_CELL_8_1": [
+      "SW_ROM_8.7"
+    ],
+    "ROM_CELL_8_2": [
+      "SW_ROM_8.6"
+    ],
+    "ROM_CELL_8_3": [
+      "SW_ROM_8.5"
+    ],
+    "ROM_CELL_8_4": [
+      "SW_ROM_8.4"
+    ],
+    "ROM_CELL_8_5": [
+      "SW_ROM_8.3"
+    ],
+    "ROM_CELL_8_6": [
+      "SW_ROM_8.2"
+    ],
+    "ROM_CELL_8_7": [
+      "SW_ROM_8.1"
+    ],
+    "ROM_CELL_9_0": [
+      "SW_ROM_9.8"
+    ],
+    "ROM_CELL_9_1": [
+      "SW_ROM_9.7"
+    ],
+    "ROM_CELL_9_2": [
+      "SW_ROM_9.6"
+    ],
+    "ROM_CELL_9_3": [
+      "SW_ROM_9.5"
+    ],
+    "ROM_CELL_9_4": [
+      "SW_ROM_9.4"
+    ],
+    "ROM_CELL_9_5": [
+      "SW_ROM_9.3"
+    ],
+    "ROM_CELL_9_6": [
+      "SW_ROM_9.2"
+    ],
+    "ROM_CELL_9_7": [
+      "SW_ROM_9.1"
+    ],
+    "ROM_CELL_10_0": [
+      "SW_ROM_A.8"
+    ],
+    "ROM_CELL_10_1": [
+      "SW_ROM_A.7"
+    ],
+    "ROM_CELL_10_2": [
+      "SW_ROM_A.6"
+    ],
+    "ROM_CELL_10_3": [
+      "SW_ROM_A.5"
+    ],
+    "ROM_CELL_10_4": [
+      "SW_ROM_A.4"
+    ],
+    "ROM_CELL_10_5": [
+      "SW_ROM_A.3"
+    ],
+    "ROM_CELL_10_6": [
+      "SW_ROM_A.2"
+    ],
+    "ROM_CELL_10_7": [
+      "SW_ROM_A.1"
+    ],
+    "ROM_CELL_11_0": [
+      "SW_ROM_B.8"
+    ],
+    "ROM_CELL_11_1": [
+      "SW_ROM_B.7"
+    ],
+    "ROM_CELL_11_2": [
+      "SW_ROM_B.6"
+    ],
+    "ROM_CELL_11_3": [
+      "SW_ROM_B.5"
+    ],
+    "ROM_CELL_11_4": [
+      "SW_ROM_B.4"
+    ],
+    "ROM_CELL_11_5": [
+      "SW_ROM_B.3"
+    ],
+    "ROM_CELL_11_6": [
+      "SW_ROM_B.2"
+    ],
+    "ROM_CELL_11_7": [
+      "SW_ROM_B.1"
+    ],
+    "ROM_CELL_12_0": [
+      "SW_ROM_C.8"
+    ],
+    "ROM_CELL_12_1": [
+      "SW_ROM_C.7"
+    ],
+    "ROM_CELL_12_2": [
+      "SW_ROM_C.6"
+    ],
+    "ROM_CELL_12_3": [
+      "SW_ROM_C.5"
+    ],
+    "ROM_CELL_12_4": [
+      "SW_ROM_C.4"
+    ],
+    "ROM_CELL_12_5": [
+      "SW_ROM_C.3"
+    ],
+    "ROM_CELL_12_6": [
+      "SW_ROM_C.2"
+    ],
+    "ROM_CELL_12_7": [
+      "SW_ROM_C.1"
+    ],
+    "ROM_CELL_13_0": [
+      "SW_ROM_D.8"
+    ],
+    "ROM_CELL_13_1": [
+      "SW_ROM_D.7"
+    ],
+    "ROM_CELL_13_2": [
+      "SW_ROM_D.6"
+    ],
+    "ROM_CELL_13_3": [
+      "SW_ROM_D.5"
+    ],
+    "ROM_CELL_13_4": [
+      "SW_ROM_D.4"
+    ],
+    "ROM_CELL_13_5": [
+      "SW_ROM_D.3"
+    ],
+    "ROM_CELL_13_6": [
+      "SW_ROM_D.2"
+    ],
+    "ROM_CELL_13_7": [
+      "SW_ROM_D.1"
+    ],
+    "ROM_CELL_14_0": [
+      "SW_ROM_E.8"
+    ],
+    "ROM_CELL_14_1": [
+      "SW_ROM_E.7"
+    ],
+    "ROM_CELL_14_2": [
+      "SW_ROM_E.6"
+    ],
+    "ROM_CELL_14_3": [
+      "SW_ROM_E.5"
+    ],
+    "ROM_CELL_14_4": [
+      "SW_ROM_E.4"
+    ],
+    "ROM_CELL_14_5": [
+      "SW_ROM_E.3"
+    ],
+    "ROM_CELL_14_6": [
+      "SW_ROM_E.2"
+    ],
+    "ROM_CELL_14_7": [
+      "SW_ROM_E.1"
+    ],
+    "ROM_CELL_15_0": [
+      "SW_ROM_F.8"
+    ],
+    "ROM_CELL_15_1": [
+      "SW_ROM_F.7"
+    ],
+    "ROM_CELL_15_2": [
+      "SW_ROM_F.6"
+    ],
+    "ROM_CELL_15_3": [
+      "SW_ROM_F.5"
+    ],
+    "ROM_CELL_15_4": [
+      "SW_ROM_F.4"
+    ],
+    "ROM_CELL_15_5": [
+      "SW_ROM_F.3"
+    ],
+    "ROM_CELL_15_6": [
+      "SW_ROM_F.2"
+    ],
+    "ROM_CELL_15_7": [
+      "SW_ROM_F.1"
     ]
   },
   "romSwitches": [
