@@ -86,9 +86,8 @@
           <div><p class="eyebrow">LOGIC ANALYZER</p><h2 id="scopeTitle">信号波形</h2></div>
           <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ (4bit)</option><option value="rom">ROM / ALU</option></select></label>
         </div>
-        <div class="scope-meta"><span>立ち上がりでCPU状態を更新 · 右端が最新</span><button type="button" class="text-button" id="clearWaveBtn">波形を消去</button></div>
         <div class="scope-view" id="scopeView" aria-label="デジタル信号波形。Hは上段、Lは下段に表示"></div>
-        <div class="scope-footer"><span id="sampleCount">0 samples</span></div>
+        <div class="scope-footer"><span id="sampleCount">0 samples</span><button type="button" class="text-button" id="clearWaveBtn">波形を消去</button></div>
       </section>
       <section class="panel trace-panel" aria-label="実行履歴">
         <div class="panel-heading"><div><p class="eyebrow">EXECUTION TRACE</p><h2>実行履歴</h2></div><button type="button" id="clearLogBtn" class="text-button">クリア</button></div>

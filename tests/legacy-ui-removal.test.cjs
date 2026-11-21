@@ -82,5 +82,15 @@ test('board subtitle and analyzer H/L explanatory label are removed', () => {
   assert.match(html, /class="scope-footer"><span id="sampleCount"/);
   const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
   assert.doesNotMatch(workbench, /board-subtitle/);
-  assert.match(workbench, /\.scope-footer\{margin-top:9px;justify-content:flex-end/);
+  assert.match(workbench, /\.scope-footer\{display:flex;align-items:center;justify-content:space-between/);
+});
+
+test('logic analyzer places count at bottom left and clear action at bottom right', () => {
+  assert.doesNotMatch(html, /立ち上がりでCPU状態を更新 · 右端が最新|class="scope-meta"/);
+  assert.match(html, /<div class="scope-view" id="scopeView"[^>]*><\/div>\s*<div class="scope-footer"><span id="sampleCount">0 samples<\/span><button type="button" class="text-button" id="clearWaveBtn">波形を消去<\/button><\/div>/);
+  assert.equal((html.match(/id="clearWaveBtn"/g) || []).length, 1);
+  const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.doesNotMatch(css, /scope-meta/);
+  assert.match(css, /\.scope-footer\{display:flex;align-items:center;justify-content:space-between/);
+  assert.match(ts, /\$\('clearWaveBtn'\)\.addEventListener\('click'/);
 });
