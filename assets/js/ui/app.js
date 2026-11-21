@@ -11,7 +11,7 @@
     }
     const SAMPLES = window.TD4Samples;
     const SAMPLE_PROGRAMS = Object.fromEntries(SAMPLES.map(sample => [sample.id, sample.source]));
-    const { GROUPS, snapshot, appendSample, waveformPath } = window.TD4Signals;
+    const { GROUPS, snapshot, appendSample, waveformPath, shouldCaptureSample } = window.TD4Signals;
     const circuit = window.TD4Circuit;
     const cpu = new CPU();
     let selectedNet = 'CLK';
@@ -24,6 +24,11 @@
   let boardClockHz = 2;
     const waveSamples = [];
     const MAX_WAVE_SAMPLES = 80;
+    // Internal configuration: 'cpu' (default) freezes history when paused,
+    // 'oscilloscope' samples powered signals periodically even with CPU paused.
+    let waveCaptureMode = 'cpu';
+    const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 125;
+    let scopeCaptureIntervalId = null;
     let lastWaveDrawAt = 0;
     let boardResizeObserver = null;
     function buildRomRows() {
@@ -278,13 +283,47 @@
     function restartWaveCapture() {
         waveSamples.splice(0);
         const levels = snapshot(cpu, clockHigh);
-        if (powerOn) appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        const trigger = waveCaptureMode === 'cpu' ? 'clock' : 'timer';
+        if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
+            appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        }
         renderWaveforms(levels);
         lastWaveDrawAt = performance.now();
     }
+    /** An independent sample clock advances the waveform with a stationary CPU. */
+    function stopScopeCapture() {
+        if (scopeCaptureIntervalId === null)
+            return;
+        clearInterval(scopeCaptureIntervalId);
+        scopeCaptureIntervalId = null;
+    }
+    function startScopeCapture() {
+        stopScopeCapture();
+        if (!powerOn || waveCaptureMode !== 'oscilloscope')
+            return;
+        scopeCaptureIntervalId = setInterval(() => {
+            if (!shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer'))
+                return;
+            const levels = snapshot(cpu, clockHigh);
+            appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+            renderWaveforms(levels);
+            lastWaveDrawAt = performance.now();
+        }, OSCILLOSCOPE_SAMPLE_INTERVAL_MS);
+    }
+    function setWaveCaptureMode(mode) {
+        if (mode !== 'cpu' && mode !== 'oscilloscope')
+            throw new Error('Unsupported waveform capture mode');
+        if (waveCaptureMode === mode)
+            return;
+        waveCaptureMode = mode;
+        startScopeCapture();
+        restartWaveCapture();
+    }
     function recordSignals() {
         const levels = snapshot(cpu, clockHigh);
-        if (powerOn) appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'clock')) {
+            appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        }
         updateCircuitBoard();
         const now = performance.now();
         if (intervalId === null || now - lastWaveDrawAt > 35) {
@@ -357,6 +396,7 @@
         if (powerOn === on) return;
         if (!on) {
             stop();
+            stopScopeCapture();
             powerOn = false;
             cpu.reset();
             history.splice(0);
@@ -374,6 +414,7 @@
         renderCPU(); renderHistory();
         syncRunControls();
         // Keep ROM address 0x00 visible on power-up until the first clock edge.
+        startScopeCapture();
         startClock(false);
     }
     /** The PCB two-way switch always chooses an actual 2/10 Hz clock. */
@@ -519,10 +560,12 @@
             }
         });
     }
+    // Expose the internal configuration for debugging/future UI; default stays 'cpu'.
+    window.TD4WaveCapture = { getMode: () => waveCaptureMode, setMode: setWaveCaptureMode };
     buildRomRows();
     buildSamples();
     buildCircuitBoard();
     connectActions();
     switchExample('led');
-    window.addEventListener('pagehide', () => stop());
+    window.addEventListener('pagehide', () => { stop(); stopScopeCapture(); });
 })();
