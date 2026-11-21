@@ -460,7 +460,8 @@ test('waveform capture policy remains internal and defaults to live oscilloscope
   assert.doesNotMatch(html,/id="waveCaptureMode"|id="scopeCaptureMode"/);
   for (const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
     assert.match(source,/let waveCaptureMode(?:: WaveCaptureMode)? = 'oscilloscope'/);
-    assert.match(source,/const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 125/);
+    assert.match(source,/const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20/);
+    assert.match(source,/const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40/);
     assert.match(source,/function setWaveCaptureMode\(/);
     assert.match(source,/window\.TD4WaveCapture = \{/);
     assert.match(source,/function recordSignals\(trigger(?:: WaveSampleTrigger)? = 'clock'\)[\s\S]*?shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, trigger\)/);
@@ -502,5 +503,21 @@ test('oscilloscope INPUT changes are sampled instantly even with CPU timer pause
     const timerStart=source.indexOf('function startScopeCapture(');
     const timerEnd=source.indexOf('function setWaveCaptureMode(',timerStart);
     assert.match(source.slice(timerStart,timerEnd),/scopeCaptureIntervalId = setInterval\(/);
+  }
+});
+
+
+test('oscilloscope sampling is fast enough for 10Hz while CPU clock remains 2Hz or 10Hz',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20/);
+    assert.match(source,/const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40/);
+    assert.match(source,/const halfPeriod = 500 \/ boardClockHz/);
+    const start=source.indexOf('function startScopeCapture(');
+    const end=source.indexOf('function setWaveCaptureMode(',start);
+    const body=source.slice(start,end);
+    assert.match(body,/appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
+    assert.match(body,/now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS/);
+    assert.match(body,/renderWaveforms\(levels\)/);
+    assert.match(body,/}, OSCILLOSCOPE_SAMPLE_INTERVAL_MS\)/);
   }
 });
