@@ -49,7 +49,7 @@
     function shouldCaptureSample(mode, powerOn, cpuRunning, source) {
         if (!powerOn)
             return false;
-        return mode === 'cpu' ? cpuRunning && source === 'clock' : source === 'timer';
+        return mode === 'cpu' ? cpuRunning && source !== 'timer' : source === 'timer' || source === 'input';
     }
     // Each sample represents one observed level, normally one clock half-cycle.
     function appendSample(samples, sample, capacity = 80) {

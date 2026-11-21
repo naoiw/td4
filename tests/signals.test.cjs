@@ -88,6 +88,8 @@ test('CPU capture samples only powered CPU clock activity, not stopped input edi
     assert.equal(shouldCaptureSample('cpu', powerOn, true, 'timer'), false);
   }
   assert.equal(shouldCaptureSample('cpu', true, true, 'clock'), true);
+  assert.equal(shouldCaptureSample('cpu', true, true, 'input'), true);
+  assert.equal(shouldCaptureSample('cpu', true, false, 'input'), false);
   assert.equal(shouldCaptureSample('cpu', false, true, 'clock'), false);
   const samples = [];
   const cpu = new CPU();
@@ -114,6 +116,29 @@ test('oscilloscope capture continues at a fixed timer while CPU stopped, without
     appendSample(samples, snapshot(cpu, false));
   assert.deepEqual(samples.map(s => s.IN0), [0, 0, 0, 1]);
   assert.equal(cpu.cycles, 0, 'independent capture never advances the CPU');
+  assert.equal(shouldCaptureSample('oscilloscope', true, false, 'input'), true);
+  assert.equal(shouldCaptureSample('oscilloscope', false, false, 'input'), false);
   assert.equal(shouldCaptureSample('oscilloscope', true, true, 'clock'), false);
   assert.equal(shouldCaptureSample('oscilloscope', false, false, 'timer'), false);
+});
+
+test('oscilloscope captures paused INPUT transitions immediately then keeps holding the level',()=>{
+  const cpu = new CPU();
+  const samples = [];
+  const sample = source => {
+    if (shouldCaptureSample('oscilloscope', true, false, source))
+      appendSample(samples, snapshot(cpu, false));
+  };
+  sample('timer'); sample('timer');
+  assert.deepEqual(samples.map(x=>x.IN2), [0,0]);
+  cpu.setInput(0b0100);
+  sample('input');
+  assert.deepEqual(samples.map(x=>x.IN2), [0,0,1]);
+  sample('timer'); sample('timer');
+  assert.deepEqual(samples.map(x=>x.IN2), [0,0,1,1,1]);
+  assert.equal(cpu.cycles,0,'continuously tracing signals never steps the CPU');
+  const p=waveformPath(samples,'IN2');
+  assert.match(p,/V 7/,'input transition is represented by a rising edge');
+  const held=waveformPath(samples,'PC0');
+  assert.doesNotMatch(held,/V 7/,'CPU PC remains at the same logic value while stopped');
 });

@@ -3,7 +3,7 @@ type BinaryLevel = 0 | 1;
 type SignalGroup = 'basic' | 'io' | 'registers' | 'pc' | 'rom' | 'alu';
 type SignalLevels = Record<string, BinaryLevel>;
 type WaveCaptureMode = 'cpu' | 'oscilloscope';
-type WaveSampleTrigger = 'clock' | 'timer';
+type WaveSampleTrigger = 'clock' | 'timer' | 'input';
 type SignalGroups = Readonly<Record<SignalGroup, readonly string[]>>;
 
 interface TD4Step {
