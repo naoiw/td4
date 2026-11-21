@@ -1,0 +1,30 @@
+name: Export refactor-generated JavaScript (temporary)
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'src/**'
+      - '.github/workflows/refactor-export.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '9.14.2'
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Print generated JavaScript in labeled chunks
+        shell: bash
+        run: |
+          node -e "const fs=require('node:fs');for(const p of ['assets/js/core/td4-core.js','assets/js/core/signals.js','assets/js/core/ic-circuit.js','assets/js/data/samples.js','assets/js/ui/board.js','assets/js/ui/app.js']){const b=fs.readFileSync(p).toString('base64');for(let i=0;i<b.length;i+=3000)console.log('TD4GEN_DATA|'+p+'|'+i+'|'+b.slice(i,i+3000));}"
