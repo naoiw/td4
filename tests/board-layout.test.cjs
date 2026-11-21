@@ -162,7 +162,8 @@ test('ROM active LED is green and IO labels grow to 11px with green/grey state',
   assert.match(lastRule('schematic-io-led'),/font-size:11px/);
   assert.match(lastRule('schematic-io-switch.is-on'),/background:#246c4e/);
   assert.match(lastRule('schematic-io-led:before'),/background:#75838a/);
-  assert.match(lastRule('schematic-io-led.is-on:before'),/background:#55e997/);
+  assert.match(lastRule('schematic-io-led.is-on:before'),/background:radial-gradient/);
+  assert.match(lastRule('schematic-io-led.is-on:before'),/box-shadow:0 0 26px 6px/);
 });
 
 test('whole PCB auto-fits viewport while preserving original geometry',()=>{
@@ -223,7 +224,9 @@ test('board controls start power OFF and 2Hz with board-exclusive frequency sele
     assert.match(source,/function setPower\(/);
     assert.match(source,/function restartRunningClock\(/);
     assert.match(source,/if\s*\(immediate\)\s*risingEdge\(\)/);
-    assert.match(source,/\('stopBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
+    assert.match(source,/\('powerOnBtn'\)\.addEventListener\('click', \(\) => setPower\(true\)\)/);
+    assert.match(source,/\('powerOffBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
+    assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
     assert.match(source,/const halfPeriod = 500 \/ boardClockHz/);
     assert.doesNotMatch(source,/stepBtn|resetBtn|actualClockHz|boardOscReadout|['"]speed['"]/);
   }
@@ -234,8 +237,10 @@ test('board controls start power OFF and 2Hz with board-exclusive frequency sele
     assert.match(source,/frequencySwitch\.classList\.toggle\('is-ten-hz', boardClockHz === 10\)/);
     assert.match(source,/cell\.classList\.toggle\('is-current',\s*selected && powerOn\)/);
   }
-  assert.match(html,/id="runBtn"/);
-  assert.match(html,/id="stopBtn"/);
+  assert.match(html,/id="powerOnBtn"/);
+  assert.match(html,/id="powerOffBtn"/);
+  assert.match(html,/id="runPauseBtn"/);
+  for (const oldId of ['runBtn','stopBtn']) assert.doesNotMatch(html,new RegExp('id="'+oldId+'"'));
   for (const id of ['stepBtn','resetBtn','speed','boardOscReadout']) assert.doesNotMatch(html,new RegExp('id="'+id+'"'));
 });
 
@@ -399,4 +404,42 @@ test('inverter CR feedback is closed and the output bubble has no wire through i
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
   assert.match(svg,/M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55/);
+});
+
+test('power ON, power OFF and one dynamic CPU stop/run button represent three states',()=>{
+  const header=html.slice(html.indexOf('<section class="runbar"'),html.indexOf('id="schematicViewport"'));
+  assert.match(header,/id="powerOnBtn"[^>]*>電源ON<\/button>/);
+  assert.match(header,/id="powerOffBtn" disabled>電源OFF<\/button>/);
+  assert.match(header,/id="runPauseBtn"[^>]*disabled[^>]*>[\s\S]*id="runPauseLabel">実行<\/span>/);
+  assert.match(html,/id="runStatus" aria-live="polite"/);
+  const foundation=fs.readFileSync(path.join(root,'assets/css/foundation.css'),'utf8');
+  assert.match(foundation,/\.connection\.is-powered-on:not\(\.running\) \.status-dot/);
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/const running = powerOn && intervalId !== null/);
+    assert.match(source,/\('powerOnBtn'\)\.disabled = powerOn/);
+    assert.match(source,/\('powerOffBtn'\)\.disabled = !powerOn/);
+    assert.match(source,/toggle\.disabled = !powerOn/);
+    assert.match(source,/if \(intervalId === null\) run\(\)/);
+    assert.match(source,/else stop\(\)/);
+    assert.match(source,/\('runPauseLabel'\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/running \? 'CPUを停止する' : 'CPUを実行する'/);
+    assert.match(source,/!powerOn \? '電源OFF' : running \? '電源ON · 実行中' : '電源ON · CPU停止中'/);
+  }
+});
+
+test('ROM edits and breakpoints pause CPU without shutting off the PCB power',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const stopStart=source.indexOf('function stop(');
+    const stopEnd=source.indexOf('function risingEdge(',stopStart);
+    const stopBody=source.slice(stopStart,stopEnd);
+    assert.match(stopBody,/clearInterval\(intervalId\)/);
+    assert.match(stopBody,/setClockLow\(\)/);
+    assert.doesNotMatch(stopBody,/powerOn = false|setPower\(false\)/);
+    assert.match(source,/onRomBitToggle\(addr, bit\)\s*\{\s*stop\(\)/);
+    assert.match(source,/button\.addEventListener\('click', \(\) => \{\s*stop\(\);\s*cpu\.rom\[addr\]/);
+    assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/);
+    assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
+    assert.match(source,/\('powerOffBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
+    assert.match(source,/event\.preventDefault\(\); stop\(\); return;/);
+  }
 });
