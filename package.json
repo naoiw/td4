@@ -4,10 +4,10 @@
   "private": true,
   "description": "TD4 4-bit CPU browser emulator",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node scripts/generate-netlist.mjs && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsc --noEmit -p tsconfig.json && node --test tests/*.cjs",
-    "verify": "tsc -p tsconfig.json && tsc --noEmit -p tsconfig.json && node --test tests/*.cjs",
+    "test": "node scripts/generate-netlist.mjs && tsc --noEmit -p tsconfig.json && node --test tests/*.cjs",
+    "verify": "node scripts/generate-netlist.mjs && tsc -p tsconfig.json && tsc --noEmit -p tsconfig.json && node --test tests/*.cjs",
     "lint": "node scripts/check-style.mjs && pnpm run format:check",
     "format": "prettier --write \"src/core/*.ts\" \"src/data/*.ts\" \"src/types/*.d.ts\"",
     "format:check": "prettier --check \"src/core/*.ts\" \"src/data/*.ts\" \"src/types/*.d.ts\""
