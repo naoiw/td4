@@ -701,10 +701,11 @@
 .schematic-io-led.is-on {
   color:#bcffd2;
 }
+/* Slightly brighter, broader glow only while a powered OUTPUT LED is lit. */
 .schematic-io-led.is-on:before {
-  background:radial-gradient(circle at 35% 28%,#ffffff 0%,#e9fff3 22%,#99ffbd 53%,#32ed7d 100%);
-  border-color:#e3ffe9;
-  box-shadow:0 0 26px 6px #67ffb58c,0 0 11px 3px #bbffdcaa,inset 0 0 4px #ffffff;
+  background:radial-gradient(circle at 35% 28%,#ffffff 0%,#f5fff9 24%,#b3ffd2 54%,#48f991 100%);
+  border-color:#f2fff6;
+  box-shadow:0 0 30px 8px #67ffb5ad,0 0 14px 4px #bbffdcce,inset 0 0 5px #ffffff;
 }
 
 /* PCB-mounted power and inverter-oscillator controls (#15).
