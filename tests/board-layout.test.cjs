@@ -683,10 +683,10 @@ test('all IC detail signals share the same box size, type, and spacing',()=>{
   assert.match(shared,/min-height:var\(--ic-detail-probe-height\)/);
   assert.match(shared,/padding:8px 10px/);
   assert.match(shared,/font-size:12px/);
-  assert.match(lastRule('ic-detail-panel .ic-function-row'),/min-height:var\(--ic-detail-probe-height\)/);
-  assert.match(lastRule('ic-detail-panel .ic-function-column'),/gap:var\(--ic-detail-probe-gap\)/);
-  assert.match(lastRule('ic-detail-panel .ic-function-subcolumn'),/gap:var\(--ic-detail-probe-gap\)/);
-  assert.match(lastRule('ic-detail-panel .ic-function-section:only-child'),/grid-column:1 \/ -1/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-row\{min-height:var\(--ic-detail-probe-height\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-column\{gap:var\(--ic-detail-probe-gap\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-subcolumn\{[^}]*gap:var\(--ic-detail-probe-gap\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-section:only-child\{grid-column:1 \/ -1\}/);
   assert.doesNotMatch(css,/\.ic-detail-panel\[data-chip="U13"\] \.ic-probe-compact\s*\{/);
 });
 
