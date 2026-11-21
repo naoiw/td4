@@ -605,3 +605,11 @@ test('IC reference silk is clear of DIP bodies and role blocks have vertical bre
   assert.match(lastRule('ic-chip-grid'),/grid-template-rows:\s*auto auto auto/);
   assert.match(lastRule('ic-role-fetch'),/grid-row:\s*1 \/ span 3/);
 });
+
+test('IC reference silkscreen is legible without shrinking DIP clearance',()=>{
+  const silk=lastRule('ic-role-rack .ic-dip .ic-head span');
+  assert.match(silk,/font:\s*800 11px\/1\.2 ui-monospace,monospace/);
+  assert.match(silk,/color:\s*#d3ead7/);
+  assert.match(lastRule('ic-role-rack .ic-dip .ic-head'),/height:\s*18px/);
+  assert.match(lastRule('ic-role-rack .ic-dip .ic-footprint'),/margin:\s*6px auto 0/);
+});

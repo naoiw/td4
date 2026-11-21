@@ -266,7 +266,7 @@
   padding:0;
   text-align:center;
 }
-.ic-role-rack .ic-dip .ic-head span{display:inline;font-size:8px;line-height:1.1;color:#8eac9c}
+.ic-role-rack .ic-dip .ic-head span{display:inline;font:800 11px/1.2 ui-monospace,monospace;letter-spacing:.25px;color:#d3ead7}
 .ic-role-rack .ic-dip .ic-head strong,
 .ic-role-rack .ic-package-label,
 .ic-role-rack .ic-description{display:none!important}
