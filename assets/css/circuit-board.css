@@ -631,6 +631,12 @@
   box-shadow:0 0 0 1px #91e6ae,0 4px 0 #092c29,0 0 20px #6bdaa644;
 }
 
+/* De-energized board: leave physical switches and silk visible, mute the live probes. */
+.schematic-board.is-powered-off .ic-footprint .ic-leg.is-high:before{background:#596c65;border-color:#81988c;box-shadow:none}
+.schematic-board.is-powered-off .ic-probe.is-high{background:#303e39;border-color:#61746c;color:#b1c4ba}
+.schematic-board.is-powered-off .ic-probe.is-high b{background:#556a61;color:#dde7e1}
+.schematic-board.is-powered-off .schematic-io-led.is-on:before{background:#75838a;box-shadow:none}
+
 /* H=green, L=grey on the input switches and output LED readouts. */
 .schematic-io-switch {
   background:#39464c;
@@ -660,3 +666,33 @@
   border-color:#b2fbd0;
   box-shadow:0 0 14px #68e7a4,0 0 6px #84ffc0,inset 0 0 5px #e3fff0;
 }
+
+/* PCB-mounted power and inverter-oscillator controls (#15).
+   Silk artwork is illustrative; timers model digital clocks only. */
+.rom-zone{display:flex;flex-direction:column;gap:14px;align-self:stretch}
+.board-control-bay{min-height:226px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);grid-template-rows:auto 1fr;gap:10px 14px;border:1px solid #a9d4b4;border-radius:7px;padding:12px 13px 14px;background:linear-gradient(155deg,#165d42,#145138);box-shadow:inset 0 0 0 2px #1d704d}
+.pcb-control-heading{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #8abda188;padding-bottom:8px;color:#d4efd8;font:800 13px/1.2 ui-monospace,monospace;letter-spacing:.7px}
+.pcb-control-heading span{font-size:9px;font-weight:650;letter-spacing:.2px;color:#9fcfb2}
+.pcb-power-area,.pcb-osc-area{position:relative;min-width:0;padding:7px 8px 9px;border:1px dashed #b9dbc080;border-radius:4px}
+.pcb-silk-heading{display:flex;gap:9px;align-items:center;white-space:nowrap;color:#e2f6de;font:800 12px ui-monospace,monospace;letter-spacing:.65px}
+.pcb-silk-heading span{font-size:9px;font-weight:650;color:#a6cdb4}
+.pcb-power-hardware{display:flex;justify-content:center;align-items:center;gap:13px;margin:12px 0 9px}
+.pcb-switch-labels{height:75px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding:8px 0;color:#dbefdf;font:850 11px/1 ui-monospace,monospace;letter-spacing:.15px;white-space:nowrap}
+.pcb-toggle-switch{position:relative;width:46px;height:75px;flex:none;border-radius:8px;border:3px solid #92a8a2;background:linear-gradient(90deg,#1b302d,#30483f 44%,#182c28);box-shadow:inset 0 2px 10px #091811,0 2px 0 #0d3d2c;cursor:pointer}
+.pcb-toggle-switch:focus-visible{outline:3px solid #ffec96;outline-offset:3px}
+.pcb-toggle-lever{position:absolute;left:6px;right:6px;top:7px;height:27px;border:1px solid #cbd3ce;border-radius:5px;background:linear-gradient(145deg,#f2f4f1,#8b9f99 70%,#556e64);box-shadow:inset 1px 1px 3px #fff9,0 4px 3px #061812}
+.pcb-power-switch:not(.is-on) .pcb-toggle-lever,.pcb-clock-switch.is-ten-hz .pcb-toggle-lever{top:auto;bottom:7px;box-shadow:inset 1px 1px 3px #fff9,0 -3px 3px #061812}
+.pcb-pilot-group{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:47px}
+.pcb-power-led{width:27px;height:27px;border:3px solid #bfa8a3;border-radius:50%;background:radial-gradient(circle at 40% 32%,#743735,#431b1c 68%);box-shadow:inset 0 1px 7px #210d0c,0 0 0 2px #2b5543}
+.pcb-power-led.is-on{border-color:#ffc1b8;background:radial-gradient(circle at 35% 29%,#fff2e9,#ff5351 42%,#d51d2b 85%);box-shadow:0 0 20px #fb3939bd,0 0 8px #ff7777,inset 0 1px 3px #fff8}
+.pcb-silk-caption,.pcb-silk-note{color:#b7d8bf;font:750 9px ui-monospace,monospace;white-space:nowrap}
+.pcb-silk-note{display:block;text-align:center;letter-spacing:.5px}
+.pcb-osc-hardware{display:flex;align-items:center;justify-content:space-between;gap:3px;margin-top:3px}
+.pcb-osc-diagram{width:180px;max-width:100%;height:98px;flex:1;min-width:0}
+.pcb-osc-lines{fill:none;stroke:#c6e4c8;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
+.pcb-osc-silk-text{fill:#e0f0d6;font:750 11px ui-monospace,monospace}
+.pcb-osc-selector{display:flex;align-items:center;gap:5px;flex:none}
+.pcb-osc-selector .pcb-switch-labels{font-size:11px}
+.pcb-osc-readout{display:block;text-align:right;margin:0 5px;color:#c3e9ce;font:800 10px ui-monospace,monospace}
+.pcb-osc-area.is-override .pcb-osc-readout{color:#ffe094}
+

@@ -195,3 +195,44 @@ test('scaled board keeps signal wires aligned in logical SVG coordinates',()=>{
     assert.match(source,/getBoundingClientRect\(\)/);
   }
 });
+
+test('PCB power and oscillator controls sit above the lowered ROM and IO',()=>{
+  const area=html.indexOf('class="board-control-bay"');
+  const rom=html.indexOf('id="romDipGrid"');
+  const io=html.indexOf('class="schematic-io-strip"');
+  assert.ok(area>0 && area<rom && rom<io,'controls must precede the ROM and IO on the PCB');
+  for(const id of ['boardPowerSwitch','boardClockSwitch','boardPowerLed','boardOscReadout']){
+    assert.match(html,new RegExp('id="'+id+'"'));
+  }
+  assert.match(html,/class="pcb-osc-diagram" viewBox="0 0 220 92"/);
+  assert.match(html,/CR OSCILLATOR/);
+  assert.match(lastRule('rom-zone'),/flex-direction:column/);
+  assert.match(lastRule('board-control-bay'),/min-height:226px/);
+  assert.match(lastRule('pcb-power-led.is-on'),/background:radial-gradient/);
+});
+
+test('board controls start power OFF and 2Hz, then synchronize with legacy buttons',()=>{
+  const appTs=fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8');
+  const boardTs=fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8');
+  for(const source of [js,appTs]){
+    assert.match(source,/let powerOn = false/);
+    assert.match(source,/let boardClockHz(?:\s*:\s*2\s*\|\s*10)? = 2/);
+    assert.match(source,/onPowerToggle\(\) \{ setPower\(!powerOn\); \}/);
+    assert.match(source,/onFrequencyToggle\(\) \{ setBoardFrequency\(boardClockHz === 2 \? 10 : 2\); \}/);
+    assert.match(source,/function setPower\(/);
+    assert.match(source,/function restartRunningClock\(/);
+    assert.match(source,/if \(immediate\) risingEdge\(\)/);
+    assert.match(source,/\('stopBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
+    assert.match(source,/\('speed'\)\.addEventListener\('change'/);
+  }
+  for(const source of [boardJs,boardTs]){
+    assert.match(source,/\('boardPowerSwitch'\)\.addEventListener\('click', onPowerToggle\)/);
+    assert.match(source,/\('boardClockSwitch'\)\.addEventListener\('click', onFrequencyToggle\)/);
+    assert.match(source,/pilot\.classList\.toggle\('is-on', powerOn\)/);
+    assert.match(source,/const override = actualClockHz !== boardClockHz/);
+  }
+  assert.match(html,/id="speed"[\s\S]*?<option value="1">1 Hz/);
+  assert.match(html,/id="runBtn"/);
+  assert.match(html,/id="stopBtn"/);
+  assert.match(html,/id="stepBtn"/);
+});

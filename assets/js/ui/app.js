@@ -20,6 +20,8 @@
     let intervalId = null;
     let sourceMatchesROM = true;
     let clockHigh = false;
+  let powerOn = false;
+  let boardClockHz = 2;
     let pulseTimer = null;
     const waveSamples = [];
     const MAX_WAVE_SAMPLES = 80;
@@ -122,7 +124,9 @@
             onInputBitToggle(bit) {
                 cpu.setInput(cpu.input ^ (1 << bit));
                 renderCPU(); recordSignals();
-            }
+            },
+            onPowerToggle() { setPower(!powerOn); },
+            onFrequencyToggle() { setBoardFrequency(boardClockHz === 2 ? 10 : 2); }
         });
         if (typeof ResizeObserver !== 'undefined') {
             boardResizeObserver = new ResizeObserver(fitCircuitBoard);
@@ -186,10 +190,10 @@
     }
     /** Keep CPU state in the application; delegate all board DOM updates. */
     function updateCircuitBoard() {
-        window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit, HEX});
+        window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz, actualClockHz: Number($('speed').value)});
     }
     function drawSelectedWires() {
-        window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX});
+        window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz, actualClockHz: Number($('speed').value)});
     }
     /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
     function fitCircuitBoard() {
@@ -266,6 +270,7 @@
             const status = document.createElement('strong');
             status.className = signal ? 'scope-level ' + (levels[signal] ? 'hi' : 'lo') : 'scope-level unused';
             status.textContent = signal ? (levels[signal] ? 'H' : 'L') : '×';
+            if (!powerOn && signal) { status.className = 'scope-level unused'; status.textContent = '—'; }
             row.append(name, graph, status);
             area.append(row);
         }
@@ -274,13 +279,13 @@
     function restartWaveCapture() {
         waveSamples.splice(0);
         const levels = snapshot(cpu, clockHigh);
-        appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        if (powerOn) appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         renderWaveforms(levels);
         lastWaveDrawAt = performance.now();
     }
     function recordSignals() {
         const levels = snapshot(cpu, clockHigh);
-        appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+        if (powerOn) appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         updateCircuitBoard();
         const now = performance.now();
         if (intervalId === null || now - lastWaveDrawAt > 35) {
@@ -338,6 +343,46 @@
         $('editorMessage').textContent = message;
         $('editorMessage').className = 'editor-message' + (kind ? ` ${kind}` : '');
     }
+    function syncRunControls() {
+        $('runBtn').disabled = intervalId !== null;
+        $('stopBtn').disabled = !powerOn;
+        $('stepBtn').disabled = !powerOn || intervalId !== null;
+    }
+    /** An OFF→ON transition resets volatile CPU state; ROM and switches persist. */
+    function setPower(on) {
+        if (powerOn === on) return;
+        if (!on) {
+            stop();
+            powerOn = false;
+            cpu.reset();
+            history.splice(0);
+            waveSamples.splice(0);
+            renderCPU(); renderHistory();
+            renderWaveforms(snapshot(cpu, clockHigh));
+            syncRunControls();
+            showMessage('電源OFF：CPUを初期化しました（ROM・入力スイッチは保持）');
+            return;
+        }
+        powerOn = true;
+        cpu.reset();
+        history.splice(0);
+        waveSamples.splice(0);
+        renderCPU(); renderHistory();
+        syncRunControls();
+        startClock(true);
+    }
+    /** The PCB two-way switch always chooses an actual 2/10 Hz clock. */
+    function setBoardFrequency(frequency) {
+        boardClockHz = frequency;
+        $('speed').value = String(frequency);
+        restartRunningClock();
+    }
+    /** Reschedule without injecting an extra rising edge on speed changes. */
+    function restartRunningClock() {
+        const wasRunning = intervalId !== null;
+        if (wasRunning) { stop(); startClock(false); }
+        else updateCircuitBoard();
+    }
     function stop(reason = '') {
         if (intervalId !== null) {
             clearInterval(intervalId);
@@ -345,9 +390,7 @@
         }
         clearPulseTimer();
         setClockLow();
-        $('runBtn').disabled = false;
-        $('stopBtn').disabled = true;
-        $('stepBtn').disabled = false;
+        syncRunControls();
         $('runStatus').classList.remove('running');
         $('runStatus').lastChild.textContent = '停止中';
         renderWaveforms(snapshot(cpu, clockHigh));
@@ -365,7 +408,7 @@
         recordSignals();
     }
     function step() {
-        if (intervalId !== null)
+        if (intervalId !== null || !powerOn)
             return;
         clearPulseTimer();
         setClockLow();
@@ -377,25 +420,23 @@
         }, 180);
     }
     function run() {
-        if (intervalId !== null)
-            return;
+        if (!powerOn) { setPower(true); return; }
+        startClock(true);
+    }
+    function startClock(immediate) {
+        if (intervalId !== null || !powerOn) return;
         if (breakpoints.has(cpu.pc)) {
             showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。1クロックで進めるかBPを解除してください。`);
+            syncRunControls();
             return;
         }
         clearPulseTimer();
         setClockLow();
-        $('runBtn').disabled = true;
-        $('stopBtn').disabled = false;
-        $('stepBtn').disabled = true;
         $('runStatus').classList.add('running');
         $('runStatus').lastChild.textContent = '実行中';
         const halfPeriod = 500 / Number($('speed').value);
         intervalId = setInterval(() => {
-            if (clockHigh) {
-                setClockLow();
-                return;
-            }
+            if (clockHigh) { setClockLow(); return; }
             if (breakpoints.has(cpu.pc)) {
                 stop(`PC=${HEX(cpu.pc)} のブレークポイントで停止しました。`);
                 renderCPU();
@@ -403,8 +444,10 @@
             }
             risingEdge();
         }, halfPeriod);
-        risingEdge();
+        syncRunControls();
+        if (immediate) risingEdge();
     }
+
     function reset() {
         stop();
         cpu.reset();
@@ -462,14 +505,13 @@
     }
     function connectActions() {
         $('runBtn').addEventListener('click', run);
-        $('stopBtn').addEventListener('click', () => stop());
+        $('stopBtn').addEventListener('click', () => setPower(false));
         $('stepBtn').addEventListener('click', step);
         $('resetBtn').addEventListener('click', reset);
         $('speed').addEventListener('change', () => {
-            if (intervalId !== null) {
-                stop();
-                run();
-            }
+            const selected = Number($('speed').value);
+            if (selected === 2 || selected === 10) boardClockHz = selected;
+            restartRunningClock();
         });
         $('clearLogBtn').addEventListener('click', () => { history.splice(0); renderHistory(); });
         $('clearBpBtn').addEventListener('click', () => { breakpoints.clear(); renderROM(); });
