@@ -66,15 +66,14 @@ test('every channel defined by a selectable group is a boolean',()=>{
 });
 
 test('selectable analyzer groups contain at most 10 signals and retain all channels', () => {
-  assert.deepEqual(Object.keys(GROUPS), ['basic', 'io', 'registers', 'pc', 'rom', 'alu']);
+  assert.deepEqual(Object.keys(GROUPS), ['basic', 'io', 'registers', 'pc', 'rom']);
   for (const [name, channels] of Object.entries(GROUPS)) {
     assert.ok(channels.length >= 1 && channels.length <= 10, name + ': too many signals');
     assert.equal(new Set(channels).size, channels.length, name + ': duplicate signal');
   }
   assert.deepEqual(GROUPS.registers, ['CLK', 'C', 'A3', 'A2', 'A1', 'A0', 'B3', 'B2', 'B1', 'B0']);
-  assert.deepEqual(GROUPS.pc, ['CLK', 'C', 'PC3', 'PC2', 'PC1', 'PC0']);
+  assert.deepEqual(GROUPS.pc, ['CLK', 'C', 'PC3', 'PC2', 'PC1', 'PC0', 'ALU3', 'ALU2', 'ALU1', 'ALU0']);
   assert.deepEqual(GROUPS.rom, ['CLK', 'D7', 'D6', 'D5', 'D4', 'D3', 'D2', 'D1', 'D0']);
-  assert.deepEqual(GROUPS.alu, ['CLK', 'C', 'ALU3', 'ALU2', 'ALU1', 'ALU0']);
   const allSignals = new Set(Object.values(GROUPS).flat());
   for (const name of ['PC0','PC1','PC2','PC3','D0','D1','D2','D3','D4','D5','D6','D7','ALU0','ALU1','ALU2','ALU3']) {
     assert.ok(allSignals.has(name), name + ' should stay selectable');
