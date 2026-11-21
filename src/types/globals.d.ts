@@ -187,6 +187,12 @@ interface TD4NetlistData {
   components: Record<string, IcPackageType>;
   pinNets: Record<string, Record<string, string>>;
   pinNames: Record<string, Record<string, string>>;
+  gateGroups: Record<string, {
+    gate: string;
+    purpose: string;
+    inputPins: number[];
+    outputPin: number;
+  }[]>;
   romSwitches: {
     id: string;
     address: number;
