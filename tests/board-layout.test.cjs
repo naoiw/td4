@@ -731,8 +731,9 @@ test('IC Escape closes details before the running-CPU Escape fallback',()=>{
     assert.match(keyHandler,/event\.preventDefault\(\);\s*toggleIcDetails\(detail\.dataset\.chip\);\s*return;/);
     assert.match(source,/\.ic-open-details'\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
       'closing IC details returns focus to the originating IC');
-    assert.match(source,/close\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
-      'opening IC details focuses its close control');
+    assert.match(source,/host\.tabIndex = -1;/,'detail region must be programmatically focusable');
+    assert.match(source,/host\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
+      'opening IC details focuses the panel so Space can still control CPU execution');
   }
 });
 
