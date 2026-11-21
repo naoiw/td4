@@ -173,7 +173,6 @@ interface BoardRenderOptions {
 interface BoardViewApi {
   mount(options: BoardViewOptions): void;
   render(options: BoardRenderOptions): void;
-  drawWires(options: BoardRenderOptions): void;
 }
 interface Window {
   TD4BoardView: BoardViewApi;
