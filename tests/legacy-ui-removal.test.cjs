@@ -101,12 +101,15 @@ test('logic analyzer groups the clear action with the signal selector', () => {
   }
 });
 
-test('execution controls are inside workbench board, below its title', () => {
+test('execution controls share the TD4 board title row above the divider', () => {
   const boardStart = html.indexOf('<section class="panel board-panel"');
-  const heading = html.indexOf('id="boardTitle"', boardStart);
-  const control = html.indexOf('<section class="runbar"', boardStart);
-  const pcb = html.indexOf('id="schematicViewport"', boardStart);
-  assert.ok(boardStart > 0 && heading > boardStart && control > heading && pcb > control);
+  const heading = html.indexOf('<div class="panel-heading board-heading">', boardStart);
+  const title = html.indexOf('id="boardTitle"', heading);
+  const control = html.indexOf('<section class="runbar"', heading);
+  const pcb = html.indexOf('id="schematicViewport"', heading);
+  assert.ok(boardStart > 0 && heading > boardStart && title > heading && control > title && pcb > control);
+  const headerMarkup = html.slice(heading, pcb);
+  assert.match(headerMarkup, /<section class="runbar"[\s\S]*?<\/section>\s*<\/div>/);
   assert.equal((html.match(/class="runbar"/g) || []).length, 1);
   for (const id of ['runBtn', 'stopBtn', 'cycles']) {
     assert.ok(html.indexOf('id="' + id + '"', control) > control);
@@ -116,7 +119,10 @@ test('execution controls are inside workbench board, below its title', () => {
     assert.doesNotMatch(html, new RegExp('id="' + removed + '"'));
   }
   const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
-  assert.match(workbench, /\.board-panel \.runbar\{margin:0 0 14px/);
+  assert.match(workbench, /\.board-heading\{[^}]*border-bottom:1px solid var\(--line\)/);
+  assert.match(workbench, /\.board-panel \.runbar\{margin:0;padding:0;border:0;/);
+  assert.match(workbench, /\.board-panel \.runbar\{[^}]*flex-direction:row;flex-wrap:wrap/);
+  assert.doesNotMatch(workbench, /\.board-panel \.runbar\{[^}]*border-top:/);
 });
 
 test('ROM legend and breakpoint clear are above table, with help text removed', () => {
