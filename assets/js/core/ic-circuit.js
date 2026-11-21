@@ -167,9 +167,9 @@
         {
             id: 'U2',
             type: '74HC14',
-            description: 'Schmitt clock/reset stage',
+            description: 'Two-stage Schmitt CR oscillator (B / C)',
             group: 'clock',
-            pins: [p('CLK', 'CLK'), p('RESET#', 'RST_N')]
+            pins: [p('2A', 'OSC_IN'), p('2Y', 'OSC_INV'), p('3A', 'OSC_INV'), p('3Y', 'CLK')]
         }
     ];
     // DIP physical pad count is independent from the functional terminal positions.
@@ -262,10 +262,17 @@
             ]);
         }
         if (component.type === '74HC14') {
-            return make('INPUT', 'OUTPUT', [
+            // B and C are the only fitted oscillator gates; the RC network is analogue.
+            return make('INPUT · A', 'OUTPUT · Y', [
                 {
-                    left: component.pins.map((x) => row(x)),
-                    right: [row(pin('CLK', 'CLK')), row(pin('RESET#', 'RST_N'))]
+                    label: 'B · OSCILLATOR',
+                    left: [row(pin('2A', 'OSC_IN'))],
+                    right: [row(pin('2Y', 'OSC_INV'))]
+                },
+                {
+                    label: 'C · CLOCK BUFFER',
+                    left: [row(pin('3A', 'OSC_INV'))],
+                    right: [row(pin('3Y', 'CLK'))]
                 }
             ]);
         }
@@ -302,6 +309,9 @@
         const { selectA: selA, selectB: selB, source: input, sum, carry } = decodeALU(instruction, cpu.a, cpu.b, cpu.input);
         const nets = {
             CLK: clock ? 1 : 0,
+            // Idealized logic states, not the analogue RC voltage or propagation delay.
+            OSC_IN: clock ? 1 : 0,
+            OSC_INV: clock ? 0 : 1,
             RST_N: 1,
             GND: 0,
             VCC: 1,
