@@ -456,14 +456,14 @@ test('header POWER ON and OFF buttons use green and red styles without recolorin
 });
 
 
-test('waveform capture policy remains internal and defaults to running-CPU-only',()=>{
+test('waveform capture policy remains internal and defaults to live oscilloscope mode',()=>{
   assert.doesNotMatch(html,/id="waveCaptureMode"|id="scopeCaptureMode"/);
   for (const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
-    assert.match(source,/let waveCaptureMode(?:: WaveCaptureMode)? = 'cpu'/);
+    assert.match(source,/let waveCaptureMode(?:: WaveCaptureMode)? = 'oscilloscope'/);
     assert.match(source,/const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 125/);
     assert.match(source,/function setWaveCaptureMode\(/);
     assert.match(source,/window\.TD4WaveCapture = \{/);
-    assert.match(source,/function recordSignals\(\)[\s\S]*?shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, 'clock'\)/);
+    assert.match(source,/function recordSignals\(trigger(?:: WaveSampleTrigger)? = 'clock'\)[\s\S]*?shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, trigger\)/);
     assert.match(source,/function restartWaveCapture\(\)[\s\S]*?shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, trigger\)/);
     assert.doesNotMatch(source,/if \(powerOn\) appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
   }
@@ -488,5 +488,19 @@ test('oscilloscope mode uses a separate timer across pause and cleans up at powe
     const stopBegin=source.indexOf('function stop(');
     const stopEnd=source.indexOf('function risingEdge(',stopBegin);
     assert.doesNotMatch(source.slice(stopBegin,stopEnd),/stopScopeCapture\(\)/);
+  }
+});
+
+test('oscilloscope INPUT changes are sampled instantly even with CPU timer paused',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/onInputBitToggle\(bit\)\s*\{[\s\S]{0,200}?cpu\.setInput[\s\S]{0,140}?recordSignals\('input'\)/);
+    assert.match(source,/function recordSignals\(trigger(?:: WaveSampleTrigger)? = 'clock'\)/);
+    assert.match(source,/shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, trigger\)/);
+    const stopStart=source.indexOf('function stop(');
+    const stopEnd=source.indexOf('function risingEdge(',stopStart);
+    assert.doesNotMatch(source.slice(stopStart,stopEnd),/stopScopeCapture\(\)/);
+    const timerStart=source.indexOf('function startScopeCapture(');
+    const timerEnd=source.indexOf('function setWaveCaptureMode(',timerStart);
+    assert.match(source.slice(timerStart,timerEnd),/scopeCaptureIntervalId = setInterval\(/);
   }
 });
