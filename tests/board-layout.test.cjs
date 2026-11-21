@@ -242,7 +242,7 @@ test('oscillator is on the left, power on the right, and both left-of-switch lab
   const right=html.indexOf('<div class="pcb-power-area">');
   const rom=html.indexOf('id="romDipGrid"');
   assert.ok(left>0 && right>left && rom>right,'left CR/right power must precede ROM');
-  const power=html.slice(right,html.indexOf('</div>',html.indexOf('class="pcb-power-hardware"',right))+6);
+  const power=html.slice(right,html.indexOf('<span class="pcb-silk-note"',right));
   const led=power.indexOf('id="boardPowerLed"');
   const labels=power.indexOf('class="pcb-switch-labels"');
   const toggle=power.indexOf('id="boardPowerSwitch"');
