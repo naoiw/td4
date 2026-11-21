@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f6f8">
   <meta name="description" content="TD4 4-bit CPU emulator — 実機の命令デコードを再現するオフライン対応Webエミュレータ。">
-  <title>TD4 Emulator — 4-bit CPU Lab</title>
+  <title>TD4 (4-bit CPU) Emulator</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/core/td4-core.js" defer></script>
   <script src="assets/js/data/samples.js" defer></script>
@@ -124,8 +124,6 @@
         <textarea id="source" class="code-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="TD4アセンブリソースコード"></textarea>
         <div id="editorMessage" class="editor-message" role="status" aria-live="polite">プログラムを編集してROMに書き込めます</div>
         <div class="editor-actions"><button id="assembleBtn" type="button" class="btn btn-primary btn-wide">ROMに書き込む</button><button id="fromRomBtn" type="button" class="btn btn-ghost">ROM → ソース</button></div>
-        <div class="editor-divider"></div>
-        <div class="file-actions"><button id="exportBtn" type="button" class="btn btn-small">ROM保存 (.bin)</button><button id="importBtn" type="button" class="btn btn-small">ROM読込 (.bin)</button><input type="file" id="importFile" hidden accept=".bin,application/octet-stream"></div>
         <div class="hint-box"><strong>書き方の例</strong><code>MOV B, 3<br>OUT B<br>ADD B, 1<br>JMP 1</code><p>1行1命令。即値は10進数、<code>0xF</code> 形式の16進数、<code>F</code> 形式の16進1桁に対応。ラベル、<code>DB</code>、<code>ORG</code>、<code>; コメント</code> も使えます。</p></div>
       </section>
       </div>
