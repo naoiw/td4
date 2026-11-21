@@ -12,7 +12,7 @@
   }
 
     function mount(options: BoardViewOptions): void {
-    const {circuit, HEX, toggleIcDetails, setSelectedNet, onRomBitToggle, onInputBitToggle} = options;
+    const {circuit, HEX, toggleIcDetails, setSelectedNet, onRomBitToggle, onInputBitToggle, onPowerToggle, onFrequencyToggle} = options;
     const chips = $('icChipGrid');
     chips.replaceChildren();
     for (const chip of circuit.chips) {
@@ -166,7 +166,7 @@
       led.setAttribute('aria-label',`ROMアドレス${HEX(addr)}の選択信号を追跡`);
       led.title='74HC154の出力は負論理です。LED点灯時は/ROM=L';
       led.addEventListener('click',()=>setSelectedNet(`ROM_SEL_${addr}`));
-      const address=document.createElement('strong'); address.textContent=HEX(addr);
+      const address=document.createElement('strong'); address.textContent=`0x${HEX(addr)}`;
       const value=document.createElement('span');value.className='rom-slot-value';
       head.append(led,address,value);
       const bits=document.createElement('div');bits.className='rom-dip-switches';
@@ -200,13 +200,26 @@
       diode.setAttribute('aria-label',`出力LED${bit}の信号線を追跡`);
       output.append(diode);
     }
-    
+    $('boardPowerSwitch').addEventListener('click', onPowerToggle);
+    $('boardClockSwitch').addEventListener('click', onFrequencyToggle);
   }
 
   function render(options: BoardRenderOptions):void {
-    const {cpu, clockHigh, selectedNet, circuit, HEX}=options;
+    const {cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz}=options;
     const board=document.getElementById('schematicBoard');
     if(!board)return;
+    board.classList.toggle('is-powered-off', !powerOn);
+    const powerSwitch = $('boardPowerSwitch') as HTMLButtonElement;
+    powerSwitch.classList.toggle('is-on', powerOn);
+    powerSwitch.setAttribute('aria-pressed', String(powerOn));
+    powerSwitch.setAttribute('aria-label', powerOn ? '基板の電源をOFFにする' : '基板の電源をONにする');
+    const pilot = $('boardPowerLed');
+    pilot.classList.toggle('is-on', powerOn);
+    pilot.setAttribute('aria-label', powerOn ? 'パイロットランプ点灯' : 'パイロットランプ消灯');
+    const frequencySwitch = $('boardClockSwitch') as HTMLButtonElement;
+    frequencySwitch.classList.toggle('is-ten-hz', boardClockHz === 10);
+    frequencySwitch.setAttribute('aria-pressed', String(boardClockHz === 10));
+    frequencySwitch.setAttribute('aria-label', 'クロック周波数 ' + boardClockHz + 'Hz、クリックで' + (boardClockHz === 2 ? '10' : '2') + 'Hzに変更');
     const values=circuit.levels(cpu,clockHigh);
     for(const element of document.querySelectorAll<HTMLElement>('.ic-probe')) {
       const net=element.dataset.net||'';
@@ -215,7 +228,7 @@
       element.classList.toggle('is-low',level===0);
       element.classList.toggle('is-selected',net===selectedNet);
       const value=element.querySelector<HTMLElement>('.ic-pin-level');
-      if(value)value.textContent=level?'H':'L';
+      if(value)value.textContent=powerOn ? (level?'H':'L') : '—';
       element.title=`${net}: ${level?'HIGH (1)':'LOW (0)'}`;
     }
     for (const leg of board.querySelectorAll<HTMLElement>('.ic-leg')) {
@@ -232,9 +245,9 @@
       const addr=Number(cell.dataset.addr);
       const selected=cpu.pc===addr;
       const byte=cpu.rom[addr];
-      cell.classList.toggle('is-current',selected);
+      cell.classList.toggle('is-current',selected && powerOn);
       const lamp=cell.querySelector<HTMLElement>('.rom-select-lamp')!;
-      lamp.classList.toggle('is-on',selected);
+      lamp.classList.toggle('is-on',selected && powerOn);
       lamp.classList.toggle('is-selected',selectedNet===`ROM_SEL_${addr}`);
       cell.querySelector<HTMLElement>('.rom-slot-value')!.textContent=byte.toString(16).toUpperCase().padStart(2,'0');
       for(const btn of cell.querySelectorAll<HTMLButtonElement>('.rom-dip')){
@@ -255,7 +268,7 @@
       btn.title=`IN${bit} = ${+on}`;
     });
     board.querySelectorAll<HTMLButtonElement>('.schematic-io-led').forEach(btn=>{
-      const bit=Number(btn.dataset.bit),on=!!(cpu.out&(1<<bit));
+      const bit=Number(btn.dataset.bit),on=powerOn && !!(cpu.out&(1<<bit));
       btn.classList.toggle('is-on',on);
       btn.textContent=`LED${bit}`;
       btn.title=`OUT${bit} = ${+on}（クリックで信号を追跡）`;
@@ -272,6 +285,7 @@
     const board=document.getElementById('schematicBoard');
     if(!board)return;
     const svg=document.getElementById('icWireLayer') as unknown as SVGSVGElement;
+    if (!options.powerOn) { svg.replaceChildren(); return; }
     const bounds=board.getBoundingClientRect();
     if(!bounds.width||!bounds.height)return;
     // Normalise pointer/element rectangles into the unscaled board's SVG space.

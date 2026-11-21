@@ -106,6 +106,8 @@ interface BoardViewOptions {
   setSelectedNet(net: string): void;
   onRomBitToggle(address: number, bit: number): void;
   onInputBitToggle(bit: number): void;
+  onPowerToggle(): void;
+  onFrequencyToggle(): void;
 }
 
 interface BoardRenderOptions {
@@ -114,6 +116,8 @@ interface BoardRenderOptions {
   cpu: CpuState;
   clockHigh: boolean;
   selectedNet: string;
+  powerOn: boolean;
+  boardClockHz: 2 | 10;
 }
 interface BoardViewApi {
   mount(options: BoardViewOptions): void;

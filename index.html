@@ -37,26 +37,16 @@
     <section class="panel board-panel" aria-labelledby="boardTitle">
       <div class="panel-heading board-heading">
         <div><p class="eyebrow">HARDWARE WORKBENCH</p><h1 id="boardTitle">TD4 ボード</h1></div>
+        <section class="runbar" aria-label="実行操作">
+          <div class="run-buttons">
+            <button type="button" class="btn btn-primary" id="runBtn"><span aria-hidden="true">▶</span> 実行</button>
+            <button type="button" class="btn" id="stopBtn" disabled><span aria-hidden="true">Ⅱ</span> 停止</button>
+          </div>
+          <div class="run-settings">
+            <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
+          </div>
+        </section>
       </div>
-    <section class="runbar" aria-label="実行操作">
-      <div class="run-buttons">
-        <button type="button" class="btn btn-primary" id="runBtn"><span aria-hidden="true">▶</span> 実行</button>
-        <button type="button" class="btn" id="stopBtn" disabled><span aria-hidden="true">Ⅱ</span> 停止</button>
-        <button type="button" class="btn" id="stepBtn"><span aria-hidden="true">⤷</span> 1クロック</button>
-        <button type="button" class="btn btn-ghost" id="resetBtn"><span aria-hidden="true">↻</span> リセット</button>
-      </div>
-      <div class="run-settings">
-        <label for="speed" class="small-label">クロック速度</label>
-        <select id="speed" aria-label="クロック速度">
-          <option value="1">1 Hz</option>
-          <option value="2" selected>2 Hz</option>
-          <option value="5">5 Hz</option>
-          <option value="10">10 Hz</option>
-          <option value="20">20 Hz</option>
-        </select>
-        <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
-      </div>
-    </section>
       <div class="schematic-scroll" id="schematicViewport" tabindex="0" aria-label="IC単位の論理回路と16個のROM DIPスイッチ">
         <div class="schematic-board" id="schematicBoard">
           <span class="pcb-mount-hole pcb-mount-tl" aria-hidden="true"></span>
@@ -68,6 +58,39 @@
             <div class="ic-chip-grid" id="icChipGrid"></div>
           </section>
           <section class="rom-zone" aria-label="DIPスイッチROM">
+                        <section class="board-control-bay" aria-label="基板の電源とCR発振回路">
+              <div class="pcb-control-heading">POWER / CLOCK <span>TD4 CONTROL CIRCUIT</span></div>
+              <div class="pcb-osc-area">
+                <strong class="pcb-silk-heading">CR OSCILLATOR</strong>
+                <div class="pcb-osc-hardware">
+                  <svg class="pcb-osc-diagram" viewBox="0 0 220 92" aria-hidden="true">
+                    <g class="pcb-osc-mirrored" transform="translate(220 0) scale(-1 1)">
+                      <g class="pcb-osc-lines">
+                      <path d="M40 45 H66 M119 45 H148 M148 45 V10 H125 M70 10 H40 V45"/>
+                      <path d="M66 27 V63 L108 45 Z"/><circle cx="114" cy="45" r="5"/>
+                      <path d="M40 45 V59 M28 59 H52 M28 64 H52 M40 64 V74 M29 74 H51 M33 78 H47 M37 82 H43"/>
+                      <path d="M70 10 l5 -5 l8 10 l8 -10 l8 10 l8 -10 l8 10 l8 -10 l5 5 H125"/>
+                      <path d="M148 45 H184"/>
+                      </g>
+                    </g>
+                    <g class="pcb-osc-lines"><path d="M36 45 l10 -6 M36 45 l10 6"/></g>
+                    <g class="pcb-osc-silk-text"><text x="130" y="8">R</text><text x="190" y="65">C</text></g>
+                    <g class="pcb-osc-lines pcb-osc-pulse" aria-hidden="true"><path d="M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55"/></g>
+                  </svg>
+                  <div class="pcb-osc-selector"><div class="pcb-switch-labels" aria-hidden="true"><span>10Hz</span><span>2Hz</span></div>
+                    <button type="button" id="boardClockSwitch" class="pcb-toggle-switch pcb-clock-switch" aria-label="クロック周波数 2Hz、クリックで10Hzに変更" aria-pressed="false"><span class="pcb-toggle-lever" aria-hidden="true"></span></button>
+                  </div>
+                </div>
+              </div>
+              <div class="pcb-power-area">
+                <strong class="pcb-silk-heading">POWER</strong>
+                <div class="pcb-power-hardware">
+                  <div class="pcb-pilot-group"><span id="boardPowerLed" class="pcb-power-led" role="img" aria-label="パイロットランプ消灯"></span><span class="pcb-silk-caption">PWR LED</span></div>
+                  <button type="button" id="boardPowerSwitch" class="pcb-toggle-switch pcb-power-switch" aria-label="基板の電源をONにする" aria-pressed="false"><span class="pcb-toggle-lever" aria-hidden="true"></span></button>
+                  <div class="pcb-switch-labels" aria-hidden="true"><span>ON</span><span>OFF</span></div>
+                </div>
+              </div>
+            </section>
             <div class="rom-dip-grid" id="romDipGrid"></div>
             <div class="schematic-io-strip">
               <div class="schematic-io"><strong>INPUT · 4bit</strong><div id="schematicInput" class="schematic-input-bits"></div></div>

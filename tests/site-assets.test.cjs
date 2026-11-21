@@ -57,10 +57,11 @@ test('footer uses shared Pages layout and points to this repository', () => {
   assert.match(css, /\.site-footer a\s*\{[^}]*margin-left:\s*auto/);
 });
 
-test('clock speed options stop at 20Hz', () => {
-  const options = html.match(/<select id="speed"[^>]*>([\s\S]*?)<\/select>/);
-  assert.ok(options, 'clock speed selector must exist');
-  const values = [...options[1].matchAll(/<option value="(\d+)"/g)].map(match => Number(match[1]));
-  assert.deepEqual(values, [1, 2, 5, 10, 20]);
-  assert.doesNotMatch(options[1], /50\s*Hz/);
+test('clock frequency is controlled only by PCB 2Hz / 10Hz switch', () => {
+  assert.match(html, /id="boardClockSwitch"/);
+  assert.match(html, /<span>10Hz<\/span><span>2Hz<\/span>/);
+  assert.doesNotMatch(html, /<select id="speed"/);
+  const source = fs.readFileSync(path.join(root, 'src/ui/app.ts'), 'utf8');
+  assert.match(source, /let boardClockHz: 2 \| 10 = 2/);
+  assert.match(source, /const halfPeriod = 500 \/ boardClockHz/);
 });
