@@ -21,25 +21,31 @@ test('sample catalog keeps original programs and features the 16-byte adder',()=
   }
 });
 
-test('LED scanner holds each lit state once and a blank state for two clocks',()=>{
+test('LED scanner returns to LED0 and holds it through the jump',()=>{
   const sample=byId.led;
   const {rom,count}=assemble(sample.source);
   assert.equal(count,8);
   const cpu=new CPU(rom);
   const states=Array.from({length:16},()=>{cpu.step();return cpu.out;});
-  const period=[1,2,4,8,4,2,0,0];
+  const period=[1,2,4,8,4,2,1,1];
   assert.deepEqual(states,[...period,...period]);
   assert.equal(cpu.pc,0);
+  assert.deepEqual(states.slice(6,9),[1,1,1],'LED0 stays on across the jump');
+  assert.ok(!states.includes(0),'scanner never blanks its LEDs');
 });
 
-test('binary LED pattern includes zero and holds it while jumping',()=>{
+test('binary LED pattern ends at LED0 and holds it while jumping',()=>{
   const {rom,count}=assemble(byId.bounce.source);
   assert.equal(count,8);
   const cpu=new CPU(rom);
-  const period=[1,3,7,15,7,3,0,0];
+  const period=[1,3,7,15,7,3,1,1];
   const states=Array.from({length:16},()=>{cpu.step();return cpu.out;});
   assert.deepEqual(states,[...period,...period]);
   assert.equal(cpu.pc,0);
+  // Last OUT 1, the JMP, and first OUT 1 all keep LED0 on
+  // across the cycle boundary (three instruction cycles).
+  assert.deepEqual(states.slice(6,9),[1,1,1]);
+  assert.ok(!states.includes(0),'no all-LED-off frame');
 });
 
 test('16-byte adder computes all SW01 + SW23 input combinations and uses all addresses',()=>{

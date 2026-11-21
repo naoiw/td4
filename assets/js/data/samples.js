@@ -13,7 +13,7 @@
             id: 'led',
             icon: '↔',
             title: 'LEDスキャナ',
-            description: 'LED往復・折返しで全消灯2クロック',
+            description: 'LED0点灯で折り返す往復スキャナ',
             source: `; LEDを左右に流す
 start: OUT 1
        OUT 2
@@ -21,7 +21,7 @@ start: OUT 1
        OUT 8
        OUT 4
        OUT 2
-       OUT 0
+       OUT 1
        JMP start`
         },
         {
@@ -59,15 +59,15 @@ loop:  OUT 15
             id: 'bounce',
             icon: '◆',
             title: '2進パターン',
-            description: '1→3→7→F→7→3→0',
-            source: `; 1, 3, 7, F, 7, 3, 0 の2進パターン
+            description: '1→3→7→F→7→3→1',
+            source: `; 1, 3, 7, F, 7, 3, 1 の2進パターン
 loop:  OUT 1
        OUT 3
        OUT 7
        OUT 15
        OUT 7
        OUT 3
-       OUT 0
+       OUT 1
        JMP loop`
         },
         {
