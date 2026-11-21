@@ -24,9 +24,9 @@
   let boardClockHz = 2;
     const waveSamples = [];
     const MAX_WAVE_SAMPLES = 80;
-    // Internal configuration: 'cpu' (default) freezes history when paused,
-    // 'oscilloscope' samples powered signals periodically even with CPU paused.
-    let waveCaptureMode = 'cpu';
+    // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
+    // 'cpu' is still selectable internally for clock-only capture.
+    let waveCaptureMode = 'oscilloscope';
     const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 125;
     let scopeCaptureIntervalId = null;
     let lastWaveDrawAt = 0;
@@ -127,7 +127,7 @@
             },
             onInputBitToggle(bit) {
                 cpu.setInput(cpu.input ^ (1 << bit));
-                renderCPU(); recordSignals();
+                renderCPU(); recordSignals('input');
             },
             onPowerToggle() { if (powerOn) setPower(false); else run(); },
             onFrequencyToggle() { setBoardFrequency(boardClockHz === 2 ? 10 : 2); }
@@ -319,9 +319,9 @@
         startScopeCapture();
         restartWaveCapture();
     }
-    function recordSignals() {
+    function recordSignals(trigger = 'clock') {
         const levels = snapshot(cpu, clockHigh);
-        if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'clock')) {
+        if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
             appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         }
         updateCircuitBoard();
@@ -560,7 +560,7 @@
             }
         });
     }
-    // Expose the internal configuration for debugging/future UI; default stays 'cpu'.
+    // Expose both capture modes internally; the visible default is 'oscilloscope'.
     window.TD4WaveCapture = { getMode: () => waveCaptureMode, setMode: setWaveCaptureMode };
     buildRomRows();
     buildSamples();
