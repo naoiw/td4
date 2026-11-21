@@ -148,9 +148,9 @@ test('IC VCC red, GND black, NC dark and signal pins live green/grey',()=>{
   assert.match(boardJs,/role === 'signal' && level === 0/);
   for (const kind of ['vcc','gnd','nc'])
     assert.match(css,new RegExp('\\.ic-footprint \\.ic-leg\\[data-pin-role="'+kind+'"\\]:before'));
-  assert.match(lastRule('ic-footprint .ic-leg[data-pin-role="vcc"]:before'),/background:linear-gradient\(90deg,#ff9292,#e7474d\)/);
-  assert.match(lastRule('ic-footprint .ic-leg[data-pin-role="gnd"]:before'),/background:linear-gradient\(90deg,#333b40,#0c1115\)/);
-  assert.match(lastRule('ic-footprint .ic-leg[data-pin-role="nc"]:before'),/background:#48535a/);
+  assert.match(css.match(/\.ic-footprint \.ic-leg\[data-pin-role="vcc"\]:before\s*\{([^}]*)\}/)[1],/background:linear-gradient\(90deg,#ff9292,#e7474d\)/);
+  assert.match(css.match(/\.ic-footprint \.ic-leg\[data-pin-role="gnd"\]:before\s*\{([^}]*)\}/)[1],/background:linear-gradient\(90deg,#333b40,#0c1115\)/);
+  assert.match(css.match(/\.ic-footprint \.ic-leg\[data-pin-role="nc"\]:before\s*\{([^}]*)\}/)[1],/background:#48535a/);
   assert.match(lastRule('ic-probe.is-low'),/background:#303c43/);
 });
 test('ROM end labels align with first D7 and last D0 switch',()=>{
