@@ -20,7 +20,6 @@
   let clockHigh = false;
   let powerOn = false;
   let boardClockHz: 2 | 10 = 2;
-  let pulseTimer: number | null = null;
   const waveSamples: SignalLevels[] = [];
   const MAX_WAVE_SAMPLES = 80;
   let lastWaveDrawAt = 0;
@@ -186,10 +185,10 @@
 
   /** Keep CPU state in the application; delegate all board DOM updates. */
   function updateCircuitBoard():void {
-    window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz, actualClockHz: Number($<HTMLSelectElement>('speed').value)});
+    window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz});
   }
   function drawSelectedWires():void {
-    window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz, actualClockHz: Number($<HTMLSelectElement>('speed').value)});
+    window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz});
   }
 
   /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
@@ -299,10 +298,6 @@
     recordSignals();
   }
 
-  function clearPulseTimer(): void {
-    if (pulseTimer !== null) { clearTimeout(pulseTimer); pulseTimer = null; }
-  }
-
   function buildSamples(): void {
     const select = $<HTMLSelectElement>('examples');
     select.replaceChildren();
@@ -346,7 +341,6 @@
   function syncRunControls(): void {
     $<HTMLButtonElement>('runBtn').disabled = intervalId !== null;
     $<HTMLButtonElement>('stopBtn').disabled = !powerOn;
-    $<HTMLButtonElement>('stepBtn').disabled = !powerOn || intervalId !== null;
   }
 
   /** An OFF→ON transition resets volatile CPU state; ROM and switches persist. */
@@ -376,7 +370,6 @@
   /** The PCB two-way switch always chooses an actual 2/10 Hz clock. */
   function setBoardFrequency(frequency: 2 | 10): void {
     boardClockHz = frequency;
-    $<HTMLSelectElement>('speed').value = String(frequency);
     restartRunningClock();
   }
 
@@ -384,12 +377,11 @@
   function restartRunningClock(): void {
     const wasRunning = intervalId !== null;
     if (wasRunning) { stop(); startClock(false); }
-    else updateCircuitBoard();
+    updateCircuitBoard();
   }
 
   function stop(reason = ''): void {
     if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
-    clearPulseTimer();
     setClockLow();
     syncRunControls();
     $('runStatus').classList.remove('running');
@@ -409,18 +401,6 @@
     recordSignals();
   }
 
-  function step(): void {
-    if (intervalId !== null || !powerOn) return;
-    clearPulseTimer();
-    setClockLow();
-    risingEdge();
-    // Hold H long enough to observe the pulse, then return to L.
-    pulseTimer = setTimeout(() => {
-      pulseTimer = null;
-      setClockLow();
-    }, 180);
-  }
-
   function run(): void {
     if (!powerOn) { setPower(true); return; }
     startClock(true);
@@ -429,15 +409,14 @@
   function startClock(immediate: boolean): void {
     if (intervalId !== null || !powerOn) return;
     if (breakpoints.has(cpu.pc)) {
-      showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。1クロックで進めるかBPを解除してください。`);
+      showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。BPを解除してから実行してください。`);
       syncRunControls();
       return;
     }
-    clearPulseTimer();
     setClockLow();
     $('runStatus').classList.add('running');
     $('runStatus').lastChild!.textContent = '実行中';
-    const halfPeriod = 500 / Number($<HTMLSelectElement>('speed').value);
+    const halfPeriod = 500 / boardClockHz;
     intervalId = setInterval(() => {
       if (clockHigh) { setClockLow(); return; }
       if (breakpoints.has(cpu.pc)) {
@@ -451,15 +430,6 @@
     if (immediate) risingEdge();
   }
 
-
-  function reset(): void {
-    stop();
-    cpu.reset();
-    history.splice(0);
-    waveSamples.splice(0);
-    renderCPU(); renderHistory(); recordSignals();
-    showMessage('CPUをリセットしました（ROMと入力スイッチは保持）');
-  }
 
   function installROM(bytes: number[], message?: string): void {
     stop();
@@ -507,13 +477,6 @@
   function connectActions(): void {
     $('runBtn').addEventListener('click', run);
     $('stopBtn').addEventListener('click', () => setPower(false));
-    $('stepBtn').addEventListener('click', step);
-    $('resetBtn').addEventListener('click', reset);
-    $('speed').addEventListener('change', () => {
-      const selected = Number($<HTMLSelectElement>('speed').value);
-      if (selected === 2 || selected === 10) boardClockHz = selected;
-      restartRunningClock();
-    });
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
     $('clearWaveBtn').addEventListener('click', restartWaveCapture);
@@ -537,11 +500,6 @@
       }
       if (event.key === 'Escape' && intervalId !== null) {
         event.preventDefault(); setPower(false); return;
-      }
-      const active = document.activeElement;
-      const editing = ['TEXTAREA','INPUT','SELECT','BUTTON'].includes(active?.tagName ?? '');
-      if (!editing && event.code === 'Space' && !event.repeat) {
-        event.preventDefault(); if (intervalId === null) step();
       }
     });
   }
