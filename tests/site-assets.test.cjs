@@ -59,7 +59,7 @@ test('footer uses shared Pages layout and points to this repository', () => {
 
 test('clock frequency is controlled only by PCB 2Hz / 10Hz switch', () => {
   assert.match(html, /id="boardClockSwitch"/);
-  assert.match(html, /<span>2Hz<\/span><span>10Hz<\/span>/);
+  assert.match(html, /<span>10Hz<\/span><span>2Hz<\/span>/);
   assert.doesNotMatch(html, /<select id="speed"/);
   const source = fs.readFileSync(path.join(root, 'src/ui/app.ts'), 'utf8');
   assert.match(source, /let boardClockHz: 2 \| 10 = 2/);
