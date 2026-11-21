@@ -201,7 +201,7 @@ test('PCB power and oscillator controls sit above the lowered ROM and IO',()=>{
   const rom=html.indexOf('id="romDipGrid"');
   const io=html.indexOf('class="schematic-io-strip"');
   assert.ok(area>0 && area<rom && rom<io,'controls must precede the ROM and IO on the PCB');
-  for(const id of ['boardPowerSwitch','boardClockSwitch','boardPowerLed','boardOscReadout']){
+  for(const id of ['boardPowerSwitch','boardClockSwitch','boardPowerLed']){
     assert.match(html,new RegExp('id="'+id+'"'));
   }
   assert.match(html,/class="pcb-osc-diagram" viewBox="0 0 220 92"/);
@@ -211,7 +211,7 @@ test('PCB power and oscillator controls sit above the lowered ROM and IO',()=>{
   assert.match(lastRule('pcb-power-led.is-on'),/background:radial-gradient/);
 });
 
-test('board controls start power OFF and 2Hz, then synchronize with legacy buttons',()=>{
+test('board controls start power OFF and 2Hz with board-exclusive frequency selection',()=>{
   const appTs=fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8');
   const boardTs=fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8');
   for(const source of [js,appTs]){
@@ -223,21 +223,22 @@ test('board controls start power OFF and 2Hz, then synchronize with legacy butto
     assert.match(source,/function restartRunningClock\(/);
     assert.match(source,/if\s*\(immediate\)\s*risingEdge\(\)/);
     assert.match(source,/\('stopBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
-    assert.match(source,/\('speed'\)\.addEventListener\('change'/);
+    assert.match(source,/const halfPeriod = 500 \/ boardClockHz/);
+    assert.doesNotMatch(source,/stepBtn|resetBtn|actualClockHz|boardOscReadout|['"]speed['"]/);
   }
   for(const source of [boardJs,boardTs]){
     assert.match(source,/\('boardPowerSwitch'\)\.addEventListener\('click', onPowerToggle\)/);
     assert.match(source,/\('boardClockSwitch'\)\.addEventListener\('click', onFrequencyToggle\)/);
     assert.match(source,/pilot\.classList\.toggle\('is-on', powerOn\)/);
-    assert.match(source,/const override = actualClockHz !== boardClockHz/);
+    assert.match(source,/frequencySwitch\.classList\.toggle\('is-ten-hz', boardClockHz === 10\)/);
+    assert.match(source,/cell\.classList\.toggle\('is-current',\s*selected && powerOn\)/);
   }
-  assert.match(html,/id="speed"[\s\S]*?<option value="1">1 Hz/);
   assert.match(html,/id="runBtn"/);
   assert.match(html,/id="stopBtn"/);
-  assert.match(html,/id="stepBtn"/);
+  for (const id of ['stepBtn','resetBtn','speed','boardOscReadout']) assert.doesNotMatch(html,new RegExp('id="'+id+'"'));
 });
 
-test('oscillator is on the left, power on the right, and both left-of-switch labels and pilot match silk',()=>{
+test('oscillator on left and power silk labels to the right of its switch',()=>{
   const left=html.indexOf('<div class="pcb-osc-area">');
   const right=html.indexOf('<div class="pcb-power-area">');
   const rom=html.indexOf('id="romDipGrid"');
@@ -246,7 +247,7 @@ test('oscillator is on the left, power on the right, and both left-of-switch lab
   const led=power.indexOf('id="boardPowerLed"');
   const labels=power.indexOf('class="pcb-switch-labels"');
   const toggle=power.indexOf('id="boardPowerSwitch"');
-  assert.ok(led>=0 && led<labels && labels<toggle,'pilot LED and ON/OFF labels sit to left of power switch');
+  assert.ok(led>=0 && led<toggle && toggle<labels,'pilot LED left, ON/OFF labels right of POWER switch');
   assert.match(lastRule('board-control-bay'),/grid-template-columns:minmax\(0,1\.4fr\) minmax\(0,\.8fr\)/);
 });
 
@@ -276,5 +277,41 @@ test('PCB power toggle runs and stops the CPU and CLK toggles precisely 2/10Hz',
     assert.match(source,/frequencySwitch\.classList\.toggle\('is-ten-hz', boardClockHz === 10\)/);
     assert.match(source,/onPowerToggle/);
     assert.match(source,/onFrequencyToggle/);
+  }
+});
+
+test('power OFF hides the highlighted ROM module without losing ROM bits',()=>{
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/cell\.classList\.toggle\('is-current',\s*selected && powerOn\)/);
+    assert.match(source,/lamp\.classList\.toggle\('is-on',\s*selected && powerOn\)/);
+    assert.match(source,/cell\.querySelector[^\n]*'rom-slot-value'[^\n]*textContent=/);
+  }
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const start=source.indexOf('function setPower(');
+    const end=source.indexOf('function setBoardFrequency(',start);
+    assert.ok(start>=0&&end>start);
+    const power=source.slice(start,end);
+    assert.match(power,/powerOn = false;/);
+    assert.match(power,/cpu\.reset\(\)/);
+    assert.match(power,/renderCPU\(\)/);
+    assert.match(power,/powerOn = true;/);
+    assert.match(power,/startClock\(true\)/);
+  }
+});
+
+test('no hidden clock dropdown, manual-step/reset bindings or duplicate CLK readout remain',()=>{
+  for(const id of ['stepBtn','resetBtn','speed','boardOscReadout'])
+    assert.doesNotMatch(html,new RegExp('id="'+id+'"'));
+  assert.doesNotMatch(html,/1クロック|クロック速度|CLOCK · 2 Hz/);
+  assert.match(html,/id="boardClockSwitch"/);
+  assert.match(html,/2Hz<\/span><span>10Hz/);
+  const foundation=fs.readFileSync(path.join(root,'assets/css/foundation.css'),'utf8');
+  assert.match(foundation,/\.run-buttons\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.doesNotMatch(source,/stepBtn|resetBtn|boardOscReadout|actualClockHz|['"]speed['"]/);
+    assert.doesNotMatch(source,/function step\(|function reset\(|clearPulseTimer/);
+  }
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.doesNotMatch(source,/boardOscReadout|actualClockHz|PANEL OVERRIDE/);
   }
 });
