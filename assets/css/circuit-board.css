@@ -287,8 +287,8 @@
   border-radius:7px;
   padding:9px;
 }
-.ic-role-registers .ic-functional-layout,
-.ic-role-control .ic-functional-layout{top:auto;bottom:calc(100% - 1px)}
+.ic-role-alu .ic-functional-layout,
+.ic-role-registers .ic-functional-layout{top:auto;bottom:calc(100% - 1px)}
 .ic-role-rack .ic-functional-layout[hidden]{display:none!important}
 .rom-dip-grid{}
 .rom-slot{}
@@ -514,9 +514,9 @@
   row-gap:9px;
   align-items:start;
 }
-.ic-role-alu{grid-column:1;grid-row:1}
-.ic-role-registers{grid-column:1;grid-row:2}
-.ic-role-control{grid-column:1;grid-row:3}
+.ic-role-control{grid-column:1;grid-row:1}
+.ic-role-alu{grid-column:1;grid-row:2}
+.ic-role-registers{grid-column:1;grid-row:3}
 .ic-role-fetch{
   grid-column:2;
   grid-row:1 / span 3;

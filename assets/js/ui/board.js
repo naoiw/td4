@@ -132,10 +132,10 @@
       const mountedChips = [...chips.children];
       chips.replaceChildren();
       const roleAreas = [
-        {key:'fetch',title:'ROM / FETCH',types:['rom']},
+        {key:'control',title:'CLOCK / CONTROL',types:['clock','decode']},
         {key:'alu',title:'MUX / ALU',types:['select']},
-        {key:'registers',title:'REGISTERS',types:['register']},
-        {key:'control',title:'CLOCK / CONTROL',types:['clock','decode']}
+        {key:'registers',title:'REGISTER',types:['register']},
+        {key:'fetch',title:'ROM / FETCH',types:['rom']}
       ];
       for (const role of roleAreas) {
         const area=document.createElement('section');
