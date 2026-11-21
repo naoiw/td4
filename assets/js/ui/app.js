@@ -460,32 +460,6 @@
         }).length;
         $('lineCount').textContent = `${count} / 16 instructions`;
     }
-    function downloadROM() {
-        const bytes = new Uint8Array(cpu.rom);
-        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'td4-rom.bin';
-        document.body.append(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        showMessage('ROM 16バイトを td4-rom.bin として保存しました');
-    }
-    function importROM(file) {
-        if (!file)
-            return;
-        file.arrayBuffer().then(buffer => {
-            if (buffer.byteLength !== 16)
-                throw new Error(`ROMは16バイトちょうど必要です（選択されたファイル: ${buffer.byteLength}バイト）`);
-            const bytes = Array.from(new Uint8Array(buffer));
-            installROM(bytes, `${file.name} をROMに読み込みました`);
-            $('source').value = romToSource(bytes);
-            sourceMatchesROM = true;
-            $('examples').selectedIndex = -1;
-            updateCount();
-        }).catch(error => showMessage(error instanceof Error ? error.message : String(error), 'error'));
-    }
     function connectActions() {
         $('runBtn').addEventListener('click', run);
         $('stopBtn').addEventListener('click', () => stop());
@@ -508,13 +482,6 @@
             $('examples').selectedIndex = -1;
             updateCount();
             showMessage('現在のROMを16行のDB形式でソースへ反映しました');
-        });
-        $('exportBtn').addEventListener('click', downloadROM);
-        $('importBtn').addEventListener('click', () => $('importFile').click());
-        $('importFile').addEventListener('change', event => {
-            const picker = $('importFile');
-            importROM(picker.files?.[0]);
-            picker.value = '';
         });
         $('examples').addEventListener('change', event => switchExample($('examples').value));
         $('source').addEventListener('input', () => {
