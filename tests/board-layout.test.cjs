@@ -207,7 +207,8 @@ test('PCB power and oscillator controls sit above the lowered ROM and IO',()=>{
   assert.match(html,/class="pcb-osc-diagram" viewBox="0 0 220 92"/);
   assert.match(html,/CR OSCILLATOR/);
   assert.match(lastRule('rom-zone'),/flex-direction:column/);
-  assert.match(lastRule('board-control-bay'),/min-height:226px/);
+  assert.match(lastRule('board-control-bay'),/grid-template-rows:auto auto/);
+  assert.match(lastRule('board-control-bay'),/padding:9px 12px 9px/);
   assert.match(lastRule('pcb-power-led.is-on'),/background:radial-gradient/);
 });
 
@@ -243,7 +244,7 @@ test('oscillator on left and power silk labels to the right of its switch',()=>{
   const right=html.indexOf('<div class="pcb-power-area">');
   const rom=html.indexOf('id="romDipGrid"');
   assert.ok(left>0 && right>left && rom>right,'left CR/right power must precede ROM');
-  const power=html.slice(right,html.indexOf('<span class="pcb-silk-note"',right));
+  const power=html.slice(right,html.indexOf('            </section>',right));
   const led=power.indexOf('id="boardPowerLed"');
   const labels=power.indexOf('class="pcb-switch-labels"');
   const toggle=power.indexOf('id="boardPowerSwitch"');
@@ -304,7 +305,7 @@ test('no hidden clock dropdown, manual-step/reset bindings or duplicate CLK read
     assert.doesNotMatch(html,new RegExp('id="'+id+'"'));
   assert.doesNotMatch(html,/1クロック|クロック速度|CLOCK · 2 Hz/);
   assert.match(html,/id="boardClockSwitch"/);
-  assert.match(html,/2Hz<\/span><span>10Hz/);
+  assert.match(html,/10Hz<\/span><span>2Hz/);
   const foundation=fs.readFileSync(path.join(root,'assets/css/foundation.css'),'utf8');
   assert.match(foundation,/\.run-buttons\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
@@ -313,5 +314,41 @@ test('no hidden clock dropdown, manual-step/reset bindings or duplicate CLK read
   }
   for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
     assert.doesNotMatch(source,/boardOscReadout|actualClockHz|PANEL OVERRIDE/);
+  }
+});
+
+test('clock lever maps lower position to 2Hz and upper to 10Hz',()=>{
+  assert.match(html, /<span>10Hz<\/span><span>2Hz<\/span>/);
+  const cssSource=fs.readFileSync(path.join(root,'assets/css/circuit-board.css'),'utf8');
+  assert.match(cssSource,/\.pcb-clock-switch:not\(\.is-ten-hz\) \.pcb-toggle-lever\{top:auto;bottom:7px/);
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/let boardClockHz(?:\s*:\s*2\s*\|\s*10)? = 2/);
+  }
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/frequencySwitch\.classList\.toggle\('is-ten-hz', boardClockHz === 10\)/);
+  }
+});
+
+test('power controls have no footer silk and unused lower padding is compact',()=>{
+  assert.doesNotMatch(html,/MAIN SWITCH|pcb-silk-note/);
+  const cssSource=fs.readFileSync(path.join(root,'assets/css/circuit-board.css'),'utf8');
+  assert.doesNotMatch(cssSource,/\.pcb-silk-note/);
+  assert.match(lastRule('pcb-power-area,.pcb-osc-area'),/padding:6px 8px 5px/);
+  assert.match(lastRule('pcb-power-hardware'),/margin:7px 0 0/);
+  assert.match(lastRule('pcb-osc-diagram'),/height:88px/);
+  assert.doesNotMatch(lastRule('board-control-bay'),/min-height:226px/);
+});
+
+test('VCC supply pins lose their red glow only when PCB POWER is OFF',()=>{
+  const cssSource=fs.readFileSync(path.join(root,'assets/css/circuit-board.css'),'utf8');
+  const on=cssSource.match(/\.ic-footprint \.ic-leg\[data-pin-role="vcc"\]:before\s*\{([^}]*)\}/);
+  const off=cssSource.match(/\.schematic-board\.is-powered-off \.ic-footprint \.ic-leg\[data-pin-role="vcc"\]:before\s*\{([^}]*)\}/);
+  assert.ok(on&&off,'powered and unpowered supply-pin styles are both required');
+  assert.match(on[1],/background:linear-gradient\(90deg,#ff9292,#e7474d\)/);
+  assert.match(off[1],/box-shadow:none/);
+  assert.doesNotMatch(off[1],/#e7474d|#ff9292/);
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/board\.classList\.toggle\('is-powered-off', !powerOn\)/);
+    assert.match(source,/physicalPin\.name === 'VCC'/);
   }
 });
