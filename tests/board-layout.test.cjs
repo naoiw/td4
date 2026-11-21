@@ -46,7 +46,7 @@ test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>
     assert.match(board,new RegExp('\\.ic-role-'+role+'\\{grid-column:1;grid-row:'+row+'\\}'));
   }
   for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
-    const leftRoles=[...source.matchAll(/\\{key:'(control|alu|registers)',title:/g)].map(match=>match[1]);
+    const leftRoles=[...source.matchAll(/key:'(control|alu|registers)',title:/g)].map(match=>match[1]);
     assert.deepEqual(leftRoles,['control','alu','registers']);
   }
   assert.match(board,/\.ic-role-fetch\s*\{[^}]*grid-column:2/);
