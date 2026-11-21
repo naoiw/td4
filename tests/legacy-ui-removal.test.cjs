@@ -108,9 +108,12 @@ test('execution controls are inside workbench board, below its title', () => {
   const pcb = html.indexOf('id="schematicViewport"', boardStart);
   assert.ok(boardStart > 0 && heading > boardStart && control > heading && pcb > control);
   assert.equal((html.match(/class="runbar"/g) || []).length, 1);
-  for (const id of ['runBtn', 'stopBtn', 'stepBtn', 'resetBtn', 'speed', 'cycles']) {
+  for (const id of ['runBtn', 'stopBtn', 'cycles']) {
     assert.ok(html.indexOf('id="' + id + '"', control) > control);
     assert.ok(html.indexOf('id="' + id + '"', control) < pcb);
+  }
+  for (const removed of ['stepBtn', 'resetBtn', 'speed']) {
+    assert.doesNotMatch(html, new RegExp('id="' + removed + '"'));
   }
   const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
   assert.match(workbench, /\.board-panel \.runbar\{margin:0 0 14px/);
