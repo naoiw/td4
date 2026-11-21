@@ -260,6 +260,22 @@
                 }
             ]);
         }
+        if (component.type === '74HC32' || component.type === '74HC10') {
+            // Use the PDF-derived electrical netlist, including every gate and its actual pin numbers.
+            const netlist = globalThis.TD4Netlist;
+            if (!netlist)
+                throw new Error('TD4 netlist is missing: load data/netlist.js first');
+            const gateGroups = netlist.gateGroups[component.id];
+            if (!gateGroups)
+                throw new Error('Missing gate groups for ' + component.id);
+            const fromPin = (number) => pin(netlist.pinNames[component.id][String(number)], netlist.pinNets[component.id][String(number)]);
+            const inputLabel = component.type === '74HC32' ? 'INPUT · A/B' : 'INPUT · A/B/C';
+            return make(inputLabel, 'OUTPUT · Y', gateGroups.map((gate) => ({
+                label: `${gate.gate} · ${gate.purpose}`,
+                left: gate.inputPins.map((number) => row(fromPin(number))),
+                right: [row(fromPin(gate.outputPin))]
+            })));
+        }
         if (component.type === '74HC14') {
             // B and C are the only fitted oscillator gates; the RC network is analogue.
             return make('INPUT · A', 'OUTPUT · Y', [
@@ -306,6 +322,8 @@
         const instruction = cpu.rom[cpu.pc];
         const d4 = bit(instruction, 4), d6 = bit(instruction, 6), d7 = bit(instruction, 7);
         const { selectA: selA, selectB: selB, source: input, sum, carry } = decodeALU(instruction, cpu.a, cpu.b, cpu.input);
+        const invertedD6 = (1 - d6);
+        const jumpOr = (d4 | (1 - cpu.carry));
         const nets = {
             CLK: clock ? 1 : 0,
             // Idealized logic states, not the analogue RC voltage or propagation delay.
@@ -320,10 +338,12 @@
             COUT: carry,
             SEL_A: selA,
             SEL_B: selB,
+            D6_N: invertedD6,
+            JUMP_OR: jumpOr,
             LOAD_A_N: (d6 | d7),
-            LOAD_B_N: ((1 - d6) | d7),
-            LOAD_OUT_N: ((1 - d7) | d6),
-            LOAD_PC_N: Number(!(d6 && d7 && (d4 || !cpu.carry)))
+            LOAD_B_N: (invertedD6 | d7),
+            LOAD_OUT_N: Number(!(invertedD6 && d7)),
+            LOAD_PC_N: Number(!(d6 && d7 && jumpOr))
         };
         for (let i = 0; i < 16; i++)
             nets[`ROM_SEL_${i}`] = cpu.pc === i ? 0 : 1;

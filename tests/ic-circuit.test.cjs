@@ -317,3 +317,69 @@ test('74HC283 output divides SUM0–3 and COUT into separate columns', () => {
   assert.ok(!section.left.flat().some(pin=>pin.name==='CIN'));
   assert.equal(physicalPins(chip)[6].net,'GND','actual CIN is still tied LOW');
 });
+
+
+test('PDF 74HC32/74HC10 netlist enumerates every physical gate terminal and cross-reference', () => {
+  const {physicalPins,layout}=require('../assets/js/core/ic-circuit.js');
+  const byId=Object.fromEntries(chips.map(chip=>[chip.id,chip]));
+  const expected={
+    U10:{1:'D7',2:'D4',3:'SEL_A',4:'C_N',5:'D4',6:'JUMP_OR',7:'GND',
+      8:'LOAD_A_N',9:'D6',10:'D7',11:'LOAD_B_N',12:'D6_N',13:'D7',14:'VCC'},
+    U11:{1:'VCC',2:'VCC',3:'VCC',4:'D6_N',5:'D7',6:'LOAD_OUT_N',7:'GND',
+      8:'LOAD_PC_N',9:'D6',10:'D7',11:'JUMP_OR',12:'D6_N',13:'D6',14:'VCC'}
+  };
+  const groups={
+    U10:[[[1,2],3],[[4,5],6],[[9,10],8],[[12,13],11]],
+    U11:[[[1,2,13],12],[[3,4,5],6],[[9,10,11],8]]
+  };
+  for(const id of ['U10','U11']){
+    const dip=physicalPins(byId[id]);
+    assert.equal(dip.length,14);
+    assert.equal(Object.keys(netlist.pinNets[id]).length,14,id+' has all package pins');
+    for(const [pin,net] of Object.entries(expected[id])){
+      assert.equal(netlist.pinNets[id][pin],net,id+'.'+pin+' net');
+      assert.equal(dip[Number(pin)-1].net,net,id+'.'+pin+' displayed net');
+      assert.ok(netlist.nets[net].includes(id+'.'+pin),id+'.'+pin+' reverse endpoint');
+    }
+    assert.equal(netlist.gateGroups[id].length,groups[id].length);
+    const sections=layout(byId[id]).sections;
+    assert.equal(sections.length,groups[id].length,id+' functional gates');
+    for(const [index,[inputs,output]] of groups[id].entries()){
+      const def=netlist.gateGroups[id][index];
+      assert.deepEqual(def.inputPins,inputs,id+' gate '+index+' inputs');
+      assert.equal(def.outputPin,output,id+' gate '+index+' output');
+      const section=sections[index];
+      assert.equal(section.label[0],def.gate);
+      assert.deepEqual(section.left.flat(),inputs.map(pin=>({
+        name:netlist.pinNames[id][pin],net:netlist.pinNets[id][pin]
+      })));
+      assert.deepEqual(section.right.flat(),[{
+        name:netlist.pinNames[id][output],net:netlist.pinNets[id][output]
+      }]);
+    }
+  }
+  assert.deepEqual(netlist.nets.D6_N.sort(),['U10.12','U11.12','U11.4']);
+  assert.deepEqual(netlist.nets.JUMP_OR.sort(),['U10.6','U11.11']);
+});
+
+test('PDF gates and intermediates preserve every opcode load selection for both carry states', () => {
+  const cpu=new CPU();
+  for(const carry of [0,1]){
+    cpu.carry=carry;
+    for(let opcode=0;opcode<256;opcode++){
+      cpu.pc=0;
+      cpu.rom[0]=opcode;
+      const signals=levels(cpu,false);
+      const d4=bit(opcode,4),d6=bit(opcode,6),d7=bit(opcode,7);
+      const inverseD6=1-d6;
+      const jumpOr=d4 | (1-carry);
+      assert.equal(signals.D6_N,inverseD6, 'U11.12 inversion '+opcode);
+      assert.equal(signals.JUMP_OR,jumpOr,'U10.6 jump gate '+opcode);
+      assert.equal(signals.SEL_A,d4|d7,'U10.3 '+opcode);
+      assert.equal(signals.LOAD_A_N,d6|d7,'U10.8 '+opcode);
+      assert.equal(signals.LOAD_B_N,inverseD6|d7,'U10.11 '+opcode);
+      assert.equal(signals.LOAD_OUT_N,Number(!(inverseD6&&d7)),'U11.6 '+opcode);
+      assert.equal(signals.LOAD_PC_N,Number(!(d6&&d7&&jumpOr)),'U11.8 '+opcode);
+    }
+  }
+});
