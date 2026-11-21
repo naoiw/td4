@@ -256,6 +256,7 @@
       element.classList.toggle('is-low',level===0);
       element.classList.toggle('is-selected',net===selectedNet);
       element.classList.toggle('net-selected', powerOn && net === selectedNet);
+      element.classList.toggle('net-selected-low', powerOn && net === selectedNet && level === 0);
       const value=element.querySelector<HTMLElement>('.ic-pin-level');
       if(value)value.textContent=powerOn ? (level?'H':'L') : '—';
       element.title=`${net}: ${level?'HIGH (1)':'LOW (0)'}`;
@@ -268,6 +269,7 @@
       leg.classList.toggle('is-low', role === 'signal' && level === 0);
       leg.classList.toggle('is-unmodelled', role === 'nc');
       leg.classList.toggle('net-selected', powerOn && !!net && net === selectedNet);
+      leg.classList.toggle('net-selected-low', powerOn && !!net && net === selectedNet && level === 0);
       leg.title = '#' + leg.dataset.pinNumber + ' ' + leg.dataset.pinName + ': ' +
         (level === undefined ? '未モデル化' : level === 1 ? 'H (1)' : 'L (0)');
     }
@@ -307,6 +309,7 @@
     });
     for(const el of nodes.tracked){
       el.classList.toggle('net-selected', powerOn && !!el.dataset.net && el.dataset.net === selectedNet);
+      el.classList.toggle('net-selected-low', powerOn && !!el.dataset.net && el.dataset.net === selectedNet && values[el.dataset.net] === 0);
     }
   }
 

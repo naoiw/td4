@@ -148,6 +148,23 @@ test('selected-net highlighting uses orange terminals instead of SVG wires',()=>
 });
 
 
+test('selected network color follows logic level on all board component types',()=>{
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/element\.classList\.toggle\('net-selected-low', powerOn && net === selectedNet && level === 0\)/);
+    assert.match(source,/leg\.classList\.toggle\('net-selected-low', powerOn && !!net && net === selectedNet && level === 0\)/);
+    assert.match(source,/el\.classList\.toggle\('net-selected-low', powerOn && !!el\.dataset\.net && el\.dataset\.net === selectedNet && values\[el\.dataset\.net\] === 0\)/);
+  }
+  assert.match(css,/\.ic-footprint \.ic-leg\.net-selected-low:before/);
+  assert.match(css,/\.ic-detail-panel \.ic-probe\.net-selected-low/);
+  assert.match(css,/\.rom-select-lamp\.net-selected-low/);
+  assert.match(css,/\.rom-dip\.net-selected-low/);
+  assert.match(css,/\.schematic-io-switch\.net-selected-low/);
+  assert.match(css,/\.schematic-io-led\.net-selected-low/);
+  assert.match(css,/outline-color:#f5e6a5/);
+  assert.match(css,/\.ic-leg\.net-selected:before/,'HIGH retains its orange highlight');
+  assert.doesNotMatch(html,/icWireLayer/);
+});
+
 test('IC VCC red, GND black, NC dark and signal pins live green/grey',()=>{
   assert.match(boardJs,/dataset\.pinRole = physicalPin\.name === 'VCC'/);
   assert.match(boardJs,/physicalPin\.name === 'GND' \? 'gnd'/);

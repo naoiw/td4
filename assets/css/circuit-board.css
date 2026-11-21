@@ -746,3 +746,31 @@
   border-color:#ffe3a3;
   box-shadow:0 0 0 3px #ff9428,0 0 17px 5px #ff952b99
 }
+
+/* LOW on a selected net uses a softer pale yellow; HIGH keeps the orange highlight. */
+.schematic-board:not(.is-powered-off) .ic-footprint .ic-leg.net-selected-low:before{
+  background:linear-gradient(90deg,#fffbe2,#f2df9e);
+  border-color:#fff5c7;
+  box-shadow:0 0 6px 2px #fff0b4b8,0 0 11px 4px #ecd78670
+}
+.ic-detail-panel .ic-probe.net-selected-low{
+  outline-color:#f5e6a5;
+  box-shadow:0 0 7px 2px #f5e6a570
+}
+.schematic-board:not(.is-powered-off) .rom-select-lamp.net-selected-low{
+  outline-color:#f5e6a5;
+  box-shadow:0 0 0 2px #fff5ca,0 0 9px 4px #e9d88a75
+}
+.schematic-board:not(.is-powered-off) .rom-dip.net-selected-low{
+  outline-color:#f5e6a5;
+  box-shadow:0 0 8px 2px #e9d88a65
+}
+.schematic-board:not(.is-powered-off) .schematic-io-switch.net-selected-low,
+.schematic-board:not(.is-powered-off) .schematic-io-led.net-selected-low{
+  outline-color:#f5e6a5;
+  box-shadow:0 0 9px 2px #f5e6a570
+}
+.schematic-board:not(.is-powered-off) .schematic-io-led.net-selected-low:before{
+  border-color:#fff5ca;
+  box-shadow:0 0 0 3px #f5e6a5,0 0 12px 4px #e9d88a75
+}
