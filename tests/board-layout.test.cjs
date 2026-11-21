@@ -454,3 +454,39 @@ test('header POWER ON and OFF buttons use green and red styles without recolorin
   assert.match(workbench,/\.btn-power-on:not\(:disabled\):hover\{background:#167a47/);
   assert.match(workbench,/\.btn-power-off:not\(:disabled\):hover\{background:#b93636/);
 });
+
+
+test('waveform capture policy remains internal and defaults to running-CPU-only',()=>{
+  assert.doesNotMatch(html,/id="waveCaptureMode"|id="scopeCaptureMode"/);
+  for (const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/let waveCaptureMode(?:: WaveCaptureMode)? = 'cpu'/);
+    assert.match(source,/const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 125/);
+    assert.match(source,/function setWaveCaptureMode\(/);
+    assert.match(source,/window\.TD4WaveCapture = \{/);
+    assert.match(source,/function recordSignals\(\)[\s\S]*?shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, 'clock'\)/);
+    assert.match(source,/function restartWaveCapture\(\)[\s\S]*?shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, trigger\)/);
+    assert.doesNotMatch(source,/if \(powerOn\) appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
+  }
+});
+
+test('oscilloscope mode uses a separate timer across pause and cleans up at power-off',()=>{
+  for (const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const begin=source.indexOf('function startScopeCapture(');
+    const end=source.indexOf('function setWaveCaptureMode(',begin);
+    assert.ok(begin>0&&end>begin,'scope timer lifecycle should exist');
+    const scope=source.slice(begin,end);
+    assert.match(scope,/if \(!powerOn \|\| waveCaptureMode !== 'oscilloscope'\)/);
+    assert.match(scope,/scopeCaptureIntervalId = setInterval\(/);
+    assert.match(scope,/shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, 'timer'\)/);
+    assert.match(scope,/appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
+    const powerBegin=source.indexOf('function setPower(');
+    const powerEnd=source.indexOf('function setBoardFrequency(',powerBegin);
+    const power=source.slice(powerBegin,powerEnd);
+    assert.match(power,/stopScopeCapture\(\)/);
+    assert.match(power,/startScopeCapture\(\)/);
+    assert.match(source,/window\.addEventListener\('pagehide',[\s\S]*?stopScopeCapture\(\)/);
+    const stopBegin=source.indexOf('function stop(');
+    const stopEnd=source.indexOf('function risingEdge(',stopBegin);
+    assert.doesNotMatch(source.slice(stopBegin,stopEnd),/stopScopeCapture\(\)/);
+  }
+});
