@@ -235,11 +235,7 @@
           row(pin(`IN${n}`, `IN${n}`)),
           row(pin('0', 'GND'))
         ],
-        right: [
-          row(pin(`Y${n}`, `MUX${n}`)),
-          row(pin('S0', 'SEL_A')),
-          row(pin('S1', 'SEL_B'))
-        ]
+        right: [row(pin(`Y${n}`, `MUX${n}`)), row(pin('S0', 'SEL_A')), row(pin('S1', 'SEL_B'))]
       });
       return make('INPUT · 4:1', 'SELECT / Y', [section(first, 0), section(second, 1)]);
     }
