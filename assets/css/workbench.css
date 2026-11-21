@@ -18,7 +18,7 @@
 .board-panel{padding:18px 20px 15px}
 .board-heading{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:10px}
 .board-panel .runbar{margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:flex-end;flex-direction:row;flex-wrap:wrap;gap:10px 16px}
-.board-panel .run-buttons{display:flex;align-items:center;gap:8px}
+.board-panel .run-buttons{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .board-panel .run-settings{display:flex;align-items:center}
 .board-panel .cycle-counter{border-left:0;margin-left:0;padding-left:0}
 .rom-panel .rom-footer{margin:0 0 11px}
