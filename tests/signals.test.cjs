@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { CPU, assemble } = require('../assets/js/core/td4-core.js');
-const { GROUPS, preview, snapshot, appendSample, waveformPath } = require('../assets/js/core/signals.js');
+const { GROUPS, preview, snapshot, appendSample, waveformPath, shouldCaptureSample } = require('../assets/js/core/signals.js');
 const examples = require('../assets/js/data/samples.js');
 
 test('all sample programs assemble inside TD4 16-byte ROM', () => {
@@ -79,4 +79,41 @@ test('selectable analyzer groups contain at most 10 signals and retain all chann
   for (const name of ['PC0','PC1','PC2','PC3','D0','D1','D2','D3','D4','D5','D6','D7','ALU0','ALU1','ALU2','ALU3']) {
     assert.ok(allSignals.has(name), name + ' should stay selectable');
   }
+});
+
+test('CPU capture samples only powered CPU clock activity, not stopped input edits', () => {
+  for (const powerOn of [false, true]) {
+    assert.equal(shouldCaptureSample('cpu', powerOn, false, 'clock'), false);
+    assert.equal(shouldCaptureSample('cpu', powerOn, false, 'timer'), false);
+    assert.equal(shouldCaptureSample('cpu', powerOn, true, 'timer'), false);
+  }
+  assert.equal(shouldCaptureSample('cpu', true, true, 'clock'), true);
+  assert.equal(shouldCaptureSample('cpu', false, true, 'clock'), false);
+  const samples = [];
+  const cpu = new CPU();
+  cpu.setInput(0);
+  if (shouldCaptureSample('cpu', true, true, 'clock')) appendSample(samples, snapshot(cpu, false));
+  const frozen = waveformPath(samples, 'IN0');
+  cpu.setInput(1);
+  if (shouldCaptureSample('cpu', true, false, 'clock')) appendSample(samples, snapshot(cpu, false));
+  assert.equal(waveformPath(samples, 'IN0'), frozen, 'paused input changes do not scroll the trace');
+  assert.equal(samples.length, 1);
+});
+
+test('oscilloscope capture continues at a fixed timer while CPU stopped, without stepping CPU', () => {
+  const cpu = new CPU();
+  const samples = [];
+  cpu.setInput(0);
+  for (let i = 0; i < 3; i++) {
+    if (shouldCaptureSample('oscilloscope', true, false, 'timer'))
+      appendSample(samples, snapshot(cpu, false));
+  }
+  assert.deepEqual(samples.map(s => s.IN0), [0, 0, 0]);
+  cpu.setInput(1);
+  if (shouldCaptureSample('oscilloscope', true, false, 'timer'))
+    appendSample(samples, snapshot(cpu, false));
+  assert.deepEqual(samples.map(s => s.IN0), [0, 0, 0, 1]);
+  assert.equal(cpu.cycles, 0, 'independent capture never advances the CPU');
+  assert.equal(shouldCaptureSample('oscilloscope', true, true, 'clock'), false);
+  assert.equal(shouldCaptureSample('oscilloscope', false, false, 'timer'), false);
 });
