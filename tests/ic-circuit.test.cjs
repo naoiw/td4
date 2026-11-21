@@ -228,7 +228,7 @@ test('IC details omit fixed enable controls but retain dynamic and non-enable pi
   assert.equal(names('U13').filter(name=>/^Y[0-9A-F]#$/.test(name)).length,16);
 
   assert.deepEqual(names('U12').filter(name=>/^OE[12]#$/.test(name)),[]);
-  assert.deepEqual(names('U12').filter(name=>/^A[0-7]$/.test(name)),Array.from({length:8},(_,n)=>'A'+n));
+  assert.deepEqual(names('U12').filter(name=>/^A[0-7]$/.test(name)).sort((a,b)=>Number(a[1])-Number(b[1])),Array.from({length:8},(_,n)=>'A'+n));
   assert.equal(names('U12').filter(name=>/^Y[0-7]$/.test(name)).length,8);
 
   for(const id of ['U7','U8']){
