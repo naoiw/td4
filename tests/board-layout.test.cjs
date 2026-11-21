@@ -650,3 +650,21 @@ test('IC detail renderer supports nested input/output probe columns',()=>{
   assert.match(lastRule('ic-detail-panel .ic-function-subcolumns'),/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(lastRule('ic-detail-panel .ic-function-subcolumn'),/flex-direction:column/);
 });
+
+test('all four IC block headers share the same silk font and weight',()=>{
+  const common=lastRule('ic-role-head strong');
+  assert.match(common,/font:\s*800 11px\/1\.2 ui-monospace,monospace/);
+  const roleSelectors=['control','alu','registers','fetch'];
+  for(const role of roleSelectors){
+    assert.doesNotMatch(css,new RegExp('\\.ic-role-'+role+' \\.ic-role-head strong\\s*\\{'),
+      role+' must not override the common heading typography');
+  }
+  // The independent power/clock area is intentionally left at its original size.
+  assert.match(lastRule('pcb-control-heading'),/font:\s*800 13px\/1\.2 ui-monospace,monospace/);
+});
+
+test('POWER / CLOCK remains without the redundant TD4 CONTROL CIRCUIT caption',()=>{
+  assert.match(html,/<div class="pcb-control-heading">POWER \/ CLOCK<\/div>/);
+  assert.doesNotMatch(html,/TD4 CONTROL CIRCUIT/);
+  assert.doesNotMatch(css,/\.pcb-control-heading span\s*\{/);
+});
