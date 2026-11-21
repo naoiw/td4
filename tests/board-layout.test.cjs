@@ -221,7 +221,7 @@ test('board controls start power OFF and 2Hz, then synchronize with legacy butto
     assert.match(source,/onFrequencyToggle\(\) \{ setBoardFrequency\(boardClockHz === 2 \? 10 : 2\); \}/);
     assert.match(source,/function setPower\(/);
     assert.match(source,/function restartRunningClock\(/);
-    assert.match(source,/if \(immediate\) risingEdge\(\)/);
+    assert.match(source,/if\s*\(immediate\)\s*risingEdge\(\)/);
     assert.match(source,/\('stopBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
     assert.match(source,/\('speed'\)\.addEventListener\('change'/);
   }
