@@ -1,12 +1,4 @@
 /* IC-level TD4 board: stylized functional probe diagram, not physical pinout. */
-.ic-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:12px;flex-wrap:wrap}
-.ic-toolbar>div:first-child{display:flex;flex-direction:column;gap:4px}
-.ic-toolbar strong{font-weight:800;font-size:13px;color:#2a4450}
-.ic-toolbar span{font-size:10px;color:#718594}
-.ic-probe-control{display:flex;align-items:center;gap:9px;font:650 11px ui-monospace,monospace}
-.ic-probe-control code{background:#e5f1ed;color:#176547;padding:5px 9px;border-radius:5px}
-.ic-probe-control b{padding:4px 8px;border-radius:5px;background:#2a5248;color:#caffd6}
-.ic-probe-control b.lo{background:#dce4e8;color:#425964}
 .schematic-scroll{overflow-x:auto;overflow-y:hidden;}
 .schematic-board{position:relative;display:grid;margin:auto;overflow:hidden;}
 .schematic-zone-head{justify-content:space-between;align-items:center;color:#dbecd6;font:800 15px ui-monospace,monospace;letter-spacing:.7px;margin:0 0 12px}
@@ -51,12 +43,10 @@
 .schematic-io-led{min-width:0;border:0;background:none;color:#a7c7b1;font:700 9px ui-monospace,monospace;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
 .schematic-io-led:before{content:'';display:block;border-radius:50%;background:#4d3b26;border:2px solid #a07a4c;box-shadow:inset 0 0 6px #100e0b}
 .schematic-io-led.is-on:before{background:#ffbc51;box-shadow:0 0 18px #ffb343,0 0 7px #fda636,inset 0 0 6px #fff2c6}
-.schematic-explain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#c0d6c8;font:750 10px ui-monospace,monospace}
-.schematic-caution{color:#89b3a1;font:600 10px/1.6 sans-serif;margin:15px 0 0}
 .ic-wire-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .ic-wire{fill:none;stroke-linejoin:round;stroke-linecap:round;stroke-width:3.5;vector-effect:non-scaling-stroke;opacity:.9}
 .ic-wire.hi{stroke:#a8ffb7;filter:drop-shadow(0 0 5px #98ffc7)}.ic-wire.lo{stroke:#718ea3;stroke-dasharray:7 5;opacity:.72}
-@media(max-width:650px){.ic-toolbar{align-items:start;flex-direction:column}.schematic-board{margin:0}.ic-probe-control{width:100%;justify-content:space-between}}
+@media(max-width:650px){.schematic-board{margin:0}}
 
 
 /* Functional pin-oriented IC layout. Physical DIP leg count is precise but
@@ -312,8 +302,6 @@
 .schematic-io-strip{}
 .schematic-io{}
 .schematic-io strong{margin-bottom:6px}
-.schematic-explain{margin-top:12px}
-.schematic-caution{margin-top:8px;font-size:9px;line-height:1.4}
 @media(max-width:650px){
   .schematic-board{}
 }
@@ -571,24 +559,96 @@
 .pcb-mount-tr{top:6px;right:6px}
 .pcb-mount-bl{bottom:6px;left:6px}
 .pcb-mount-br{bottom:6px;right:6px}
-/* Explanatory material belongs below the PCB, never inside its ROM zone. */
-.board-notes{
-  max-width:1135px;
-  margin:12px auto 0;
-  padding:0 8px 12px;
-  color:#355849;
-}
-.board-notes .schematic-explain{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-  margin:0;
-  color:#315844;
-}
-.board-notes .schematic-caution{
-  margin:8px 0 0;
-  color:#526f61;
-  font:500 11px/1.6 sans-serif;
-}
 @media(max-width:650px){.schematic-board{width:1135px}}
+
+
+/* Pin roles override H/L: actual supply pins use fixed colors, unmodelled/NC
+   pads stay charcoal, and only logic signals use the live green/grey palette. */
+.ic-footprint .ic-leg[data-pin-role="vcc"]:before {
+  background:linear-gradient(90deg,#ff9292,#e7474d);
+  border-color:#ffb1b1;
+  box-shadow:0 0 5px #e94747a1;
+  opacity:1;
+}
+.ic-footprint .ic-leg[data-pin-role="gnd"]:before {
+  background:linear-gradient(90deg,#333b40,#0c1115);
+  border-color:#59646b;
+  box-shadow:0 1px 1px #080e11;
+  opacity:1;
+}
+.ic-footprint .ic-leg[data-pin-role="nc"]:before {
+  background:#48535a;
+  border-color:#66747a;
+  box-shadow:none;
+  opacity:.83;
+}
+.ic-probe.is-low {
+  border-color:#61717a;
+  background:#303c43;
+  color:#ccd4d8;
+}
+.ic-probe.is-low b {
+  background:#687780;
+  color:#f2f6f8;
+}
+
+/* Each 8-way ROM DIP has just two end labels aligned to the first/last key. */
+.rom-slot-bits {
+  display:grid;
+  grid-template-columns:repeat(8,minmax(0,1fr));
+  gap:2px;
+  padding:0 4px;
+  margin-top:5px;
+  font-size:9px;
+  line-height:1.2;
+  color:#cadfd2;
+  text-align:center;
+}
+.rom-slot-bits span:first-child{grid-column:1}
+.rom-slot-bits span:last-child{grid-column:8}
+
+/* Green address-selection LED (active-low 74HC154). */
+.rom-select-lamp {
+  border-color:#7b9e8c;
+  background:#3c574e;
+  box-shadow:inset 0 0 3px #1c3329;
+}
+.rom-select-lamp.is-on {
+  background:#63efa2;
+  border-color:#b9ffd2;
+  box-shadow:0 0 10px #68e7a4,inset 0 0 2px #edfff4;
+}
+.rom-slot.is-current {
+  border-color:#75db9c;
+  box-shadow:0 0 0 1px #91e6ae,0 4px 0 #092c29,0 0 20px #6bdaa644;
+}
+
+/* H=green, L=grey on the input switches and output LED readouts. */
+.schematic-io-switch {
+  background:#39464c;
+  border-color:#72828a;
+  color:#d0d8dc;
+  font-size:11px;
+}
+.schematic-io-switch.is-on {
+  background:#246c4e;
+  border-color:#6ada9f;
+  color:#bbffcf;
+}
+.schematic-io-led {
+  color:#c4cdd1;
+  font-size:11px;
+}
+.schematic-io-led:before {
+  background:#75838a;
+  border-color:#a2adb3;
+  box-shadow:inset 0 0 5px #354149;
+}
+.schematic-io-led.is-on {
+  color:#bcffd2;
+}
+.schematic-io-led.is-on:before {
+  background:#55e997;
+  border-color:#b2fbd0;
+  box-shadow:0 0 14px #68e7a4,0 0 6px #84ffc0,inset 0 0 5px #e3fff0;
+}

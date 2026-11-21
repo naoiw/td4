@@ -56,3 +56,11 @@ test('footer uses shared Pages layout and points to this repository', () => {
   assert.match(css, /\.site-footer\s*\{[^}]*border-top:\s*1px solid var\(--line\)/);
   assert.match(css, /\.site-footer a\s*\{[^}]*margin-left:\s*auto/);
 });
+
+test('clock speed options stop at 20Hz', () => {
+  const options = html.match(/<select id="speed"[^>]*>([\s\S]*?)<\/select>/);
+  assert.ok(options, 'clock speed selector must exist');
+  const values = [...options[1].matchAll(/<option value="(\d+)"/g)].map(match => Number(match[1]));
+  assert.deepEqual(values, [1, 2, 5, 10, 20]);
+  assert.doesNotMatch(options[1], /50\s*Hz/);
+});

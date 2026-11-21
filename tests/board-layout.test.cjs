@@ -28,7 +28,9 @@ test('each ROM address contains eight horizontally arranged DIP toggles',()=>{
   assert.match(lastRule('rom-dip'),/flex-direction:\s*column/);
   assert.match(lastRule('rom-dip'),/flex:\s*1 1 0/);
   assert.match(lastRule('rom-dip.is-on'),/justify-content:\s*flex-start/);
-  assert.match(boardJs,/footer\.textContent\s*=\s*'D7 → D0'/);
+  assert.match(boardJs,/firstBit\.textContent\s*=\s*'7'/);
+  assert.match(boardJs,/lastBit\.textContent\s*=\s*'0'/);
+  assert.match(boardJs,/footer\.append\(firstBit,\s*lastBit\)/);
 });
 
 test('Input and Output panels are horizontal beneath the ROM',()=>{
@@ -53,9 +55,9 @@ test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>
 });
 
 test('IC detail is outside board and large enough to inspect H/L probes',()=>{
-  const boardEnd=html.indexOf('</div>\n      <div class="board-notes"');
-  assert.ok(boardEnd>0,'external notes must follow schematic-scroll');
-  assert.ok(html.indexOf('id="icDetailPanel"')>boardEnd,'detail panel must follow notes outside PCB');
+  const boardEnd=html.indexOf('      <section id="icDetailPanel"');
+  assert.ok(boardEnd>html.indexOf('id="romDipGrid"'),'external IC detail must follow board');
+  assert.ok(html.indexOf('id="schematicBoard"')<boardEnd,'IC detail panel must stay outside PCB');
   assert.match(js,/function toggleIcDetails\(chipId\)/);
   assert.match(js,/host\.append\(head,\s*pins\)/);
   assert.match(js,/oldCard\.append\(oldPins\)/);
@@ -103,17 +105,14 @@ test('DIP footprints retain two opposing pin banks and functional signal colors'
   assert.match(lastRule('ic-footprint .ic-leg-left'),/left:\s*-4px/);
   assert.match(lastRule('ic-footprint .ic-leg-right'),/right:\s*-4px/);
 });
-test('upper board text is removed and the signal legend sits entirely below the PCB',()=>{
-  const board=html.slice(html.indexOf('id="schematicBoard"'),html.indexOf('id="icDetailPanel"'));
+test('board legend and disclaimer are absent while PCB and details remain',()=>{
   for(const title of ['LOGIC ICs','74HC SERIES · 13 PACKAGES','ROM · 16 × 8-bit','74HC154でアドレスを選択']){
-    assert.ok(!board.includes(title),title+' must be removed');
+    assert.ok(!html.includes(title),title+' must be removed');
   }
-  assert.equal((html.match(/class="schematic-explain"/g)||[]).length,1);
-  assert.equal((html.match(/class="schematic-caution"/g)||[]).length,1);
-  const boardClose=html.indexOf('      <div class="board-notes"');
-  assert.ok(boardClose>html.indexOf('id="romDipGrid"'));
-  assert.ok(boardClose<html.indexOf('id="icDetailPanel"'));
-  assert.ok(!html.slice(html.indexOf('id="schematicBoard"'),boardClose).includes('class="schematic-explain"'));
+  assert.doesNotMatch(html,/board-notes|schematic-explain|schematic-caution|アドレス選択中（\/Y=L）/);
+  assert.doesNotMatch(html,/HIGH 1|LOW 0/);
+  assert.match(html,/id="schematicBoard"/);
+  assert.match(html,/id="icDetailPanel"/);
 });
 
 test('DOM construction is delegated to stateless board renderer',()=>{
@@ -131,8 +130,37 @@ test('board H/L and selected-net SVG renderers stay separate from CPU state',()=
   assert.match(boardJs,/function render\(options\)/);
   assert.match(boardJs,/function drawWires\(options\)/);
   assert.match(boardJs,/drawWires\(options\)/);
-  assert.match(boardJs,/selectedNetName/);
+  assert.match(boardJs,/classList\.toggle\('net-selected'/);
   assert.match(boardJs,/getBoundingClientRect\(\)/);
   assert.match(boardJs,/classList\.toggle\('is-high'/);
   assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');
+});
+
+
+test('IC VCC red, GND black, NC dark and signal pins live green/grey',()=>{
+  assert.match(boardJs,/dataset\.pinRole = physicalPin\.name === 'VCC'/);
+  assert.match(boardJs,/physicalPin\.name === 'GND' \? 'gnd'/);
+  assert.match(boardJs,/physicalPin\.net \? 'signal' : 'nc'/);
+  assert.match(boardJs,/role === 'signal' && level === 1/);
+  assert.match(boardJs,/role === 'signal' && level === 0/);
+  for (const kind of ['vcc','gnd','nc'])
+    assert.match(css,new RegExp('\\.ic-footprint \\.ic-leg\\[data-pin-role="'+kind+'"\\]:before'));
+  assert.match(css.match(/\.ic-footprint \.ic-leg\[data-pin-role="vcc"\]:before\s*\{([^}]*)\}/)[1],/background:linear-gradient\(90deg,#ff9292,#e7474d\)/);
+  assert.match(css.match(/\.ic-footprint \.ic-leg\[data-pin-role="gnd"\]:before\s*\{([^}]*)\}/)[1],/background:linear-gradient\(90deg,#333b40,#0c1115\)/);
+  assert.match(css.match(/\.ic-footprint \.ic-leg\[data-pin-role="nc"\]:before\s*\{([^}]*)\}/)[1],/background:#48535a/);
+  assert.match(lastRule('ic-probe.is-low'),/background:#303c43/);
+});
+test('ROM end labels align with first D7 and last D0 switch',()=>{
+  assert.match(lastRule('rom-slot-bits'),/grid-template-columns:repeat\(8,minmax\(0,1fr\)\)/);
+  assert.match(lastRule('rom-slot-bits span:first-child'),/grid-column:1/);
+  assert.match(lastRule('rom-slot-bits span:last-child'),/grid-column:8/);
+  assert.match(boardJs,/footer\.append\(firstBit,\s*lastBit\)/);
+});
+test('ROM active LED is green and IO labels grow to 11px with green/grey state',()=>{
+  assert.match(lastRule('rom-select-lamp.is-on'),/background:#63efa2/);
+  assert.match(lastRule('schematic-io-switch'),/font-size:11px/);
+  assert.match(lastRule('schematic-io-led'),/font-size:11px/);
+  assert.match(lastRule('schematic-io-switch.is-on'),/background:#246c4e/);
+  assert.match(lastRule('schematic-io-led:before'),/background:#75838a/);
+  assert.match(lastRule('schematic-io-led.is-on:before'),/background:#55e997/);
 });

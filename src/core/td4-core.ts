@@ -112,7 +112,7 @@
       }
       if (destination !== 3) this.pc = (this.pc + 1) & 15;
       this.carry = nextCarry; // 74HC283 updates C even for MOV, IN, OUT, JMP, JNC.
-      this.cycles += 1;
+      this.cycles = (this.cycles + 1) % 1000000;
       this.lastStep = {
         pc: pcBefore, byte: instruction, asm: disassemble(instruction),
         source, imm, sum, result, carryBefore: oldCarry,

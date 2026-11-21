@@ -44,7 +44,6 @@
           <option value="5">5 Hz</option>
           <option value="10">10 Hz</option>
           <option value="20">20 Hz</option>
-          <option value="50">50 Hz</option>
         </select>
         <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
       </div>
@@ -58,11 +57,6 @@
     <section class="panel board-panel" aria-labelledby="boardTitle">
       <div class="panel-heading board-heading">
         <div><p class="eyebrow">HARDWARE WORKBENCH</p><h1 id="boardTitle">TD4 ボード</h1><p class="board-subtitle">スイッチを動かし、LEDと信号の変化を観察する</p></div>
-        <span class="panel-tag">4-BIT / 16 BYTE ROM</span>
-      </div>
-      <div class="ic-toolbar">
-        <div><strong>実ICロジック・ROM基板</strong><span>ICを押すと基板の下に大きな詳細が開きます。脚はH=緑 / L=灰色</span></div>
-        <div class="ic-probe-control"><span>追跡中</span><code id="selectedNetName">CLK</code><b id="selectedNetLevel">L</b><button type="button" id="resetNetBtn" class="btn btn-small">CLKに戻す</button></div>
       </div>
       <div class="schematic-scroll" tabindex="0" aria-label="IC単位の論理回路と16個のROM DIPスイッチ">
         <div class="schematic-board" id="schematicBoard">
@@ -83,12 +77,7 @@
           </section>
         </div>
       </div>
-      <div class="board-notes" aria-label="信号表示の凡例と注意事項">
-        <div class="schematic-explain"><span class="signal-key high"></span> HIGH 1 <span class="signal-key low"></span> LOW 0 <span class="rom-select-lamp is-on"></span> アドレス選択中（/Y=L）</div>
-        <p class="schematic-caution">74HC系列の部品構成と論理接続を示しています。各ICは機能信号単位で表示しており、パッケージの実ピン番号や基板配線の完全再現ではありません。配線は選択信号のみを描画します。</p>
-      </div>
       <section id="icDetailPanel" class="ic-detail-panel" data-chip="" aria-label="IC入出力の詳細" hidden></section>
-      <div class="live-signals" id="liveSignals" aria-label="現在の主要信号レベル"></div>
     </section>
 
     <div class="scope-layout">
@@ -110,7 +99,6 @@
       <section class="panel rom-panel" aria-labelledby="romTitle">
         <div class="panel-heading">
           <div><p class="eyebrow">PROGRAM ROM</p><h2 id="romTitle">16バイト ROM</h2></div>
-          <span class="panel-tag">16 × 8-BIT</span>
         </div>
         <div class="rom-info">実行中の命令がハイライトされます。<strong>0 / 1</strong> を押すとビットを反転できます。</div>
         <div class="rom-table-wrap">
@@ -125,7 +113,6 @@
       <section class="panel editor-panel" aria-labelledby="editorTitle">
         <div class="panel-heading">
           <div><p class="eyebrow">PROGRAM EDITOR</p><h2 id="editorTitle">プログラムを書く</h2></div>
-          <span class="panel-tag">ASSEMBLER</span>
         </div>
         <label for="examples" class="field-label">サンプルプログラム</label>
         <select id="examples" class="wide-select">
