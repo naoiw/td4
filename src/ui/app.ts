@@ -262,7 +262,6 @@
       row.append(name, graph, status);
       area.append(row);
     }
-    $('sampleCount').textContent = `${waveSamples.length} samples / ${MAX_WAVE_SAMPLES}`;
   }
 
   function recordSignals(): void {

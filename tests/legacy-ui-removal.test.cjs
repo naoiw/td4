@@ -79,18 +79,54 @@ test('board subtitle and analyzer H/L explanatory label are removed', () => {
   assert.doesNotMatch(html, /H = HIGH \(1\) \/ L = LOW \(0\)/);
   assert.match(html, /id="boardTitle"/);
   assert.match(html, /id="scopeView"/);
-  assert.match(html, /class="scope-footer"><span id="sampleCount"/);
+  assert.doesNotMatch(html, /id="sampleCount"|scope-footer/);
   const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
   assert.doesNotMatch(workbench, /board-subtitle/);
-  assert.match(workbench, /\.scope-footer\{display:flex;align-items:center;justify-content:space-between/);
+  assert.doesNotMatch(workbench, /scope-footer/);
 });
 
-test('logic analyzer places count at bottom left and clear action at bottom right', () => {
-  assert.doesNotMatch(html, /立ち上がりでCPU状態を更新 · 右端が最新|class="scope-meta"/);
-  assert.match(html, /<div class="scope-view" id="scopeView"[^>]*><\/div>\s*<div class="scope-footer"><span id="sampleCount">0 samples<\/span><button type="button" class="text-button" id="clearWaveBtn">波形を消去<\/button><\/div>/);
+test('logic analyzer groups the clear action with the signal selector', () => {
+  assert.doesNotMatch(html, /立ち上がりでCPU状態を更新|id="sampleCount"|scope-footer|scope-meta/);
+  const header = html.slice(html.indexOf('<section class="panel scope-panel"'), html.indexOf('id="scopeView"'));
+  assert.match(header, /class="scope-controls"/);
+  assert.ok(header.indexOf('id="signalGroup"') < header.indexOf('id="clearWaveBtn"'));
   assert.equal((html.match(/id="clearWaveBtn"/g) || []).length, 1);
   const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
-  assert.doesNotMatch(css, /scope-meta/);
-  assert.match(css, /\.scope-footer\{display:flex;align-items:center;justify-content:space-between/);
-  assert.match(ts, /\$\('clearWaveBtn'\)\.addEventListener\('click'/);
+  assert.match(css, /\.scope-controls\{display:flex;align-items:center/);
+  assert.doesNotMatch(css, /scope-footer/);
+  for (const source of [ts, js]) {
+    assert.match(source, /\$\('clearWaveBtn'\)\.addEventListener\('click'/);
+    assert.doesNotMatch(source, /sampleCount/);
+    assert.match(source, /appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
+  }
+});
+
+test('execution controls are inside workbench board, below its title', () => {
+  const boardStart = html.indexOf('<section class="panel board-panel"');
+  const heading = html.indexOf('id="boardTitle"', boardStart);
+  const control = html.indexOf('<section class="runbar"', boardStart);
+  const pcb = html.indexOf('id="schematicViewport"', boardStart);
+  assert.ok(boardStart > 0 && heading > boardStart && control > heading && pcb > control);
+  assert.equal((html.match(/class="runbar"/g) || []).length, 1);
+  for (const id of ['runBtn', 'stopBtn', 'stepBtn', 'resetBtn', 'speed', 'cycles']) {
+    assert.ok(html.indexOf('id="' + id + '"', control) > control);
+    assert.ok(html.indexOf('id="' + id + '"', control) < pcb);
+  }
+  const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.match(workbench, /\.board-panel \.runbar\{margin:0 0 14px/);
+});
+
+test('ROM legend and breakpoint clear are above table, with help text removed', () => {
+  const romStart = html.indexOf('<section class="panel rom-panel"');
+  const legend = html.indexOf('class="rom-footer"', romStart);
+  const table = html.indexOf('class="rom-table-wrap"', romStart);
+  const panelEnd = html.indexOf('</section>', table);
+  assert.ok(romStart > 0 && legend > romStart && table > legend && panelEnd > table);
+  assert.ok(html.indexOf('id="clearBpBtn"', legend) < table);
+  assert.match(html.slice(legend,table), /PC（次の命令）/);
+  assert.match(html.slice(legend,table), /ブレークポイント/);
+  assert.doesNotMatch(html, /rom-info|実行中の命令がハイライトされます。/);
+  const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.match(css, /\.rom-panel \.rom-footer\{margin:0 0 11px/);
+  assert.match(ts, /\$\('clearBpBtn'\)\.addEventListener\('click'/);
 });
