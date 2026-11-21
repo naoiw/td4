@@ -415,10 +415,10 @@ test('two 74HC14 Schmitt gates form a closed RC oscillator with CLK output',()=>
   const stop=html.indexOf('</svg>',start);
   assert.ok(start>0&&stop>start);
   const svg=html.slice(start,stop);
-  assert.match(svg,/M25 45 H45 M88 45 H124 M166 45 H198/);
-  assert.match(svg,/M45 31 V59 L76 45 Z/);
+  assert.match(svg,/M25 45 H45 M87 45 H124 M165 45 H198/);
+  assert.match(svg,/M45 31 V59 L77 45 Z/);
   assert.match(svg,/<circle cx="82" cy="45" r="5"\/>/);
-  assert.match(svg,/M124 31 V59 L154 45 Z/);
+  assert.match(svg,/M124 31 V59 L155 45 Z/);
   assert.match(svg,/<circle cx="160" cy="45" r="5"\/>/);
   assert.match(svg,/M107 45 V10 H102 M60 10 H25 V45/);
   assert.match(svg,/M25 45 V75 H38 M44 75 H198 V45/);
