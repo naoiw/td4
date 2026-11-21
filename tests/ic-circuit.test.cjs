@@ -169,3 +169,20 @@ test('ROM matrix has independent contact nets and common raw data columns', () =
   }
   assert.equal(cells.size,128);
 });
+
+test('74HC154 decoder outputs are arranged in a 4x4 row-major grid', () => {
+  const {layout}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.type==='74HC154');
+  const [section]=layout(chip).sections;
+  assert.equal(section.right.length,4,'four output rows');
+  for(let row=0;row<4;row++){
+    assert.equal(section.right[row].length,4,'four columns per row');
+    for(let column=0;column<4;column++){
+      const address=row*4+column;
+      assert.deepEqual(section.right[row][column],{
+        name:'Y'+address.toString(16).toUpperCase()+'#',
+        net:'ROM_SEL_'+address
+      });
+    }
+  }
+});
