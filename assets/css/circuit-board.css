@@ -689,3 +689,9 @@
 .pcb-osc-selector .pcb-switch-labels{font-size:11px}
 .pcb-osc-readout{display:block;text-align:right;margin:0 5px;color:#c3e9ce;font:800 10px ui-monospace,monospace}
 .pcb-osc-area.is-override .pcb-osc-readout{color:#ffe094}
+
+/* De-energized board: leave physical switches and silk visible, mute the live probes. */
+.schematic-board.is-powered-off .ic-footprint .ic-leg.is-high:before{background:#596c65;border-color:#81988c;box-shadow:none}
+.schematic-board.is-powered-off .ic-probe.is-high{background:#303e39;border-color:#61746c;color:#b1c4ba}
+.schematic-board.is-powered-off .ic-probe.is-high b{background:#556a61;color:#dde7e1}
+.schematic-board.is-powered-off .schematic-io-led.is-on:before{background:#75838a;box-shadow:none}
