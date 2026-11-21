@@ -13,9 +13,8 @@
     basic: ['CLK', 'C', 'IN0', 'OUT0', 'A0', 'B0', 'PC0', 'D0'],
     io: ['CLK', 'IN3', 'IN2', 'IN1', 'IN0', 'OUT3', 'OUT2', 'OUT1', 'OUT0'],
     registers: ['CLK', 'C', 'A3', 'A2', 'A1', 'A0', 'B3', 'B2', 'B1', 'B0'],
-    pc: ['CLK', 'C', 'PC3', 'PC2', 'PC1', 'PC0'],
-    rom: ['CLK', 'D7', 'D6', 'D5', 'D4', 'D3', 'D2', 'D1', 'D0'],
-    alu: ['CLK', 'C', 'ALU3', 'ALU2', 'ALU1', 'ALU0']
+    pc: ['CLK', 'C', 'PC3', 'PC2', 'PC1', 'PC0', 'ALU3', 'ALU2', 'ALU1', 'ALU0'],
+    rom: ['CLK', 'D7', 'D6', 'D5', 'D4', 'D3', 'D2', 'D1', 'D0']
   });
   const bit = (n: number, i: number): BinaryLevel => ((n >> i) & 1) as BinaryLevel;
 
