@@ -73,3 +73,14 @@ test('PROGRAM ROM and PROGRAM EDITOR keep headings without redundant top-right t
   assert.match(html, /id="romRows"/);
   assert.match(html, /id="source"/);
 });
+
+test('board subtitle and analyzer H/L explanatory label are removed', () => {
+  assert.doesNotMatch(html, /スイッチを動かし、LEDと信号の変化を観察する|board-subtitle/);
+  assert.doesNotMatch(html, /H = HIGH \(1\) \/ L = LOW \(0\)/);
+  assert.match(html, /id="boardTitle"/);
+  assert.match(html, /id="scopeView"/);
+  assert.match(html, /class="scope-footer"><span id="sampleCount"/);
+  const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.doesNotMatch(workbench, /board-subtitle/);
+  assert.match(workbench, /\.scope-footer\{margin-top:9px;justify-content:flex-end/);
+});
