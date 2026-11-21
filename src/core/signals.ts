@@ -48,7 +48,7 @@
   /** CPU capture follows clock activity; oscilloscope capture follows an independent timer. */
   function shouldCaptureSample(mode: WaveCaptureMode, powerOn: boolean, cpuRunning: boolean, source: WaveSampleTrigger): boolean {
     if (!powerOn) return false;
-    return mode === 'cpu' ? cpuRunning && source === 'clock' : source === 'timer';
+    return mode === 'cpu' ? cpuRunning && source !== 'timer' : source === 'timer' || source === 'input';
   }
 
   // Each sample represents one observed level, normally one clock half-cycle.
