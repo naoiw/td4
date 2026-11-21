@@ -42,6 +42,12 @@ jobs:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'develop' }}
           path: preview
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: '9.14.2'
+          run_install: false
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -50,14 +56,14 @@ jobs:
       - name: Verify production
         working-directory: production
         run: |
-          npm install --no-audit --no-fund
-          npm run verify
+          pnpm install --frozen-lockfile
+          pnpm run verify
 
       - name: Verify preview
         working-directory: preview
         run: |
-          npm install --no-audit --no-fund
-          npm run verify
+          pnpm install --frozen-lockfile
+          pnpm run verify
 
       - name: Compose production and preview
         shell: bash

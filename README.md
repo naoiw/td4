@@ -29,18 +29,18 @@
 
 - **TypeScript 5.8.3（strict）**：CPU、アセンブラ、信号、IC回路、基板表示、アプリ制御
 - **Vanilla JavaScript / DOM / SVG / CSS**：React・Vite・バンドラーを使わない静的Webアプリ
-- **Node.js 26 / npm**：GitHub Actionsでのビルド・型チェック・テスト（ローカル開発はNode.js 22以降）
+- **Node.js 26 / pnpm 9.14.2**：GitHub Actionsでのビルド・型チェック・テスト（ローカル開発はNode.js 22以降）
 - **GitHub Actions / GitHub Pages**：`main` の本番公開と `develop` のプレビューを同時配信
 
 実行時の外部ライブラリ・バックエンドは不要です。
 
 ## ローカル開発
 
-Node.js 22以降とnpmを使用します。
+Node.js 22以降と **pnpm 9.14.2** を使用します。pnpmがない場合は `npm install --global pnpm@9.14.2` 等で準備してください（Node.js 26はCIの実行環境です）。
 
 ```bash
-npm ci
-npm run build
+pnpm install --frozen-lockfile
+pnpm run build
 ```
 
 ビルドは `src/**/*.ts` を `assets/js/` に出力します。ブラウザから `index.html` を開いて確認できます。
@@ -48,15 +48,15 @@ npm run build
 変更時のチェック：
 
 ```bash
-npm run typecheck
-npm test
-npm run verify
+pnpm run typecheck
+pnpm test
+pnpm run verify
 ```
 
 - `src/` がTypeScriptの編集元、`assets/js/` は生成物です。**生成JavaScriptを直接編集せず**、ビルド後に生成物もコミットしてください。
 - スタイルは `assets/css/style.css` から `foundation.css`・`workbench.css`・`circuit-board.css` を順に読み込みます。
 - `src/ui/app.ts` はCPU状態・実行制御、`src/ui/board.ts` はDIP・ROMのDOM生成とH/L・配線描画を担当します。
-- `npm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。
+- `pnpm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。
 
 ## 公開と開発フロー
 
@@ -73,8 +73,8 @@ GitHub Pagesの公開元は **Settings → Pages → Build and deployment → Gi
 
 ## 依存関係の保守
 
-- パッケージ管理は **npm** です。`package-lock.json` を使用し、依存関係を更新した場合はロックファイルもコミットします（pnpmは使用しません）。
-- TypeScriptは `package.json` でバージョン固定しています。更新時は `npm run verify` と `develop` プレビューで確認してください。
+- パッケージ管理は **pnpm 9.14.2** です。`package.json` の `packageManager` にバージョンを明記し、`pnpm-lock.yaml` のみを使用します。依存関係変更時は `pnpm install` でロックファイルを更新し、コミットしてください。`package-lock.json` は使用しません。
+- TypeScriptは `package.json` でバージョン固定しています。更新時は `pnpm run verify` と `develop` プレビューで確認してください。
 - GitHub Actionsの共通CIはコミットSHAに固定しているため、更新時には `naoiw/.github` 側の変更を確認し、Pull Requestで検証します。
 - 現時点ではリポジトリに `dependabot.yml` はありません。Dependabotによる定期更新や自動マージを設定済みとは扱いません。
 
