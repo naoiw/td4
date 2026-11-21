@@ -18,6 +18,7 @@
 .board-panel{padding:18px 20px 15px}
 .board-heading{margin-bottom:14px}
 .board-panel .runbar{margin:0 0 14px;padding:12px 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;flex-wrap:wrap;row-gap:10px}
+.board-panel .cycle-counter{border-left:0;margin-left:0;padding-left:0}
 .rom-panel .rom-footer{margin:0 0 11px}
 .scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);gap:15px;align-items:stretch}
 .scope-layout>.panel{height:550px}
