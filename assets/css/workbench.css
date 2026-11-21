@@ -18,9 +18,6 @@
 .board-panel{padding:18px 20px 15px}
 .board-heading{margin-bottom:14px}.board-subtitle{margin:5px 0 0;color:#7d8b9b;font-size:11px}
 .signal-key{display:inline-block;width:20px;height:4px;border-radius:4px}.signal-key.high{background:#83efaa}.signal-key.low{background:#3d6864}.signal-key.led-key{background:#ffac54;margin-left:10px}
-.live-signals{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-.signal-pill{padding:6px 8px;border:1px solid;border-radius:5px;font:800 11px ui-monospace,Consolas,monospace;letter-spacing:.25px}
-.signal-pill.is-high{background:#e0f7eb;border-color:#94d6b4;color:#18704c}.signal-pill.is-low{background:#f0f4f6;border-color:#d6e0e5;color:#758b99}
 .scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);gap:15px;align-items:start}
 .scope-panel{padding:17px 20px}.scope-group-label{font-size:10px;color:#7c8792;display:flex;align-items:center;gap:8px}
 .scope-group-label select{background:#f8fafc;border:1px solid #dce5ed;border-radius:6px;color:#314c68;padding:7px 9px;font-size:11px}
@@ -37,4 +34,4 @@
 .detail-grid .code-editor{height:265px}
 @media(max-width:1300px){.sample-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-grid{grid-template-columns:minmax(0,1.1fr) minmax(320px,1fr)}.scope-layout{grid-template-columns:minmax(0,1.5fr) minmax(245px,.65fr)}}
 @media(max-width:900px){.detail-grid,.scope-layout{grid-template-columns:minmax(0,1fr)}.sample-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-grid .editor-panel{grid-column:auto}}
-@media(max-width:650px){.sample-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sample-card{padding:9px 8px}.sample-icon{width:29px;height:29px}.quick-start{padding:13px}.quick-heading{align-items:start;flex-direction:column;gap:6px}.board-panel,.scope-panel{padding:13px}.board-bottom{align-items:start;flex-direction:column}.scope-meta{align-items:start;gap:5px}.pcb-board{min-width:990px}.live-signals{gap:4px}.signal-pill{padding:5px 7px;font-size:10px}}
+@media(max-width:650px){.sample-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sample-card{padding:9px 8px}.sample-icon{width:29px;height:29px}.quick-start{padding:13px}.quick-heading{align-items:start;flex-direction:column;gap:6px}.board-panel,.scope-panel{padding:13px}.board-bottom{align-items:start;flex-direction:column}.scope-meta{align-items:start;gap:5px}.pcb-board{min-width:990px}}

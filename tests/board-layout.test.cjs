@@ -105,13 +105,13 @@ test('DIP footprints retain two opposing pin banks and functional signal colors'
   assert.match(lastRule('ic-footprint .ic-leg-left'),/left:\s*-4px/);
   assert.match(lastRule('ic-footprint .ic-leg-right'),/right:\s*-4px/);
 });
-test('upper board text is removed and the signal legend sits entirely below the PCB',()=>{
+test('board legend stays below PCB without the removed disclaimer',()=>{
   const board=html.slice(html.indexOf('id="schematicBoard"'),html.indexOf('id="icDetailPanel"'));
   for(const title of ['LOGIC ICs','74HC SERIES · 13 PACKAGES','ROM · 16 × 8-bit','74HC154でアドレスを選択']){
     assert.ok(!board.includes(title),title+' must be removed');
   }
   assert.equal((html.match(/class="schematic-explain"/g)||[]).length,1);
-  assert.equal((html.match(/class="schematic-caution"/g)||[]).length,1);
+  assert.doesNotMatch(html,/schematic-caution/);
   const boardClose=html.indexOf('      <div class="board-notes"');
   assert.ok(boardClose>html.indexOf('id="romDipGrid"'));
   assert.ok(boardClose<html.indexOf('id="icDetailPanel"'));

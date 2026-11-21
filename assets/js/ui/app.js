@@ -210,18 +210,6 @@
             list.append(li);
         }
     }
-    function renderLiveSignals(levels) {
-        const region = $('liveSignals');
-        region.replaceChildren();
-        for (const key of ['CLK', 'C', 'IN3', 'IN2', 'IN1', 'IN0', 'OUT3', 'OUT2', 'OUT1', 'OUT0']) {
-            const label = document.createElement('span');
-            const high = levels[key] === 1;
-            label.className = 'signal-pill ' + (high ? 'is-high' : 'is-low');
-            label.textContent = `${key} ${high ? 'H' : 'L'}`;
-            label.title = `${key} = ${high ? 'HIGH (1)' : 'LOW (0)'}`;
-            region.append(label);
-        }
-    }
     function renderWaveforms(levels) {
         const area = $('scopeView');
         area.replaceChildren();
@@ -260,7 +248,6 @@
         const levels = snapshot(cpu, clockHigh);
         appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         updateCircuitBoard();
-        renderLiveSignals(levels);
         const now = performance.now();
         if (intervalId === null || now - lastWaveDrawAt > 35) {
             renderWaveforms(levels);

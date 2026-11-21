@@ -20,7 +20,7 @@ test('obsolete CPU overview is removed while active PCB and analyzer remain', ()
   assert.match(html, /id="schematicBoard"/);
   assert.match(html, /id="icDetailPanel"/);
   assert.match(html, /id="romDipGrid"/);
-  assert.match(html, /id="liveSignals"/);
+  assert.doesNotMatch(html, /id="liveSignals"/);
   assert.match(html, /id="scopeView"/);
 });
 
@@ -32,5 +32,16 @@ test('app and generated JS no longer update deleted legacy DOM elements', () => 
     }
     assert.match(source, /TD4BoardView\.render\(/);
     assert.match(source, /TD4BoardView\.mount\(/);
+  }
+});
+
+test('obsolete signal badge strip and 74HC disclaimer are removed', () => {
+  assert.doesNotMatch(html, /live-signals|schematic-caution|74HC系列の部品構成と論理接続/);
+  assert.match(html, /class="schematic-explain"/, 'HIGH/LOW and selected-address legend remain');
+  assert.match(html, /id="selectedNetName"/, 'IC net selection remains available');
+  assert.match(html, /id="scopeView"/, 'logic analyzer remains available');
+  for (const source of [ts, js]) {
+    assert.doesNotMatch(source, /renderLiveSignals|liveSignals/);
+    assert.match(source, /renderWaveforms\(levels\)/);
   }
 });
