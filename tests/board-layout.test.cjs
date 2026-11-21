@@ -443,3 +443,14 @@ test('ROM edits and breakpoints pause CPU without shutting off the PCB power',()
     assert.match(source,/event\.preventDefault\(\);\s*stop\(\);\s*return;/);
   }
 });
+
+test('header POWER ON and OFF buttons use green and red styles without recoloring CPU run/pause',()=>{
+  assert.match(html,/class="btn btn-power-on" id="powerOnBtn">電源ON<\/button>/);
+  assert.match(html,/class="btn btn-power-off" id="powerOffBtn" disabled>電源OFF<\/button>/);
+  assert.match(html,/class="btn btn-primary" id="runPauseBtn"/);
+  const workbench=fs.readFileSync(path.join(root,'assets/css/workbench.css'),'utf8');
+  assert.match(workbench,/\.board-panel \.run-buttons \.btn-power-on\{background:#1f945b;border-color:#177a49;color:#fff\}/);
+  assert.match(workbench,/\.board-panel \.run-buttons \.btn-power-off\{background:#cc4646;border-color:#b83232;color:#fff\}/);
+  assert.match(workbench,/\.btn-power-on:not\(:disabled\):hover\{background:#167a47/);
+  assert.match(workbench,/\.btn-power-off:not\(:disabled\):hover\{background:#b93636/);
+});
