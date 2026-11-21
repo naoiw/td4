@@ -195,7 +195,8 @@
     host.append(head, pins);
     updateCircuitBoard();
     host.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-    close.focus({preventScroll: true});
+    host.tabIndex = -1;
+    host.focus({preventScroll: true});
   }
 
   function setSelectedNet(net:string):void {
