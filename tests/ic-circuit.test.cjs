@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {CPU} = require('../assets/js/core/td4-core.js');
+const netlist = require('../assets/js/data/netlist.js');
 const {chips, levels} = require('../assets/js/core/ic-circuit.js');
 const bit = (value, bitNumber) => (value >> bitNumber) & 1;
 
@@ -98,7 +99,7 @@ test('DIP pin counts and functional signal orientation', () => {
   }
   const adder=require('../assets/js/core/ic-circuit.js').layout(named.U9);
   assert.deepEqual(adder.sections[0].right.flat().map(x=>x.name),['SUM0','SUM1','SUM2','SUM3','COUT']);
-  assert.deepEqual(adder.sections[0].left.flat().map(x=>x.name),['A0','B0','A1','B1','A2','B2','A3','B3','CIN']);
+  assert.deepEqual(adder.sections[0].left.flat().map(x=>x.name),['A0','B0','A1','B1','A2','B2','A3','B3']);
 });
 
 
@@ -124,8 +125,8 @@ test('physical pins of decoder, ROM buffer, MUX and adder match their DIP pinout
   assert.equal(dec[16].net,'ROM_SEL_15');
   assert.equal(dec[22].net,'PC0');
   const buf=physicalPins(byId.U12);
-  assert.equal(buf[1].net,'ROM_RAW0');assert.equal(buf[8].net,'ROM_RAW7');
-  assert.equal(buf[17].net,'D0');assert.equal(buf[10].net,'D7');
+  assert.equal(buf[1].net,'ROM_RAW7');assert.equal(buf[8].net,'ROM_RAW0');
+  assert.equal(buf[17].net,'D7');assert.equal(buf[10].net,'D0');
   for(const [id,lbit,hbit] of [['U7',0,1],['U8',2,3]]) {
     const mux=physicalPins(byId[id]);
     assert.equal(mux[1].net,'SEL_B');
@@ -135,4 +136,250 @@ test('physical pins of decoder, ROM buffer, MUX and adder match their DIP pinout
   }
   const add=physicalPins(byId.U9);
   assert.equal(add[8].net,'COUT');assert.equal(add[3].net,'ALU0');
+});
+
+test('physical DIP pin nets match canonical JSON for all 13 chips', () => {
+  const {physicalPins}=require('../assets/js/core/ic-circuit.js');
+  for(const chip of chips){
+    const mapped=physicalPins(chip);
+    const defined=netlist.pinNets[chip.id];
+    const names=netlist.pinNames[chip.id];
+    for(const pin of mapped){
+      assert.equal(pin.net,defined[String(pin.number)],chip.id+'.'+pin.number+' net');
+      assert.equal(pin.name,names[String(pin.number)],chip.id+'.'+pin.number+' name');
+    }
+  }
+  assert.equal(physicalPins(chips.find(c=>c.id==='U1'))[7].net,'C_N');
+  assert.equal(physicalPins(chips.find(c=>c.id==='U1'))[8].net,undefined);
+  assert.equal(physicalPins(chips.find(c=>c.id==='U12'))[0].net,'GND');
+});
+
+test('ROM matrix has independent contact nets and common raw data columns', () => {
+  assert.equal(netlist.romSwitches.length,16);
+  const cells = new Set();
+  for (const [address, sw] of netlist.romSwitches.entries()) {
+    assert.equal(sw.address,address);
+    assert.equal(sw.bits.length,8);
+    for (const [bit,contact] of sw.bits.entries()) {
+      assert.equal(contact.upperNet,'ROM_RAW'+bit);
+      assert.equal(contact.selectedRow,'ROM_SEL_'+address);
+      assert.equal(contact.lowerNet,'ROM_CELL_'+address+'_'+bit);
+      cells.add(contact.lowerNet);
+    }
+  }
+  assert.equal(cells.size,128);
+});
+
+test('74HC154 decoder outputs are arranged in a 4x4 row-major grid', () => {
+  const {layout}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.type==='74HC154');
+  const [section]=layout(chip).sections;
+  assert.equal(section.right.length,4,'four output rows');
+  for(let row=0;row<4;row++){
+    assert.equal(section.right[row].length,4,'four columns per row');
+    for(let column=0;column<4;column++){
+      const address=row*4+column;
+      assert.deepEqual(section.right[row][column],{
+        name:'Y'+address.toString(16).toUpperCase()+'#',
+        net:'ROM_SEL_'+address
+      });
+    }
+  }
+});
+
+test('74HC14 uses only oscillator gates B and C and drives the common CLK net', () => {
+  const {layout,physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.id==='U2');
+  assert.deepEqual(chip.pins.map(p=>[p.name,p.net]),[
+    ['2A','OSC_IN'],['2Y','OSC_INV'],['3A','OSC_INV'],['3Y','CLK']
+  ]);
+  const pins=physicalPins(chip);
+  for(const [num,net] of [[3,'OSC_IN'],[4,'OSC_INV'],[5,'OSC_INV'],[6,'CLK']]){
+    assert.equal(pins[num-1].net,net);
+    assert.equal(netlist.pinNets.U2[num],net);
+    assert.ok(netlist.nets[net].includes('U2.'+num));
+  }
+  for(const num of [1,2,8,9,10,11,12,13])
+    assert.equal(pins[num-1].net,undefined,'unused gate '+num+' is not tied to CPU nets');
+  assert.ok(!netlist.nets.RST_N.includes('U2.10'));
+  for(const target of ['U1.11','U3.2','U4.2','U5.2','U6.2'])
+    assert.ok(netlist.nets.CLK.includes(target),target+' shares U2.6');
+  assert.ok(!netlist.nets.OSC_IN.includes('U2.6'),'RC feedback is not a direct copper net');
+  const layoutBC=layout(chip);
+  assert.deepEqual(layoutBC.sections.map(s=>s.label),['B · OSCILLATOR','C · CLOCK BUFFER']);
+  for(const high of [false,true]){
+    const values=levels(new CPU(),high);
+    assert.equal(values.CLK,high?1:0);
+    assert.equal(values.OSC_IN,high?1:0,'idealized post-threshold B input');
+    assert.equal(values.OSC_INV,high?0:1,'B output is inverted from CLK');
+  }
+});
+
+test('IC details omit fixed enable controls but retain dynamic and non-enable pins', () => {
+  const {layout,physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const byId=Object.fromEntries(chips.map(chip=>[chip.id,chip]));
+  const detailPins=id=>layout(byId[id]).sections.flatMap(section=>[
+    ...section.left.flat(),...section.right.flat()
+  ]);
+  const names=id=>detailPins(id).map(pin=>pin.name);
+
+  assert.deepEqual(names('U13').filter(name=>/^G[12]#$/.test(name)),[]);
+  assert.deepEqual(names('U13').filter(name=>/^A[0-3]$/.test(name)),['A0','A1','A2','A3']);
+  assert.equal(names('U13').filter(name=>/^Y[0-9A-F]#$/.test(name)).length,16);
+
+  assert.deepEqual(names('U12').filter(name=>/^OE[12]#$/.test(name)),[]);
+  assert.deepEqual(names('U12').filter(name=>/^A[0-7]$/.test(name)).sort((a,b)=>Number(a[1])-Number(b[1])),Array.from({length:8},(_,n)=>'A'+n));
+  assert.equal(names('U12').filter(name=>/^Y[0-7]$/.test(name)).length,8);
+
+  for(const id of ['U7','U8']){
+    assert.deepEqual(names(id).filter(name=>/^E[12]#$/.test(name)),[]);
+    for(const control of ['S0','S1']){
+      assert.equal(names(id).filter(name=>name===control).length,2,id+' '+control);
+    }
+  }
+  for(const id of ['U3','U4','U5','U6']){
+    const [section]=layout(byId[id]).sections;
+    assert.equal(section.leftColumnBreak,2,id+' must split INPUT after CLK and PE#');
+    assert.deepEqual(section.left.slice(0,2).flat().map(pin=>pin.name),['CLK','PE#'],id+' left input column');
+    assert.deepEqual(section.left.slice(2).flat().map(pin=>pin.name),['D0','D1','D2','D3'],id+' right input column');
+    assert.ok(names(id).includes('PE#'),id+' must retain dynamic parallel-load control');
+    assert.ok(!names(id).includes('CLR#'),id+' fixed-HIGH clear must be hidden');
+    assert.ok(names(id).includes('CLK'),id+' clock must remain visible');
+    assert.deepEqual(names(id).filter(name=>/^D[0-3]$/.test(name)),['D0','D1','D2','D3']);
+    assert.deepEqual(names(id).filter(name=>/^Q[0-3]$/.test(name)),['Q0','Q1','Q2','Q3']);
+    assert.equal(physicalPins(byId[id])[0].net,'RST_N',id+' physical clear must remain connected');
+  }
+  assert.ok(!names('U1').includes('CLR#'),'74HC74 fixed-HIGH clear must be hidden');
+  assert.ok(names('U1').includes('CLK'),'74HC74 clock must remain visible');
+  assert.ok(names('U1').includes('D'),'74HC74 data input must remain visible');
+  assert.ok(names('U1').includes('Q'),'74HC74 data output must remain visible');
+  assert.ok(names('U1').includes('Q#'),'74HC74 inverted output must remain visible');
+  assert.equal(physicalPins(byId.U1)[12].net,'RST_N','physical 74HC74 clear must remain connected');
+  assert.equal(levels(new CPU(),false).RST_N,1,'clear remains deasserted HIGH in the model');
+  assert.ok(!names('U9').includes('CIN'),'fixed LOW carry input hidden from detail view');
+  assert.equal(physicalPins(byId.U9)[6].net,'GND','physical CIN remains tied LOW');
+
+  // Hidden probes must not erase real physical terminals or the canonical wiring.
+  assert.equal(physicalPins(byId.U12)[0].net,'GND');
+  assert.equal(physicalPins(byId.U12)[18].net,'GND');
+  assert.equal(physicalPins(byId.U13)[17].net,'GND');
+  assert.equal(physicalPins(byId.U13)[18].net,'GND');
+  for(const id of ['U7','U8']){
+    assert.equal(physicalPins(byId[id])[0].net,'GND');
+    assert.equal(physicalPins(byId[id])[14].net,'GND');
+  }
+});
+
+
+test('74HC540 A and Y probes are 4 rows by 2 columns, with 0–3 in the left column', () => {
+  const {layout}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.type==='74HC540');
+  const [section]=layout(chip).sections;
+  for(const [side,label,net] of [['left','A','ROM_RAW'],['right','Y','D']]){
+    const rows=section[side];
+    assert.equal(rows.length,4,side+' must contain four rows');
+    for(let row=0;row<4;row++){
+      assert.equal(rows[row].length,2,side+' must contain two columns');
+      assert.deepEqual(rows[row],[
+        {name:label+row,net:net+row},
+        {name:label+(row+4),net:net+(row+4)}
+      ]);
+    }
+  }
+});
+
+test('74HC153 detail displays selector and data inputs in two separate columns', () => {
+  const {layout}=require('../assets/js/core/ic-circuit.js');
+  for(const [id,start] of [['U7',0],['U8',2]]){
+    const chip=chips.find(c=>c.id===id);
+    const model=layout(chip);
+    assert.match(model.leftLabel,/INPUT/);
+    assert.match(model.rightLabel,/OUTPUT/);
+    assert.equal(model.sections.length,2);
+    for(const [index,section] of model.sections.entries()){
+      const n=start+index;
+      assert.equal(section.leftColumnBreak,2);
+      assert.deepEqual(section.left.flat().map(pin=>pin.name),['S0','S1','A'+n,'B'+n,'IN'+n]);
+      assert.deepEqual(section.left.slice(0,2).flat().map(pin=>pin.net),['SEL_A','SEL_B']);
+      assert.deepEqual(section.right.flat().map(pin=>pin.name),['Y'+n]);
+      assert.ok(!section.left.flat().some(pin=>pin.net==='GND'),'fixed-LOW C3 hidden');
+    }
+  }
+});
+
+test('74HC283 output divides SUM0–3 and COUT into separate columns', () => {
+  const {layout,physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.id==='U9');
+  const section=layout(chip).sections[0];
+  assert.equal(section.rightColumnBreak,4);
+  assert.deepEqual(section.right.slice(0,4).flat().map(pin=>pin.name),['SUM0','SUM1','SUM2','SUM3']);
+  assert.deepEqual(section.right.slice(4).flat().map(pin=>pin.name),['COUT']);
+  assert.ok(!section.left.flat().some(pin=>pin.name==='CIN'));
+  assert.equal(physicalPins(chip)[6].net,'GND','actual CIN is still tied LOW');
+});
+
+
+test('PDF 74HC32/74HC10 netlist enumerates every physical gate terminal and cross-reference', () => {
+  const {physicalPins,layout}=require('../assets/js/core/ic-circuit.js');
+  const byId=Object.fromEntries(chips.map(chip=>[chip.id,chip]));
+  const expected={
+    U10:{1:'D7',2:'D4',3:'SEL_A',4:'C_N',5:'D4',6:'JUMP_OR',7:'GND',
+      8:'LOAD_A_N',9:'D6',10:'D7',11:'LOAD_B_N',12:'D6_N',13:'D7',14:'VCC'},
+    U11:{1:'VCC',2:'VCC',3:'VCC',4:'D6_N',5:'D7',6:'LOAD_OUT_N',7:'GND',
+      8:'LOAD_PC_N',9:'D6',10:'D7',11:'JUMP_OR',12:'D6_N',13:'D6',14:'VCC'}
+  };
+  const groups={
+    U10:[[[1,2],3],[[4,5],6],[[9,10],8],[[12,13],11]],
+    U11:[[[1,2,13],12],[[3,4,5],6],[[9,10,11],8]]
+  };
+  for(const id of ['U10','U11']){
+    const dip=physicalPins(byId[id]);
+    assert.equal(dip.length,14);
+    assert.equal(Object.keys(netlist.pinNets[id]).length,14,id+' has all package pins');
+    for(const [pin,net] of Object.entries(expected[id])){
+      assert.equal(netlist.pinNets[id][pin],net,id+'.'+pin+' net');
+      assert.equal(dip[Number(pin)-1].net,net,id+'.'+pin+' displayed net');
+      assert.ok(netlist.nets[net].includes(id+'.'+pin),id+'.'+pin+' reverse endpoint');
+    }
+    assert.equal(netlist.gateGroups[id].length,groups[id].length);
+    const sections=layout(byId[id]).sections;
+    assert.equal(sections.length,groups[id].length,id+' functional gates');
+    for(const [index,[inputs,output]] of groups[id].entries()){
+      const def=netlist.gateGroups[id][index];
+      assert.deepEqual(def.inputPins,inputs,id+' gate '+index+' inputs');
+      assert.equal(def.outputPin,output,id+' gate '+index+' output');
+      const section=sections[index];
+      assert.equal(section.label[0],def.gate);
+      assert.deepEqual(section.left.flat(),inputs.map(pin=>({
+        name:netlist.pinNames[id][pin],net:netlist.pinNets[id][pin]
+      })));
+      assert.deepEqual(section.right.flat(),[{
+        name:netlist.pinNames[id][output],net:netlist.pinNets[id][output]
+      }]);
+    }
+  }
+  assert.deepEqual(netlist.nets.D6_N.sort(),['U10.12','U11.12','U11.4']);
+  assert.deepEqual(netlist.nets.JUMP_OR.sort(),['U10.6','U11.11']);
+});
+
+test('PDF gates and intermediates preserve every opcode load selection for both carry states', () => {
+  const cpu=new CPU();
+  for(const carry of [0,1]){
+    cpu.carry=carry;
+    for(let opcode=0;opcode<256;opcode++){
+      cpu.pc=0;
+      cpu.rom[0]=opcode;
+      const signals=levels(cpu,false);
+      const d4=bit(opcode,4),d6=bit(opcode,6),d7=bit(opcode,7);
+      const inverseD6=1-d6;
+      const jumpOr=d4 | (1-carry);
+      assert.equal(signals.D6_N,inverseD6, 'U11.12 inversion '+opcode);
+      assert.equal(signals.JUMP_OR,jumpOr,'U10.6 jump gate '+opcode);
+      assert.equal(signals.SEL_A,d4|d7,'U10.3 '+opcode);
+      assert.equal(signals.LOAD_A_N,d6|d7,'U10.8 '+opcode);
+      assert.equal(signals.LOAD_B_N,inverseD6|d7,'U10.11 '+opcode);
+      assert.equal(signals.LOAD_OUT_N,Number(!(inverseD6&&d7)),'U11.6 '+opcode);
+      assert.equal(signals.LOAD_PC_N,Number(!(d6&&d7&&jumpOr)),'U11.8 '+opcode);
+    }
+  }
 });

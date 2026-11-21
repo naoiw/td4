@@ -10,6 +10,7 @@
   <script src="assets/js/core/td4-core.js" defer></script>
   <script src="assets/js/data/samples.js" defer></script>
   <script src="assets/js/core/signals.js" defer></script>
+  <script src="assets/js/data/netlist.js" defer></script>
   <script src="assets/js/core/ic-circuit.js" defer></script>
   <script src="assets/js/ui/board.js" defer></script>
   <script src="assets/js/ui/app.js" defer></script>
@@ -54,28 +55,38 @@
           <span class="pcb-mount-hole pcb-mount-tr" aria-hidden="true"></span>
           <span class="pcb-mount-hole pcb-mount-bl" aria-hidden="true"></span>
           <span class="pcb-mount-hole pcb-mount-br" aria-hidden="true"></span>
-          <svg class="ic-wire-layer" id="icWireLayer" aria-hidden="true"></svg>
           <section class="ic-zone" aria-label="TD4の個別ロジックIC">
             <div class="ic-chip-grid" id="icChipGrid"></div>
           </section>
           <section class="rom-zone" aria-label="DIPスイッチROM">
                         <section class="board-control-bay" aria-label="基板の電源とCR発振回路">
-              <div class="pcb-control-heading">POWER / CLOCK <span>TD4 CONTROL CIRCUIT</span></div>
+              <div class="pcb-control-heading">POWER / CLOCK</div>
               <div class="pcb-osc-area">
                 <strong class="pcb-silk-heading">CR OSCILLATOR</strong>
                 <div class="pcb-osc-hardware">
                   <svg class="pcb-osc-diagram" viewBox="0 -7 220 99" aria-hidden="true">
                     <g class="pcb-osc-mirrored" transform="translate(220 0) scale(-1 1)">
                       <g class="pcb-osc-lines">
-                      <path d="M40 45 H66 M119 45 H148 M148 45 V10 H125 M70 10 H40 V45"/>
-                      <path d="M66 27 V63 L108 45 Z"/><circle cx="114" cy="45" r="5"/>
-                      <path d="M40 45 V59 M28 59 H52 M28 64 H52 M40 64 V74 M29 74 H51 M33 78 H47 M37 82 H43"/>
-                      <path d="M70 10 l5 -5 l8 10 l8 -10 l8 10 l8 -10 l8 10 l8 -10 l5 5 H125"/>
-                      <path d="M148 45 H184"/>
+                      <!-- 74HC14 B: input -> inversion; B output directly drives C input. -->
+                      <path d="M25 45 H45 M87 45 H124 M165 45 H212"/>
+                      <path d="M45 31 V59 L77 45 Z"/><circle cx="82" cy="45" r="5"/>
+                      <!-- 74HC14 C: second inversion, CLK runs left after mirroring. -->
+                      <path d="M124 31 V59 L155 45 Z"/><circle cx="160" cy="45" r="5"/>
+                      <!-- R feedback from B output to B input, separated from direct nets. -->
+                      <path d="M107 45 V10 H102 M60 10 H25 V45"/>
+                      <path d="M60 10 l5 -5 l5 10 l5 -10 l5 10 l5 -10 l5 10 l5 -10 l5 5 H102"/>
+                      <!-- C feedback from CLK; capacitor is centered between the inverters. -->
+                      <path d="M25 45 V75 H104 M110 75 H198 V45"/>
+                      <path d="M104 64 V86 M110 64 V86"/>
+                      </g>
+                      <!-- Mark all three T junctions; the R branch is at B output. -->
+                      <g class="pcb-osc-junctions">
+                        <circle cx="25" cy="45" r="3"/>
+                        <circle cx="107" cy="45" r="3.5"/>
+                        <circle cx="198" cy="45" r="3"/>
                       </g>
                     </g>
-                    <g class="pcb-osc-lines"><path d="M36 45 l10 -6 M36 45 l10 6"/></g>
-                    <g class="pcb-osc-silk-text"><text x="130" y="3">R</text><text x="196" y="65">C</text></g>
+                    <g class="pcb-osc-silk-text"><text x="147" y="1">R</text><text x="122" y="67">C</text></g>
                     <g class="pcb-osc-lines pcb-osc-pulse" aria-hidden="true"><path d="M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55"/></g>
                   </svg>
                   <div class="pcb-osc-selector"><div class="pcb-switch-labels" aria-hidden="true"><span>10Hz</span><span>2Hz</span></div>

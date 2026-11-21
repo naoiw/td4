@@ -42,14 +42,15 @@ publish/
 3. 問題がなければdevelopのPRをmainにマージする。
 4. https://naoiw.github.io/td4/ に反映されたことを確認する。
 
-ソースは `src/**/*.ts`、JavaScript生成物は `assets/js/**`、スタイルは `assets/css/**` に置きます。ビルド時は `pnpm install --frozen-lockfile` → `pnpm run verify`（型チェック＋テスト込み）を実行します。パッケージマネージャーは `package.json` で `pnpm@9.14.2` に固定し、`pnpm-lock.yaml` をコミットします。追加のVite・Reactは使いません。
+ソースは `src/**/*.ts`、JavaScript生成物は `assets/js/**`、スタイルは `assets/css/**` に置きます。パッケージマネージャーは `package.json` で固定されたpnpmを使用し、Vite・Reactは導入しません。
 
 ## 開発・CIのパッケージ管理
 
 - ローカルでは Node.js 22以降と pnpm 9.14.2 を使用し、`pnpm install --frozen-lockfile`、`pnpm run verify` を実行します。
 - `Validate develop` は共有CIに `package-manager: pnpm` と `pnpm-version: "9.14.2"` を渡します。
-- Pagesは `main` / `develop` をそれぞれ pnpm でインストール・ビルド・検証します。`main` にワークフロー修正をマージするまで、Pagesのデプロイは移行前の `main` の設定で実行される点に注意してください。
-- npmのロックファイルは管理せず、`pnpm-lock.yaml` のみを使用します。
+- Pagesは `main` / `develop` をそれぞれ pnpm でインストール・ビルド・検証します。
+- ローカルでの整形・チェックは `pnpm run lint`、型チェックは `pnpm run typecheck`、テストは `pnpm test`、ビルドを含む総合検証は `pnpm run verify` です。
+- 依存関係の更新時は `pnpm install` で `pnpm-lock.yaml` を更新してコミットします。`package-lock.json` は使用しません。生成した `assets/js/` はソースと一緒にコミットし、CIで整合性を確認します。
 
 ## 注意
 

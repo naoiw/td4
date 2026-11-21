@@ -40,7 +40,7 @@ test('Input and Output panels are horizontal beneath the ROM',()=>{
 
 test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>{
   const board=css.match(/\/\* PCB placement:[\s\S]*$/)[0];
-  assert.match(board,/\.schematic-board\s*\{[^}]*grid-template-columns:\s*490px\s+minmax\(0,\s*1fr\)/);
+  assert.match(board,/\.schematic-board\s*\{[^}]*grid-template-columns:\s*472px\s+minmax\(0,\s*1fr\)/);
   assert.match(lastRule('ic-chip-grid'),/grid-template-columns:\s*minmax\(0,332px\)\s+126px/);
   for(const [role,row] of [['control',1],['alu',2],['registers',3]]){
     assert.match(board,new RegExp('\\.ic-role-'+role+'\\{grid-column:1;grid-row:'+row+'\\}'));
@@ -128,18 +128,42 @@ test('DOM construction is delegated to stateless board renderer',()=>{
   assert.ok(!boardJs.includes('cpu.setInput('),'renderer must not mutate input');
 });
 
-test('board H/L and selected-net SVG renderers stay separate from CPU state',()=>{
+test('selected-net highlighting uses orange terminals instead of SVG wires',()=>{
   assert.match(js,/TD4BoardView\.render\(/);
-  assert.match(js,/TD4BoardView\.drawWires\(/);
   assert.match(boardJs,/function render\(options\)/);
-  assert.match(boardJs,/function drawWires\(options\)/);
-  assert.match(boardJs,/drawWires\(options\)/);
-  assert.match(boardJs,/classList\.toggle\('net-selected'/);
-  assert.match(boardJs,/getBoundingClientRect\(\)/);
+  assert.doesNotMatch(js,/TD4BoardView\.drawWires\(/);
+  assert.doesNotMatch(boardJs,/drawWires\(|createElementNS\(/);
+  assert.doesNotMatch(html,/icWireLayer/);
+  assert.doesNotMatch(css,/\.ic-wire(?:-layer|\.hi|\.lo|\{)/);
+  assert.match(boardJs,/leg\.classList\.toggle\('net-selected', powerOn && !!net && net === selectedNet\)/);
+  assert.match(boardJs,/element\.classList\.toggle\('net-selected', powerOn && net === selectedNet\)/);
+  assert.match(boardJs,/el\.classList\.toggle\('net-selected', powerOn && !!el\.dataset\.net && el\.dataset\.net === selectedNet\)/);
+  assert.match(css,/\.ic-footprint \.ic-leg\.net-selected:before/);
+  assert.match(css,/\.rom-select-lamp\.net-selected/);
+  assert.match(css,/\.schematic-io-switch\.net-selected/);
+  assert.match(css,/\.schematic-io-led\.net-selected/);
+  assert.match(css,/\.rom-dip\.net-selected/);
   assert.match(boardJs,/classList\.toggle\('is-high'/);
   assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');
 });
 
+
+test('selected network color follows logic level on all board component types',()=>{
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/element\.classList\.toggle\('net-selected-low', powerOn && net === selectedNet && level === 0\)/);
+    assert.match(source,/leg\.classList\.toggle\('net-selected-low', powerOn && !!net && net === selectedNet && level === 0\)/);
+    assert.match(source,/el\.classList\.toggle\('net-selected-low', powerOn && !!el\.dataset\.net && el\.dataset\.net === selectedNet && values\[el\.dataset\.net\] === 0\)/);
+  }
+  assert.match(css,/\.ic-footprint \.ic-leg\.net-selected-low:before/);
+  assert.match(css,/\.ic-detail-panel \.ic-probe\.net-selected-low/);
+  assert.match(css,/\.rom-select-lamp\.net-selected-low/);
+  assert.match(css,/\.rom-dip\.net-selected-low/);
+  assert.match(css,/\.schematic-io-switch\.net-selected-low/);
+  assert.match(css,/\.schematic-io-led\.net-selected-low/);
+  assert.match(css,/outline-color:#f5e6a5/);
+  assert.match(css,/\.ic-leg\.net-selected:before/,'HIGH retains its orange highlight');
+  assert.doesNotMatch(html,/icWireLayer/);
+});
 
 test('IC VCC red, GND black, NC dark and signal pins live green/grey',()=>{
   assert.match(boardJs,/dataset\.pinRole = physicalPin\.name === 'VCC'/);
@@ -190,14 +214,10 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
     assert.match(source,/board\.style\.setProperty\('--board-fit-scale'/);
   }
 });
-test('scaled board keeps signal wires aligned in logical SVG coordinates',()=>{
-  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
-    assert.match(source,/width\s*\/\s*bounds\.width/);
-    assert.match(source,/height\s*\/\s*bounds\.height/);
-    assert.match(source,/\*\s*scaleX/);
-    assert.match(source,/\*\s*scaleY/);
-    assert.match(source,/setAttribute\('viewBox'/);
-    assert.match(source,/getBoundingClientRect\(\)/);
+test('board auto-fit no longer draws selection-dependent wires',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.doesNotMatch(source,/drawSelectedWires|TD4BoardView\.drawWires/);
   }
 });
 
@@ -261,12 +281,13 @@ test('oscillator on left and power silk labels to the right of its switch',()=>{
   assert.match(lastRule('board-control-bay'),/grid-template-columns:minmax\(0,1\.4fr\) minmax\(0,\.8fr\)/);
 });
 
-test('CR silk schematic points CLK to the left without mirroring readable text',()=>{
+test('CR oscillator CLK exits left without a directional arrow or mirrored silk',()=>{
   const a=html.indexOf('<svg class="pcb-osc-diagram"');
   const b=html.indexOf('</svg>',a);
   const svg=html.slice(a,b);
   assert.match(svg,/class="pcb-osc-mirrored" transform="translate\(220 0\) scale\(-1 1\)"/);
-  assert.match(svg,/M36 45 l10 -6 M36 45 l10 6/);
+  assert.match(svg,/M165 45 H212/);
+  assert.doesNotMatch(svg,/M36 45 l10 -6 M36 45 l10 6/);
   assert.ok(svg.indexOf('class="pcb-osc-silk-text"')>svg.indexOf('class="pcb-osc-mirrored"'));
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
@@ -390,21 +411,24 @@ test('both board ROM slots and PROGRAM ROM addresses use 0x prefix',()=>{
   }
 });
 
-test('inverter CR feedback is closed and the output bubble has no wire through it',()=>{
+test('two 74HC14 Schmitt gates form a closed RC oscillator with CLK output',()=>{
   const start=html.indexOf('<svg class="pcb-osc-diagram"');
   const stop=html.indexOf('</svg>',start);
   assert.ok(start>0&&stop>start);
   const svg=html.slice(start,stop);
-  assert.doesNotMatch(html,/<span>INVERTER<\/span>/);
-  assert.doesNotMatch(svg,/>INV<\/text>/);
-  // In unmirrored SVG coordinates, the input joins R and C at x40.
-  assert.match(svg,/M40 45 H66 M119 45 H148 M148 45 V10 H125 M70 10 H40 V45/);
-  assert.doesNotMatch(svg,/M12 45 H66|M108 45 H148/);
-  // Triangle ends at x108, the inversion bubble occupies x109..119,
-  // and the output starts exactly at its outer tangent (x119).
-  assert.match(svg,/M66 27 V63 L108 45 Z/);
-  assert.match(svg,/<circle cx="114" cy="45" r="5"\/>/);
-  assert.match(svg,/M148 45 H184/);
+  assert.match(svg,/M25 45 H45 M87 45 H124 M165 45 H212/);
+  assert.match(svg,/M45 31 V59 L77 45 Z/);
+  assert.match(svg,/<circle cx="82" cy="45" r="5"\/>/);
+  assert.match(svg,/M124 31 V59 L155 45 Z/);
+  assert.match(svg,/<circle cx="160" cy="45" r="5"\/>/);
+  assert.match(svg,/M107 45 V10 H102 M60 10 H25 V45/);
+  assert.match(svg,/M25 45 V75 H104 M110 75 H198 V45/);
+  assert.match(svg,/M104 64 V86 M110 64 V86/);
+  assert.match(svg,/class="pcb-osc-junctions"/);
+  for (const x of [25,107,198])
+    assert.match(svg,new RegExp('<circle cx="'+x+'" cy="45" r="3(?:\\.5)?"\\/>'));
+  // No line crosses an inversion bubble, and the capacitor breaks direct nets.
+  assert.doesNotMatch(svg,/M76 45 H124|M154 45 H198|M25 75 H198/);
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
   assert.match(svg,/M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55/);
@@ -444,7 +468,8 @@ test('ROM edits and breakpoints pause CPU without shutting off the PCB power',()
     assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/);
     assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
     assert.match(source,/\('powerOffBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
-    assert.match(source,/event\.preventDefault\(\);\s*stop\(\);\s*return;/);
+    assert.match(source,/if \(intervalId !== null\)\s*\{\s*event\.preventDefault\(\);\s*stop\(\);/,
+      'Esc still stops a running CPU when IC details are not open');
   }
 });
 
@@ -551,8 +576,178 @@ test('CR R/C silk avoids traces while remaining visible inside enlarged SVG view
   assert.ok(start>0 && end>start);
   const svg=html.slice(start,end);
   assert.match(svg,/viewBox="0 -7 220 99"/);
-  assert.match(svg,/class="pcb-osc-silk-text"><text x="130" y="3">R<\/text><text x="196" y="65">C<\/text>/);
-  assert.doesNotMatch(svg,/<text x="130" y="8">R<\/text>|<text x="190" y="65">C<\/text>/);
-  // Zigzag resistor peaks at y=5, so R baseline 3 stays above the trace.
-  // Capacitor ends at mirrored x=192, while C starts at x=196.
+  assert.match(svg,/class="pcb-osc-silk-text"><text x="147" y="1">R<\/text><text x="122" y="67">C<\/text>/);
+  assert.doesNotMatch(svg,/<text x="130" y="3">R<\/text>|<text x="196" y="65">C<\/text>/);
+  // R is above the resistor at y=5..15, and C sits between the two gates.
+  // With mirrored coordinates, the capacitor plates appear at x=110 and x=116.
+});
+
+test('CR feedback branches have filled junction dots independent of the open inverter bubbles',()=>{
+  const styles=fs.readFileSync(path.join(root,'assets/css/circuit-board.css'),'utf8');
+  assert.match(styles,/\.pcb-osc-junctions\{fill:#fff;stroke:none\}/);
+  const start=html.indexOf('<svg class="pcb-osc-diagram"');
+  const end=html.indexOf('</svg>',start);
+  const svg=html.slice(start,end);
+  const circleGroup=svg.match(/<g class="pcb-osc-junctions">([\s\S]*?)<\/g>/)?.[1] || '';
+  assert.equal((circleGroup.match(/<circle /g)||[]).length,3);
+  assert.match(circleGroup,/<circle cx="107" cy="45" r="3\.5"\/>/);
+  assert.doesNotMatch(svg,/<g class="pcb-osc-lines"><path d="M36 45/);
+});
+
+test('IC reference silk is clear of DIP bodies and role blocks have vertical breathing room',()=>{
+  const header=lastRule('ic-role-rack .ic-dip .ic-head');
+  const footprint=lastRule('ic-role-rack .ic-dip .ic-footprint');
+  const group=lastRule('ic-role-group');
+  const fetch=lastRule('ic-role-fetch .ic-role-rack');
+  assert.match(header,/height:\s*18px/,'chip reference header reserves clear vertical space');
+  assert.match(footprint,/margin:\s*6px auto 0/,'DIP body sits below its reference text');
+  assert.match(group,/padding:\s*9px 8px 15px/,'all IC role groups have larger top and bottom clearance');
+  assert.match(fetch,/gap:\s*28px/,'HC154 and HC540 retain minimum separation');
+  assert.match(fetch,/justify-content:\s*space-evenly/,'both ROM/FETCH chips spread vertically');
+  assert.match(fetch,/flex:\s*1/,'ROM/FETCH rack fills the available block height');
+  assert.match(lastRule('ic-role-fetch'),/display:\s*flex/);
+  assert.match(lastRule('ic-role-fetch'),/flex-direction:\s*column/);
+  assert.match(lastRule('ic-chip-grid'),/grid-template-rows:\s*auto auto auto/);
+  assert.match(lastRule('ic-role-fetch'),/grid-row:\s*1 \/ span 3/);
+});
+
+test('IC reference silkscreen is legible without shrinking DIP clearance',()=>{
+  const silk=lastRule('ic-role-rack .ic-dip .ic-head span');
+  assert.match(silk,/font:\s*800 11px\/1\.2 ui-monospace,monospace/);
+  assert.match(silk,/color:\s*#d3ead7/);
+  assert.match(lastRule('ic-role-rack .ic-dip .ic-head'),/height:\s*18px/);
+  assert.match(lastRule('ic-role-rack .ic-dip .ic-footprint'),/margin:\s*6px auto 0/);
+});
+
+test('PCB columns and vertical section spacing use a shared, balanced layout',()=>{
+  const board=css.match(/\/\* PCB placement:[\s\S]*?\.schematic-board\s*\{([^}]*)\}/);
+  assert.ok(board,'PCB placement block must exist');
+  assert.match(board[1],/grid-template-columns:472px minmax\(0,1fr\)/);
+  assert.match(board[1],/gap:14px/);
+  assert.match(board[1],/padding:28px 24px/);
+  assert.match(board[1],/align-items:stretch/);
+  const columns=lastRule('ic-chip-grid');
+  assert.match(columns,/grid-template-columns:minmax\(0,332px\) 126px/);
+  assert.match(columns,/column-gap:14px/);
+  assert.match(columns,/row-gap:28px/);
+  assert.match(columns,/height:100%/);
+  assert.match(columns,/align-content:space-between/);
+  assert.match(lastRule('ic-zone'),/align-self:stretch/);
+  // 332 + 126 + 14 = 472px, leaving exactly the same 14px
+  // between the middle IC group and the right POWER / ROM column.
+  assert.equal(332 + 126 + 14,472);
+  const right=lastRule('rom-zone');
+  assert.match(right,/flex-direction:column/);
+  assert.match(right,/gap:28px/);
+  assert.match(lastRule('schematic-io-strip'),/margin-top:0/);
+});
+
+test('IC detail renderer supports nested input/output probe columns',()=>{
+  const source=fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8');
+  assert.match(source,/section\.leftColumnBreak/);
+  assert.match(source,/section\.rightColumnBreak/);
+  assert.match(source,/ic-function-subcolumns/);
+  assert.match(boardJs,/ic-function-subcolumns/);
+  assert.match(lastRule('ic-detail-panel .ic-function-subcolumns'),/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(lastRule('ic-detail-panel .ic-function-subcolumn'),/flex-direction:column/);
+});
+
+test('all four IC block headers share the same silk font and weight',()=>{
+  const common=lastRule('ic-role-head strong');
+  assert.match(common,/font:\s*800 11px\/1\.2 ui-monospace,monospace/);
+  const roleSelectors=['control','alu','registers','fetch'];
+  for(const role of roleSelectors){
+    assert.doesNotMatch(css,new RegExp('\\.ic-role-'+role+' \\.ic-role-head strong\\s*\\{'),
+      role+' must not override the common heading typography');
+  }
+  // The independent power/clock area is intentionally left at its original size.
+  assert.match(lastRule('pcb-control-heading'),/font:\s*800 13px\/1\.2 ui-monospace,monospace/);
+});
+
+test('POWER / CLOCK remains without the redundant TD4 CONTROL CIRCUIT caption',()=>{
+  assert.match(html,/<div class="pcb-control-heading">POWER \/ CLOCK<\/div>/);
+  assert.doesNotMatch(html,/TD4 CONTROL CIRCUIT/);
+  assert.doesNotMatch(css,/\.pcb-control-heading span\s*\{/);
+});
+
+
+test('all IC detail signals share the same box size, type, and spacing',()=>{
+  const panel=css.match(/\.ic-detail-panel\s*\{([^}]*)\}/)?.[1];
+  assert.ok(panel,'IC detail container exists');
+  assert.match(panel,/--ic-detail-probe-width:112px/);
+  assert.match(panel,/--ic-detail-probe-height:42px/);
+  assert.match(panel,/--ic-detail-probe-gap:8px/);
+  const shared=css.match(/\.ic-detail-panel \.ic-probe,\s*\.ic-detail-panel \.ic-probe-compact\s*\{([^}]*)\}/)?.[1];
+  assert.ok(shared,'all signal cards must use one shared sizing rule');
+  assert.match(shared,/flex:1 1 0/);
+  assert.match(shared,/max-width:var\(--ic-detail-probe-width\)/);
+  assert.match(shared,/min-height:var\(--ic-detail-probe-height\)/);
+  assert.match(shared,/padding:8px 10px/);
+  assert.match(shared,/font-size:12px/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-row\{min-height:var\(--ic-detail-probe-height\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-column\{gap:var\(--ic-detail-probe-gap\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-subcolumn\{[^}]*gap:var\(--ic-detail-probe-gap\)/);
+  assert.match(css,/\.ic-detail-panel \.ic-function-section:only-child\{grid-column:1 \/ -1\}/);
+  assert.doesNotMatch(css,/\.ic-detail-panel\[data-chip="U13"\] \.ic-probe-compact\s*\{/);
+});
+
+test('uniform detail styles do not change IC-specific probe arrangements',()=>{
+  require('../assets/js/data/netlist.js');
+  const {chips,layout}=require('../assets/js/core/ic-circuit.js');
+  assert.equal(chips.length,13);
+  const hc154=layout(chips.find(c=>c.type==='74HC154')).sections[0];
+  assert.deepEqual(hc154.right.map(row=>row.map(pin=>pin.name)),[
+    ['Y0#','Y1#','Y2#','Y3#'],
+    ['Y4#','Y5#','Y6#','Y7#'],
+    ['Y8#','Y9#','YA#','YB#'],
+    ['YC#','YD#','YE#','YF#']
+  ]);
+  const hc540=layout(chips.find(c=>c.type==='74HC540')).sections[0];
+  assert.deepEqual(hc540.left.map(row=>row.map(pin=>pin.name)),[
+    ['A0','A4'],['A1','A5'],['A2','A6'],['A3','A7']
+  ]);
+  assert.deepEqual(hc540.right.map(row=>row.map(pin=>pin.name)),[
+    ['Y0','Y4'],['Y1','Y5'],['Y2','Y6'],['Y3','Y7']
+  ]);
+  for(const c of chips.filter(c=>c.type==='74HC153')){
+    const sections=layout(c).sections;
+    assert.equal(sections.length,2);
+    for(const section of sections)assert.equal(section.leftColumnBreak,2);
+  }
+  for(const [type,expected] of [['74HC32',4],['74HC10',3]])
+    assert.equal(layout(chips.find(c=>c.type===type)).sections.length,expected);
+  assert.equal(layout(chips.find(c=>c.type==='74HC283')).sections[0].rightColumnBreak,4);
+});
+
+test('IC Escape closes details before the running-CPU Escape fallback',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const keyHandler=source.slice(source.indexOf("document.addEventListener('keydown', event =>"));
+    const close=keyHandler.indexOf("if (event.key === 'Escape')");
+    const detail=keyHandler.indexOf("if (!detail.hidden && detail.dataset.chip)");
+    const toggle=keyHandler.indexOf("toggleIcDetails(detail.dataset.chip)");
+    const fallback=keyHandler.indexOf("if (intervalId !== null)");
+    assert.ok(close>=0&&detail>close&&toggle>detail&&fallback>toggle,
+      'Escape must close open detail before stopping the CPU');
+    assert.match(keyHandler,/event\.preventDefault\(\);\s*toggleIcDetails\(detail\.dataset\.chip\);\s*return;/);
+    assert.match(source,/\.ic-open-details'\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
+      'closing IC details returns focus to the originating IC');
+    assert.match(source,/host\.tabIndex = -1;/,'detail region must be programmatically focusable');
+    assert.match(source,/host\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
+      'opening IC details focuses the panel so Space can still control CPU execution');
+  }
+});
+
+test('Space toggles CPU run/pause without editing or button-keyboard conflicts',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const keyHandler=source.slice(source.indexOf("document.addEventListener('keydown', event =>"));
+    assert.match(keyHandler,/event\.key === ' '/,'use normal Space keyboard key');
+    assert.match(keyHandler,/!event\.isComposing/);
+    assert.match(keyHandler,/!event\.ctrlKey && !event\.metaKey && !event\.altKey/);
+    assert.match(keyHandler,/event\.target instanceof HTMLElement/);
+    assert.match(keyHandler,/event\.target\.closest\('input, textarea, select, button, a\[href\], summary, \[contenteditable\], \[role="button"\]'\)/);
+    assert.match(keyHandler,/powerOn\)\s*\{\s*event\.preventDefault\(\);\s*if \(!event\.repeat\)\s*toggleRunPause\(\)/,
+      'Space should toggle only with power on, ignoring held-key repeats');
+    assert.match(source,/function toggleRunPause\(\)\s*(?:: void)?\s*\{[\s\S]*?if \(intervalId === null\)\s*run\(\);\s*else\s*stop\(\);/,
+      'shortcut reuses existing run/pause lifecycle');
+  }
 });

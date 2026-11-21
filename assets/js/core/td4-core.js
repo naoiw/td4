@@ -24,24 +24,51 @@
         const im = byte & 15;
         const n = HEX(im);
         switch (op) {
-            case 0x0: return `ADD A, ${n}`;
-            case 0x1: return im ? `MOV A, B+${n} *` : 'MOV A, B';
-            case 0x2: return im ? `IN A +${n} *` : 'IN A';
-            case 0x3: return `MOV A, ${n}`;
-            case 0x4: return im ? `MOV B, A+${n} *` : 'MOV B, A';
-            case 0x5: return `ADD B, ${n}`;
-            case 0x6: return im ? `IN B +${n} *` : 'IN B';
-            case 0x7: return `MOV B, ${n}`;
-            case 0x8: return `OUT B+${n} *`;
-            case 0x9: return im ? `OUT B+${n} *` : 'OUT B';
-            case 0xA: return `OUT ${n} *`;
-            case 0xB: return `OUT ${n}`;
-            case 0xC: return `JNC B+${n} *`;
-            case 0xD: return `JMP B+${n} *`;
-            case 0xE: return `JNC ${n}`;
-            case 0xF: return `JMP ${n}`;
-            default: throw new Error('Invalid 8-bit instruction');
+            case 0x0:
+                return `ADD A, ${n}`;
+            case 0x1:
+                return im ? `MOV A, B+${n} *` : 'MOV A, B';
+            case 0x2:
+                return im ? `IN A +${n} *` : 'IN A';
+            case 0x3:
+                return `MOV A, ${n}`;
+            case 0x4:
+                return im ? `MOV B, A+${n} *` : 'MOV B, A';
+            case 0x5:
+                return `ADD B, ${n}`;
+            case 0x6:
+                return im ? `IN B +${n} *` : 'IN B';
+            case 0x7:
+                return `MOV B, ${n}`;
+            case 0x8:
+                return `OUT B+${n} *`;
+            case 0x9:
+                return im ? `OUT B+${n} *` : 'OUT B';
+            case 0xa:
+                return `OUT ${n} *`;
+            case 0xb:
+                return `OUT ${n}`;
+            case 0xc:
+                return `JNC B+${n} *`;
+            case 0xd:
+                return `JMP B+${n} *`;
+            case 0xe:
+                return `JNC ${n}`;
+            case 0xf:
+                return `JMP ${n}`;
+            default:
+                throw new Error('Invalid 8-bit instruction');
         }
+    }
+    /** Combinational ALU/MUX view shared by execution, probe logic and waveforms. */
+    function decodeALU(byte, a, b, input) {
+        const opcode = byte >>> 4;
+        const imm = byte & 15;
+        const selectA = (((opcode >>> 3) & 1) | (opcode & 1));
+        const selectB = ((opcode >>> 1) & 1);
+        const source = [a, b, input, 0][(selectB << 1) | selectA];
+        const sum = source + imm;
+        return { byte, selectA, selectB, source, imm, sum, result: sum & 15, carry: Number(sum > 15) };
     }
     class CPU {
         constructor(rom = new Array(16).fill(0)) {
@@ -62,7 +89,7 @@
             if (!Array.isArray(bytes) && !(bytes instanceof Uint8Array)) {
                 throw new TypeError('ROM must be an array of 16 bytes');
             }
-            if (bytes.length !== 16 || Array.from(bytes).some(v => !Number.isInteger(v) || v < 0 || v > 255)) {
+            if (bytes.length !== 16 || Array.from(bytes).some((v) => !Number.isInteger(v) || v < 0 || v > 255)) {
                 throw new RangeError('ROM requires exactly 16 values between 0 and 255');
             }
             this.rom = Array.from(bytes);
@@ -85,14 +112,8 @@
             const pcBefore = this.pc;
             const instruction = this.rom[pcBefore];
             const opcode = instruction >>> 4;
-            const imm = instruction & 15;
+            const { imm, source, sum, result, carry: nextCarry } = decodeALU(instruction, this.a, this.b, this.input);
             const oldCarry = this.carry;
-            const sourceSelect0 = ((opcode >>> 3) & 1) | (opcode & 1);
-            const sourceSelect1 = (opcode >>> 1) & 1;
-            const source = [this.a, this.b, this.input, 0][(sourceSelect1 << 1) | sourceSelect0];
-            const sum = source + imm;
-            const result = sum & 15;
-            const nextCarry = sum > 15 ? 1 : 0;
             const destination = opcode >>> 2;
             let branchTaken = false;
             // A destination is chosen by the two most significant instruction bits.
@@ -105,16 +126,24 @@
                 this.out = result;
             else {
                 branchTaken = (opcode & 1) === 1 || oldCarry === 0;
-                this.pc = branchTaken ? result : ((this.pc + 1) & 15);
+                this.pc = branchTaken ? result : (this.pc + 1) & 15;
             }
             if (destination !== 3)
                 this.pc = (this.pc + 1) & 15;
             this.carry = nextCarry; // 74HC283 updates C even for MOV, IN, OUT, JMP, JNC.
             this.cycles = (this.cycles + 1) % 1000000;
             this.lastStep = {
-                pc: pcBefore, byte: instruction, asm: disassemble(instruction),
-                source, imm, sum, result, carryBefore: oldCarry,
-                carryAfter: nextCarry, branchTaken, pcAfter: this.pc,
+                pc: pcBefore,
+                byte: instruction,
+                asm: disassemble(instruction),
+                source,
+                imm,
+                sum,
+                result,
+                carryBefore: oldCarry,
+                carryAfter: nextCarry,
+                branchTaken,
+                pcAfter: this.pc,
                 destination: ['A', 'B', 'OUT', 'PC'][destination],
                 standard: isStandard(instruction)
             };
@@ -171,10 +200,10 @@
         if ((m = line.match(/^IN\s+([AB])$/)))
             return m[1] === 'A' ? 0x20 : 0x60;
         if ((m = line.match(/^OUT\s+(.+)$/))) {
-            return m[1].trim() === 'B' ? 0x90 : 0xB0 | readNumber(m[1], labels, lineNo);
+            return m[1].trim() === 'B' ? 0x90 : 0xb0 | readNumber(m[1], labels, lineNo);
         }
         if ((m = line.match(/^(JMP|JNC)\s+(.+)$/))) {
-            return (m[1] === 'JMP' ? 0xF0 : 0xE0) | readNumber(m[2], labels, lineNo);
+            return (m[1] === 'JMP' ? 0xf0 : 0xe0) | readNumber(m[2], labels, lineNo);
         }
         throw new Error(`${lineNo}行目: 未対応の命令: ${s}`);
     }
@@ -188,7 +217,10 @@
         let address = 0;
         lines.forEach((rawLine, index) => {
             const lineNo = index + 1;
-            let body = rawLine.replace(/;.*$/, '').replace(/\/\/.*$/, '').trim();
+            let body = rawLine
+                .replace(/;.*$/, '')
+                .replace(/\/\/.*$/, '')
+                .trim();
             if (!body)
                 return;
             let match;
@@ -224,7 +256,9 @@
     function romToSource(rom) {
         if (rom.length !== 16)
             throw new RangeError('ROM must have 16 bytes');
-        return rom.map((byte, addr) => `DB 0x${byte.toString(16).toUpperCase().padStart(2, '0')}  ; ${HEX(addr)} ${disassemble(byte)}`).join('\n');
+        return rom
+            .map((byte, addr) => `DB 0x${byte.toString(16).toUpperCase().padStart(2, '0')}  ; ${HEX(addr)} ${disassemble(byte)}`)
+            .join('\n');
     }
-    return { CPU, assemble, disassemble, isStandard, romToSource, HEX, BINARY };
+    return { CPU, assemble, disassemble, isStandard, romToSource, HEX, BINARY, decodeALU };
 });

@@ -6,7 +6,7 @@
   'use strict';
   const exported = factory();
   if (typeof module === 'object' && module.exports) module.exports = exported;
-  else (root as typeof globalThis & {TD4: TD4Api}).TD4 = exported;
+  else (root as typeof globalThis & { TD4: TD4Api }).TD4 = exported;
 })(globalThis, function (): TD4Api {
   'use strict';
 
@@ -24,24 +24,52 @@
     const im = byte & 15;
     const n = HEX(im);
     switch (op) {
-      case 0x0: return `ADD A, ${n}`;
-      case 0x1: return im ? `MOV A, B+${n} *` : 'MOV A, B';
-      case 0x2: return im ? `IN A +${n} *` : 'IN A';
-      case 0x3: return `MOV A, ${n}`;
-      case 0x4: return im ? `MOV B, A+${n} *` : 'MOV B, A';
-      case 0x5: return `ADD B, ${n}`;
-      case 0x6: return im ? `IN B +${n} *` : 'IN B';
-      case 0x7: return `MOV B, ${n}`;
-      case 0x8: return `OUT B+${n} *`;
-      case 0x9: return im ? `OUT B+${n} *` : 'OUT B';
-      case 0xA: return `OUT ${n} *`;
-      case 0xB: return `OUT ${n}`;
-      case 0xC: return `JNC B+${n} *`;
-      case 0xD: return `JMP B+${n} *`;
-      case 0xE: return `JNC ${n}`;
-      case 0xF: return `JMP ${n}`;
-      default: throw new Error('Invalid 8-bit instruction');
+      case 0x0:
+        return `ADD A, ${n}`;
+      case 0x1:
+        return im ? `MOV A, B+${n} *` : 'MOV A, B';
+      case 0x2:
+        return im ? `IN A +${n} *` : 'IN A';
+      case 0x3:
+        return `MOV A, ${n}`;
+      case 0x4:
+        return im ? `MOV B, A+${n} *` : 'MOV B, A';
+      case 0x5:
+        return `ADD B, ${n}`;
+      case 0x6:
+        return im ? `IN B +${n} *` : 'IN B';
+      case 0x7:
+        return `MOV B, ${n}`;
+      case 0x8:
+        return `OUT B+${n} *`;
+      case 0x9:
+        return im ? `OUT B+${n} *` : 'OUT B';
+      case 0xa:
+        return `OUT ${n} *`;
+      case 0xb:
+        return `OUT ${n}`;
+      case 0xc:
+        return `JNC B+${n} *`;
+      case 0xd:
+        return `JMP B+${n} *`;
+      case 0xe:
+        return `JNC ${n}`;
+      case 0xf:
+        return `JMP ${n}`;
+      default:
+        throw new Error('Invalid 8-bit instruction');
     }
+  }
+
+  /** Combinational ALU/MUX view shared by execution, probe logic and waveforms. */
+  function decodeALU(byte: number, a: number, b: number, input: number): ALUPreview {
+    const opcode = byte >>> 4;
+    const imm = byte & 15;
+    const selectA = (((opcode >>> 3) & 1) | (opcode & 1)) as BinaryLevel;
+    const selectB = ((opcode >>> 1) & 1) as BinaryLevel;
+    const source = [a, b, input, 0][(selectB << 1) | selectA];
+    const sum = source + imm;
+    return { byte, selectA, selectB, source, imm, sum, result: sum & 15, carry: Number(sum > 15) };
   }
 
   class CPU implements CpuState {
@@ -65,7 +93,7 @@
       if (!Array.isArray(bytes) && !(bytes instanceof Uint8Array)) {
         throw new TypeError('ROM must be an array of 16 bytes');
       }
-      if (bytes.length !== 16 || Array.from(bytes).some(v => !Number.isInteger(v) || v < 0 || v > 255)) {
+      if (bytes.length !== 16 || Array.from(bytes).some((v) => !Number.isInteger(v) || v < 0 || v > 255)) {
         throw new RangeError('ROM requires exactly 16 values between 0 and 255');
       }
       this.rom = Array.from(bytes);
@@ -90,14 +118,14 @@
       const pcBefore = this.pc;
       const instruction = this.rom[pcBefore];
       const opcode = instruction >>> 4;
-      const imm = instruction & 15;
+      const {
+        imm,
+        source,
+        sum,
+        result,
+        carry: nextCarry
+      } = decodeALU(instruction, this.a, this.b, this.input);
       const oldCarry = this.carry;
-      const sourceSelect0 = ((opcode >>> 3) & 1) | (opcode & 1);
-      const sourceSelect1 = (opcode >>> 1) & 1;
-      const source = [this.a, this.b, this.input, 0][(sourceSelect1 << 1) | sourceSelect0];
-      const sum = source + imm;
-      const result = sum & 15;
-      const nextCarry = sum > 15 ? 1 : 0;
       const destination = opcode >>> 2;
       let branchTaken = false;
 
@@ -108,15 +136,23 @@
       else if (destination === 2) this.out = result;
       else {
         branchTaken = (opcode & 1) === 1 || oldCarry === 0;
-        this.pc = branchTaken ? result : ((this.pc + 1) & 15);
+        this.pc = branchTaken ? result : (this.pc + 1) & 15;
       }
       if (destination !== 3) this.pc = (this.pc + 1) & 15;
       this.carry = nextCarry; // 74HC283 updates C even for MOV, IN, OUT, JMP, JNC.
       this.cycles = (this.cycles + 1) % 1000000;
       this.lastStep = {
-        pc: pcBefore, byte: instruction, asm: disassemble(instruction),
-        source, imm, sum, result, carryBefore: oldCarry,
-        carryAfter: nextCarry, branchTaken, pcAfter: this.pc,
+        pc: pcBefore,
+        byte: instruction,
+        asm: disassemble(instruction),
+        source,
+        imm,
+        sum,
+        result,
+        carryBefore: oldCarry,
+        carryAfter: nextCarry,
+        branchTaken,
+        pcAfter: this.pc,
         destination: (['A', 'B', 'OUT', 'PC'] as const)[destination],
         standard: isStandard(instruction)
       };
@@ -152,7 +188,8 @@
       return readNumber(m[1], labels, lineNo, 255);
     }
     if ((m = line.match(/^MOV\s+([AB])\s*,\s*(.+)$/))) {
-      const dest = m[1], src = m[2].trim();
+      const dest = m[1],
+        src = m[2].trim();
       if (dest === 'A' && src === 'B') return 0x10;
       if (dest === 'B' && src === 'A') return 0x40;
       return (dest === 'A' ? 0x30 : 0x70) | readNumber(src, labels, lineNo);
@@ -162,10 +199,10 @@
     }
     if ((m = line.match(/^IN\s+([AB])$/))) return m[1] === 'A' ? 0x20 : 0x60;
     if ((m = line.match(/^OUT\s+(.+)$/))) {
-      return m[1].trim() === 'B' ? 0x90 : 0xB0 | readNumber(m[1], labels, lineNo);
+      return m[1].trim() === 'B' ? 0x90 : 0xb0 | readNumber(m[1], labels, lineNo);
     }
     if ((m = line.match(/^(JMP|JNC)\s+(.+)$/))) {
-      return (m[1] === 'JMP' ? 0xF0 : 0xE0) | readNumber(m[2], labels, lineNo);
+      return (m[1] === 'JMP' ? 0xf0 : 0xe0) | readNumber(m[2], labels, lineNo);
     }
     throw new Error(`${lineNo}行目: 未対応の命令: ${s}`);
   }
@@ -174,18 +211,22 @@
     if (typeof source !== 'string') throw new TypeError('Source must be text');
     const lines = source.split(/\r?\n/);
     const labels: Record<string, number> = Object.create(null);
-    const instructions: {address: number; text: string; lineNo: number}[] = [];
+    const instructions: { address: number; text: string; lineNo: number }[] = [];
     const used = new Set<number>();
     let address = 0;
 
     lines.forEach((rawLine, index) => {
       const lineNo = index + 1;
-      let body = rawLine.replace(/;.*$/, '').replace(/\/\/.*$/, '').trim();
+      let body = rawLine
+        .replace(/;.*$/, '')
+        .replace(/\/\/.*$/, '')
+        .trim();
       if (!body) return;
       let match: RegExpMatchArray | null;
       while ((match = body.match(/^([A-Za-z_][A-Za-z_0-9]*):\s*/))) {
         const name = match[1].toUpperCase();
-        if (Object.prototype.hasOwnProperty.call(labels, name)) throw new Error(`${lineNo}行目: 重複ラベル: ${name}`);
+        if (Object.prototype.hasOwnProperty.call(labels, name))
+          throw new Error(`${lineNo}行目: 重複ラベル: ${name}`);
         if (address > 15) throw new Error(`${lineNo}行目: ラベルはROM範囲外です`);
         labels[name] = address;
         body = body.slice(match[0].length).trim();
@@ -196,7 +237,8 @@
         return;
       }
       if (address > 15) throw new Error(`${lineNo}行目: ROMは16命令までです`);
-      if (used.has(address)) throw new Error(`${lineNo}行目: アドレス ${HEX(address)} に命令が重複しています`);
+      if (used.has(address))
+        throw new Error(`${lineNo}行目: アドレス ${HEX(address)} に命令が重複しています`);
       used.add(address);
       instructions.push({ address, text: body, lineNo });
       address += 1;
@@ -211,8 +253,13 @@
 
   function romToSource(rom: readonly number[]): string {
     if (rom.length !== 16) throw new RangeError('ROM must have 16 bytes');
-    return rom.map((byte, addr) => `DB 0x${byte.toString(16).toUpperCase().padStart(2, '0')}  ; ${HEX(addr)} ${disassemble(byte)}`).join('\n');
+    return rom
+      .map(
+        (byte, addr) =>
+          `DB 0x${byte.toString(16).toUpperCase().padStart(2, '0')}  ; ${HEX(addr)} ${disassemble(byte)}`
+      )
+      .join('\n');
   }
 
-  return { CPU, assemble, disassemble, isStandard, romToSource, HEX, BINARY };
+  return { CPU, assemble, disassemble, isStandard, romToSource, HEX, BINARY, decodeALU };
 });

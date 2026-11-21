@@ -20,7 +20,30 @@ jobs:
       package-manager: pnpm
       pnpm-version: "9.14.2"
       node-version: "26"
-      run-lint: false # No lint script
+      run-lint: true # Lightweight source formatting checks
       run-typecheck: true
       run-tests: true
       run-build: true
+
+  generated-assets:
+    name: Verify generated JavaScript is committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '9.14.2'
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Ensure assets/js matches TypeScript sources
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain -- assets/js)" ]; then
+            git status --short -- assets/js
+            echo "::error::Run pnpm build and commit generated assets/js before merging."
+            exit 1
+          fi
