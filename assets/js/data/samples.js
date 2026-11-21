@@ -13,7 +13,7 @@
             id: 'led',
             icon: '↔',
             title: 'LEDスキャナ',
-            description: 'LEDが左右に流れる',
+            description: 'LED往復・折返しで全消灯2クロック',
             source: `; LEDを左右に流す
 start: OUT 1
        OUT 2
@@ -21,6 +21,7 @@ start: OUT 1
        OUT 8
        OUT 4
        OUT 2
+       OUT 0
        JMP start`
         },
         {
@@ -58,15 +59,42 @@ loop:  OUT 15
             id: 'bounce',
             icon: '◆',
             title: '2進パターン',
-            description: 'ビットを順に点灯',
-            source: `; 1, 3, 7, F の2進パターン
+            description: '1→3→7→F→7→3→0',
+            source: `; 1, 3, 7, F, 7, 3, 0 の2進パターン
 loop:  OUT 1
        OUT 3
        OUT 7
        OUT 15
        OUT 7
        OUT 3
+       OUT 0
        JMP loop`
+        },
+        {
+            id: 'sum2',
+            icon: '∑',
+            title: '2bit加算（16命令）',
+            description: 'SW01+SW23 → LED210（LED2は桁上がり）',
+            source: `; SW1:0 (下位2bit) + SW3:2 (上位2bit) -> LED2:0
+; Aで入力範囲を判別し、Bを0〜6の結果に変換
+start:  IN A
+        MOV B, A
+        ADD A, 4
+        JNC under12
+        ADD B, 7
+        JMP show
+under12:
+        ADD A, 4
+        JNC under8
+        ADD B, 10
+        JMP show
+under8:
+        ADD A, 4
+        JNC show
+        ADD B, 13
+show:   OUT B
+        ADD B, 12    ; 1クロックの間、CPUのCにも桁上がりを表示
+        JMP start`
         },
         {
             id: 'countdown',
