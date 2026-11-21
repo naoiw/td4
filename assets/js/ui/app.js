@@ -251,13 +251,13 @@
             graph.setAttribute('preserveAspectRatio', 'none');
             graph.classList.add('scope-graph');
             graph.setAttribute('aria-hidden', 'true');
+            for (let x = 0; x <= 640; x += 80) {
+                const grid = document.createElementNS(svgNS, 'path');
+                grid.setAttribute('d', `M${x} 0 V36`);
+                grid.setAttribute('class', 'scope-gridline');
+                graph.append(grid);
+            }
             if (signal) {
-                for (let x = 0; x <= 640; x += 80) {
-                    const grid = document.createElementNS(svgNS, 'path');
-                    grid.setAttribute('d', `M${x} 0 V36`);
-                    grid.setAttribute('class', 'scope-gridline');
-                    graph.append(grid);
-                }
                 const high = document.createElementNS(svgNS, 'path');
                 high.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
                 high.setAttribute('class', 'wave-trace');
