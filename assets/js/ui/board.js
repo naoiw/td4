@@ -170,7 +170,7 @@
             led.title = '74HC154の出力は負論理です。LED点灯時は/ROM=L';
             led.addEventListener('click', () => setSelectedNet(`ROM_SEL_${addr}`));
             const address = document.createElement('strong');
-            address.textContent = HEX(addr);
+            address.textContent = `0x${HEX(addr)}`;
             const value = document.createElement('span');
             value.className = 'rom-slot-value';
             head.append(led, address, value);
