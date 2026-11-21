@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="header-right">
-        <span class="connection" id="runStatus"><span class="status-dot"></span>停止中</span>
+        <span class="connection" id="runStatus" aria-live="polite"><span class="status-dot"></span>電源OFF</span>
       </div>
     </header>
 
@@ -39,8 +39,9 @@
         <div><p class="eyebrow">HARDWARE WORKBENCH</p><h1 id="boardTitle">TD4 ボード</h1></div>
         <section class="runbar" aria-label="実行操作">
           <div class="run-buttons">
-            <button type="button" class="btn btn-primary" id="runBtn"><span aria-hidden="true">▶</span> 実行</button>
-            <button type="button" class="btn" id="stopBtn" disabled><span aria-hidden="true">Ⅱ</span> 停止</button>
+            <button type="button" class="btn btn-power-on" id="powerOnBtn">電源ON</button>
+            <button type="button" class="btn btn-power-off" id="powerOffBtn" disabled>電源OFF</button>
+            <button type="button" class="btn btn-primary" id="runPauseBtn" disabled aria-label="CPUを実行する"><span id="runPauseIcon" aria-hidden="true">▶</span> <span id="runPauseLabel">実行</span></button>
           </div>
           <div class="run-settings">
             <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
@@ -107,7 +108,7 @@
         <div class="panel-heading">
           <div><p class="eyebrow">LOGIC ANALYZER</p><h2 id="scopeTitle">信号波形</h2></div>
           <div class="scope-controls">
-            <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ A/B</option><option value="pc">PC</option><option value="rom">ROM</option><option value="alu">ALU</option></select></label>
+            <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ A/B</option><option value="pc">PC / ALU</option><option value="rom">ROM</option></select></label>
             <button type="button" class="text-button" id="clearWaveBtn">波形を消去</button>
           </div>
         </div>

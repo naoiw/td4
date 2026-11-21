@@ -111,11 +111,11 @@ test('execution controls share the TD4 board title row above the divider', () =>
   const headerMarkup = html.slice(heading, pcb);
   assert.match(headerMarkup, /<section class="runbar"[\s\S]*?<\/section>\s*<\/div>/);
   assert.equal((html.match(/class="runbar"/g) || []).length, 1);
-  for (const id of ['runBtn', 'stopBtn', 'cycles']) {
+  for (const id of ['powerOnBtn', 'powerOffBtn', 'runPauseBtn', 'cycles']) {
     assert.ok(html.indexOf('id="' + id + '"', control) > control);
     assert.ok(html.indexOf('id="' + id + '"', control) < pcb);
   }
-  for (const removed of ['stepBtn', 'resetBtn', 'speed']) {
+  for (const removed of ['stepBtn', 'resetBtn', 'speed', 'runBtn', 'stopBtn']) {
     assert.doesNotMatch(html, new RegExp('id="' + removed + '"'));
   }
   const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
@@ -142,8 +142,8 @@ test('ROM legend and breakpoint clear are above table, with help text removed', 
 
 test('logic analyzer and execution trace match heights with ten visible waveform rows', () => {
   const groups = [...html.matchAll(/<option value="(basic|io|registers|pc|rom|alu)">([^<]+)<\/option>/g)];
-  assert.deepEqual(groups.map(x => x[1]), ['basic', 'io', 'registers', 'pc', 'rom', 'alu']);
-  assert.deepEqual(groups.slice(2).map(x => x[2]), ['レジスタ A/B', 'PC', 'ROM', 'ALU']);
+  assert.deepEqual(groups.map(x => x[1]), ['basic', 'io', 'registers', 'pc', 'rom']);
+  assert.deepEqual(groups.slice(2).map(x => x[2]), ['レジスタ A/B', 'PC / ALU', 'ROM']);
   const workbench = fs.readFileSync(path.join(root,'assets/css/workbench.css'),'utf8');
   assert.match(workbench, /\.scope-layout\{[^}]*align-items:stretch/);
   assert.match(workbench, /\.scope-layout>\.panel\{height:550px\}/);

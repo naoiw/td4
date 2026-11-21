@@ -9,7 +9,7 @@
   }
   const SAMPLES = window.TD4Samples;
   const SAMPLE_PROGRAMS: Record<string, string> = Object.fromEntries(SAMPLES.map(sample => [sample.id, sample.source]));
-  const {GROUPS, snapshot, appendSample, waveformPath} = window.TD4Signals;
+  const {GROUPS, snapshot, appendSample, waveformPath, shouldCaptureSample} = window.TD4Signals;
   const circuit = window.TD4Circuit;
   const cpu = new CPU();
   let selectedNet = 'CLK';
@@ -22,6 +22,13 @@
   let boardClockHz: 2 | 10 = 2;
   const waveSamples: SignalLevels[] = [];
   const MAX_WAVE_SAMPLES = 80;
+  // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
+  // 'cpu' is still selectable internally for clock-only capture.
+  let waveCaptureMode: WaveCaptureMode = 'oscilloscope';
+  // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
+  const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20;
+  const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40;
+  let scopeCaptureIntervalId: number | null = null;
   let lastWaveDrawAt = 0;
   let boardResizeObserver: ResizeObserver | null = null;
 
@@ -117,7 +124,7 @@
       },
       onInputBitToggle(bit) {
         cpu.setInput(cpu.input ^ (1 << bit));
-        renderCPU(); recordSignals();
+        renderCPU(); recordSignals('input');
       },
       onPowerToggle() { if (powerOn) setPower(false); else run(); },
       onFrequencyToggle() { setBoardFrequency(boardClockHz === 2 ? 10 : 2); }
@@ -276,14 +283,50 @@
   function restartWaveCapture(): void {
     waveSamples.splice(0);
     const levels = snapshot(cpu, clockHigh);
-    if (powerOn) appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    const trigger: WaveSampleTrigger = waveCaptureMode === 'cpu' ? 'clock' : 'timer';
+    if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
+      appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    }
     renderWaveforms(levels);
     lastWaveDrawAt = performance.now();
   }
 
-  function recordSignals(): void {
+  /** An independent sample clock advances the waveform with a stationary CPU. */
+  function stopScopeCapture(): void {
+    if (scopeCaptureIntervalId === null) return;
+    clearInterval(scopeCaptureIntervalId);
+    scopeCaptureIntervalId = null;
+  }
+
+  function startScopeCapture(): void {
+    stopScopeCapture();
+    if (!powerOn || waveCaptureMode !== 'oscilloscope') return;
+    scopeCaptureIntervalId = setInterval(() => {
+      if (!shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer')) return;
+      const levels = snapshot(cpu, clockHigh);
+      appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+      // Collect at 50Hz, but redraw at up to 25fps to limit DOM/SVG work.
+      const now = performance.now();
+      if (now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
+        renderWaveforms(levels);
+        lastWaveDrawAt = now;
+      }
+    }, OSCILLOSCOPE_SAMPLE_INTERVAL_MS);
+  }
+
+  function setWaveCaptureMode(mode: WaveCaptureMode): void {
+    if (mode !== 'cpu' && mode !== 'oscilloscope') throw new Error('Unsupported waveform capture mode');
+    if (waveCaptureMode === mode) return;
+    waveCaptureMode = mode;
+    startScopeCapture();
+    restartWaveCapture();
+  }
+
+  function recordSignals(trigger: WaveSampleTrigger = 'clock'): void {
     const levels = snapshot(cpu, clockHigh);
-    if (powerOn) appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
+      appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    }
     updateCircuitBoard();
     const now = performance.now();
     if (intervalId === null || now - lastWaveDrawAt > 35) {
@@ -338,9 +381,21 @@
     $('editorMessage').className = 'editor-message' + (kind ? ` ${kind}` : '');
   }
 
+  /** Power and execution are independent: OFF, ON/paused, and ON/running. */
   function syncRunControls(): void {
-    $<HTMLButtonElement>('runBtn').disabled = intervalId !== null;
-    $<HTMLButtonElement>('stopBtn').disabled = !powerOn;
+    const running = powerOn && intervalId !== null;
+    $<HTMLButtonElement>('powerOnBtn').disabled = powerOn;
+    $<HTMLButtonElement>('powerOffBtn').disabled = !powerOn;
+    const toggle = $<HTMLButtonElement>('runPauseBtn');
+    toggle.disabled = !powerOn;
+    toggle.classList.toggle('btn-primary', !running);
+    toggle.setAttribute('aria-label', running ? 'CPUを停止する' : 'CPUを実行する');
+    $('runPauseIcon').textContent = running ? 'Ⅱ' : '▶';
+    $('runPauseLabel').textContent = running ? '停止' : '実行';
+    const status = $('runStatus');
+    status.classList.toggle('running', running);
+    status.classList.toggle('is-powered-on', powerOn);
+    status.lastChild!.textContent = !powerOn ? '電源OFF' : running ? '電源ON · 実行中' : '電源ON · CPU停止中';
   }
 
   /** An OFF→ON transition resets volatile CPU state; ROM and switches persist. */
@@ -348,6 +403,7 @@
     if (powerOn === on) return;
     if (!on) {
       stop();
+      stopScopeCapture();
       powerOn = false;
       cpu.reset();
       history.splice(0);
@@ -365,6 +421,7 @@
     renderCPU(); renderHistory();
     syncRunControls();
     // Keep ROM address 0x00 visible on power-up until the first clock edge.
+    startScopeCapture();
     startClock(false);
   }
 
@@ -385,8 +442,6 @@
     if (intervalId !== null) { clearInterval(intervalId); intervalId = null; }
     setClockLow();
     syncRunControls();
-    $('runStatus').classList.remove('running');
-    $('runStatus').lastChild!.textContent = '停止中';
     renderWaveforms(snapshot(cpu, clockHigh));
     if (reason) showMessage(reason);
   }
@@ -407,6 +462,12 @@
     startClock(true);
   }
 
+  function toggleRunPause(): void {
+    if (!powerOn) return;
+    if (intervalId === null) run();
+    else stop();
+  }
+
   function startClock(immediate: boolean): void {
     if (intervalId !== null || !powerOn) return;
     if (breakpoints.has(cpu.pc)) {
@@ -415,8 +476,6 @@
       return;
     }
     setClockLow();
-    $('runStatus').classList.add('running');
-    $('runStatus').lastChild!.textContent = '実行中';
     const halfPeriod = 500 / boardClockHz;
     intervalId = setInterval(() => {
       if (clockHigh) { setClockLow(); return; }
@@ -476,8 +535,9 @@
   }
 
   function connectActions(): void {
-    $('runBtn').addEventListener('click', run);
-    $('stopBtn').addEventListener('click', () => setPower(false));
+    $('powerOnBtn').addEventListener('click', () => setPower(true));
+    $('powerOffBtn').addEventListener('click', () => setPower(false));
+    $('runPauseBtn').addEventListener('click', toggleRunPause);
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
     $('clearWaveBtn').addEventListener('click', restartWaveCapture);
@@ -500,15 +560,18 @@
         event.preventDefault(); compileSource(); return;
       }
       if (event.key === 'Escape' && intervalId !== null) {
-        event.preventDefault(); setPower(false); return;
+        event.preventDefault(); stop(); return;
       }
     });
   }
+
+  // Expose both capture modes internally; the visible default is 'oscilloscope'.
+  window.TD4WaveCapture = {getMode: () => waveCaptureMode, setMode: setWaveCaptureMode};
 
   buildRomRows();
   buildSamples();
   buildCircuitBoard();
   connectActions();
   switchExample('led');
-  window.addEventListener('pagehide', () => stop());
+  window.addEventListener('pagehide', () => {stop(); stopScopeCapture();});
 })();

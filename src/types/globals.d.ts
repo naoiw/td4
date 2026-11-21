@@ -1,7 +1,9 @@
 /** Shared public interfaces for the 4-bit emulator and the no-bundler browser UI. */
 type BinaryLevel = 0 | 1;
-type SignalGroup = 'basic' | 'io' | 'registers' | 'pc' | 'rom' | 'alu';
+type SignalGroup = 'basic' | 'io' | 'registers' | 'pc' | 'rom';
 type SignalLevels = Record<string, BinaryLevel>;
+type WaveCaptureMode = 'cpu' | 'oscilloscope';
+type WaveSampleTrigger = 'clock' | 'timer' | 'input';
 type SignalGroups = Readonly<Record<SignalGroup, readonly string[]>>;
 
 interface TD4Step {
@@ -61,6 +63,7 @@ interface TD4SignalsApi {
   preview(cpu: CpuState): ALUPreview;
   snapshot(cpu: CpuState, clockHigh: boolean | number): SignalLevels;
   appendSample(samples: SignalLevels[], sample: SignalLevels, capacity?: number): SignalLevels[];
+  shouldCaptureSample(mode: WaveCaptureMode, powerOn: boolean, cpuRunning: boolean, source: WaveSampleTrigger): boolean;
   waveformPath(samples: readonly SignalLevels[], signal: string, width?: number, height?: number, capacity?: number): string;
 }
 interface SampleProgram {
@@ -73,6 +76,11 @@ interface SampleProgram {
 interface Window {
   TD4: TD4Api;
   TD4Signals: TD4SignalsApi;
+  /** Internal capture-mode configuration. No additional control in the UI. */
+  TD4WaveCapture: {
+    getMode(): WaveCaptureMode;
+    setMode(mode: WaveCaptureMode): void;
+  };
   TD4Samples: SampleProgram[];
 }
 declare const module: {exports?: unknown};
