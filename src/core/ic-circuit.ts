@@ -216,10 +216,14 @@
       return make('INPUT · A', 'OUTPUT · Y', [{ left, right }]);
     }
     if (component.type === '74HC540') {
+      const pair = (name: string, net: string): IcPin[][] =>
+        Array.from({ length: 4 }, (_, index) =>
+          row(pin(`${name}${index}`, `${net}${index}`), pin(`${name}${index + 4}`, `${net}${index + 4}`))
+        );
       return make('INPUT · A', 'OUTPUT · Y', [
         {
-          left: lines('A', 'ROM_RAW', 8),
-          right: lines('Y', 'D', 8)
+          left: pair('A', 'ROM_RAW'),
+          right: pair('Y', 'D')
         }
       ]);
     }

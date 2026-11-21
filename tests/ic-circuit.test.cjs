@@ -228,7 +228,7 @@ test('IC details omit fixed enable controls but retain dynamic and non-enable pi
   assert.equal(names('U13').filter(name=>/^Y[0-9A-F]#$/.test(name)).length,16);
 
   assert.deepEqual(names('U12').filter(name=>/^OE[12]#$/.test(name)),[]);
-  assert.deepEqual(names('U12').filter(name=>/^A[0-7]$/.test(name)),Array.from({length:8},(_,n)=>'A'+n));
+  assert.deepEqual(names('U12').filter(name=>/^A[0-7]$/.test(name)).sort((a,b)=>Number(a[1])-Number(b[1])),Array.from({length:8},(_,n)=>'A'+n));
   assert.equal(names('U12').filter(name=>/^Y[0-7]$/.test(name)).length,8);
 
   for(const id of ['U7','U8']){
@@ -250,5 +250,23 @@ test('IC details omit fixed enable controls but retain dynamic and non-enable pi
   for(const id of ['U7','U8']){
     assert.equal(physicalPins(byId[id])[0].net,'GND');
     assert.equal(physicalPins(byId[id])[14].net,'GND');
+  }
+});
+
+
+test('74HC540 A and Y probes are 4 rows by 2 columns, with 0–3 in the left column', () => {
+  const {layout}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.type==='74HC540');
+  const [section]=layout(chip).sections;
+  for(const [side,label,net] of [['left','A','ROM_RAW'],['right','Y','D']]){
+    const rows=section[side];
+    assert.equal(rows.length,4,side+' must contain four rows');
+    for(let row=0;row<4;row++){
+      assert.equal(rows[row].length,2,side+' must contain two columns');
+      assert.deepEqual(rows[row],[
+        {name:label+row,net:net+row},
+        {name:label+(row+4),net:net+(row+4)}
+      ]);
+    }
   }
 });
