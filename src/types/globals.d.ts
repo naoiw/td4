@@ -182,17 +182,18 @@ interface Window {
 }
 
 /** Schematic-derived physical pin and ROM matrix metadata. */
+interface TD4GateGroup {
+  gate: string;
+  purpose: string;
+  inputPins: number[];
+  outputPin: number;
+}
 interface TD4NetlistData {
   schemaVersion: number;
   components: Record<string, IcPackageType>;
   pinNets: Record<string, Record<string, string>>;
   pinNames: Record<string, Record<string, string>>;
-  gateGroups: Record<string, {
-    gate: string;
-    purpose: string;
-    inputPins: number[];
-    outputPin: number;
-  }[]>;
+  gateGroups: Record<string, TD4GateGroup[]>;
   romSwitches: {
     id: string;
     address: number;
