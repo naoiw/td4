@@ -296,7 +296,7 @@ test('power OFF hides the highlighted ROM module without losing ROM bits',()=>{
     assert.match(power,/cpu\.reset\(\)/);
     assert.match(power,/renderCPU\(\)/);
     assert.match(power,/powerOn = true;/);
-    assert.match(power,/startClock\(true\)/);
+    assert.match(power,/startClock\(false\)/);
   }
 });
 
