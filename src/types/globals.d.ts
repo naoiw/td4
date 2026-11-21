@@ -1,6 +1,6 @@
 /** Shared public interfaces for the 4-bit emulator and the no-bundler browser UI. */
 type BinaryLevel = 0 | 1;
-type SignalGroup = 'basic' | 'io' | 'registers' | 'pc' | 'rom' | 'alu';
+type SignalGroup = 'basic' | 'io' | 'registers' | 'pc' | 'rom';
 type SignalLevels = Record<string, BinaryLevel>;
 type WaveCaptureMode = 'cpu' | 'oscilloscope';
 type WaveSampleTrigger = 'clock' | 'timer' | 'input';
