@@ -261,7 +261,9 @@ test('CR silk schematic points CLK to the left without mirroring readable text',
   assert.ok(svg.indexOf('class="pcb-osc-silk-text"')>svg.indexOf('class="pcb-osc-mirrored"'));
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
-  assert.match(svg,/M8 33 H16 V22 H27 V33 H38 V22 H49 V33 H60 V22 H71 V33 H79/);
+  assert.match(svg,/M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55/);
+  // The mirrored feedback path runs at x=72; the silk ends at x=55.
+  assert.doesNotMatch(svg,/M8 33 H16 V22 H27 V33 H38 V22 H49 V33 H60 V22 H71 V33 H79/);
 });
 
 test('PCB power toggle runs and stops the CPU and CLK toggles precisely 2/10Hz',()=>{
@@ -396,5 +398,5 @@ test('inverter CR feedback is closed and the output bubble has no wire through i
   assert.match(svg,/M148 45 H184/);
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
-  assert.match(svg,/M8 33 H16 V22 H27 V33 H38 V22 H49 V33 H60 V22 H71 V33 H79/);
+  assert.match(svg,/M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55/);
 });
