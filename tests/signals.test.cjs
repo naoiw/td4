@@ -142,3 +142,25 @@ test('oscilloscope captures paused INPUT transitions immediately then keeps hold
   const held=waveformPath(samples,'PC0');
   assert.doesNotMatch(held,/V 7/,'CPU PC remains at the same logic value while stopped');
 });
+
+test('fixed 20ms sampling displays 2Hz and 10Hz as distinct real-time CLK rates',()=>{
+  const cpu = new CPU();
+  const intervalMs = 20;
+  const risingEdges = frequency => {
+    const samples = [];
+    const halfPeriodMs = 500 / frequency;
+    for(let ms = 0; ms < 1000; ms += intervalMs){
+      const high = Math.floor(ms / halfPeriodMs) % 2 === 1;
+      appendSample(samples, snapshot(cpu, high), 80);
+    }
+    const rises = samples.slice(1).filter((sample, i) => samples[i].CLK === 0 && sample.CLK === 1).length;
+    assert.ok(waveformPath(samples, 'CLK').includes('V 7'));
+    return {rises, samples};
+  };
+  const slow = risingEdges(2);
+  const fast = risingEdges(10);
+  assert.equal(slow.rises, 2, '2Hz makes two rising edges per second');
+  assert.equal(fast.rises, 10, '10Hz makes ten rising edges per second');
+  assert.equal(fast.rises / slow.rises, 5, '10Hz shows five times as many cycles as 2Hz');
+  assert.equal(fast.samples.length, slow.samples.length, 'both share one timebase');
+});
