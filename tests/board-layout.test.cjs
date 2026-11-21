@@ -164,3 +164,34 @@ test('ROM active LED is green and IO labels grow to 11px with green/grey state',
   assert.match(lastRule('schematic-io-led:before'),/background:#75838a/);
   assert.match(lastRule('schematic-io-led.is-on:before'),/background:#55e997/);
 });
+
+test('whole PCB auto-fits viewport while preserving original geometry',()=>{
+  assert.match(html,/class="schematic-scroll" id="schematicViewport"/);
+  assert.match(lastRule('schematic-scroll'),/display:flex/);
+  assert.match(lastRule('schematic-scroll'),/justify-content:center/);
+  assert.match(lastRule('schematic-scroll'),/overflow:hidden/);
+  const board=css.match(/\/\* PCB placement:[\s\S]*?\.schematic-board\s*\{([^}]*)\}/);
+  assert.ok(board,'the logical board dimensions must remain fixed');
+  assert.match(board[1],/width:1135px/);
+  assert.match(board[1],/flex:none/);
+  assert.match(board[1],/transform:scale\(var\(--board-fit-scale,1\)\)/);
+  assert.match(board[1],/transform-origin:top center/);
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/new ResizeObserver\(fitCircuitBoard\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.match(source,/viewport\.clientWidth/);
+    assert.match(source,/board\.offsetHeight \* scale/);
+    assert.match(source,/window\.addEventListener\('resize', fitCircuitBoard\)/);
+    assert.match(source,/board\.style\.setProperty\('--board-fit-scale'/);
+  }
+});
+test('scaled board keeps signal wires aligned in logical SVG coordinates',()=>{
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/width\s*\/\s*bounds\.width/);
+    assert.match(source,/height\s*\/\s*bounds\.height/);
+    assert.match(source,/\*\s*scaleX/);
+    assert.match(source,/\*\s*scaleY/);
+    assert.match(source,/setAttribute\('viewBox'/);
+    assert.match(source,/getBoundingClientRect\(\)/);
+  }
+});

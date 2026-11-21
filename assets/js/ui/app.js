@@ -24,6 +24,7 @@
     const waveSamples = [];
     const MAX_WAVE_SAMPLES = 80;
     let lastWaveDrawAt = 0;
+    let boardResizeObserver = null;
     function buildRomRows() {
         const tbody = $('romRows');
         tbody.replaceChildren();
@@ -123,7 +124,13 @@
                 renderCPU(); recordSignals();
             }
         });
-        window.addEventListener('resize', drawSelectedWires);
+        if (typeof ResizeObserver !== 'undefined') {
+            boardResizeObserver = new ResizeObserver(fitCircuitBoard);
+            boardResizeObserver.observe($('schematicViewport'));
+            boardResizeObserver.observe($('schematicBoard'));
+        }
+        window.addEventListener('resize', fitCircuitBoard);
+        fitCircuitBoard();
         setSelectedNet('CLK');
     }
 
@@ -184,6 +191,23 @@
     function drawSelectedWires() {
         window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX});
     }
+    /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
+    function fitCircuitBoard() {
+        const viewport = $('schematicViewport');
+        const board = $('schematicBoard');
+        const style = window.getComputedStyle(viewport);
+        const availableWidth = viewport.clientWidth -
+            parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0) return;
+        // Shrink as much as necessary; gently enlarge on wide screens.
+        const scale = Math.min(1.2, availableWidth / board.offsetWidth);
+        board.style.setProperty('--board-fit-scale', String(scale));
+        const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
+            parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+        viewport.style.height = Math.ceil(board.offsetHeight * scale + verticalSpace) + 'px';
+        drawSelectedWires();
+    }
+
 
     function renderHistory() {
         const list = $('traceList');
