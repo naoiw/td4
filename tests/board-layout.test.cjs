@@ -440,6 +440,6 @@ test('ROM edits and breakpoints pause CPU without shutting off the PCB power',()
     assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/);
     assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
     assert.match(source,/\('powerOffBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
-    assert.match(source,/event\.preventDefault\(\); stop\(\); return;/);
+    assert.match(source,/event\.preventDefault\(\);\s*stop\(\);\s*return;/);
   }
 });
