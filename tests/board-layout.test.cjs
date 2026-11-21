@@ -717,3 +717,35 @@ test('uniform detail styles do not change IC-specific probe arrangements',()=>{
     assert.equal(layout(chips.find(c=>c.type===type)).sections.length,expected);
   assert.equal(layout(chips.find(c=>c.type==='74HC283')).sections[0].rightColumnBreak,4);
 });
+
+test('IC Escape closes details before the running-CPU Escape fallback',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const keyHandler=source.slice(source.indexOf("document.addEventListener('keydown', event =>"));
+    const close=keyHandler.indexOf("if (event.key === 'Escape')");
+    const detail=keyHandler.indexOf("if (!detail.hidden && detail.dataset.chip)");
+    const toggle=keyHandler.indexOf("toggleIcDetails(detail.dataset.chip)");
+    const fallback=keyHandler.indexOf("if (intervalId !== null)");
+    assert.ok(close>=0&&detail>close&&toggle>detail&&fallback>toggle,
+      'Escape must close open detail before stopping the CPU');
+    assert.match(keyHandler,/event\.preventDefault\(\);\s*toggleIcDetails\(detail\.dataset\.chip\);\s*return;/);
+    assert.match(source,/\.ic-open-details'\)\?\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
+      'closing IC details returns focus to the originating IC');
+    assert.match(source,/close\.focus\(\{\s*preventScroll:\s*true\s*\}\)/,
+      'opening IC details focuses its close control');
+  }
+});
+
+test('Space toggles CPU run/pause without editing or button-keyboard conflicts',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const keyHandler=source.slice(source.indexOf("document.addEventListener('keydown', event =>"));
+    assert.match(keyHandler,/event\.key === ' '/,'use normal Space keyboard key');
+    assert.match(keyHandler,/!event\.isComposing/);
+    assert.match(keyHandler,/!event\.ctrlKey && !event\.metaKey && !event\.altKey/);
+    assert.match(keyHandler,/event\.target instanceof HTMLElement/);
+    assert.match(keyHandler,/event\.target\.closest\('input, textarea, select, button, a\[href\], summary, \[contenteditable\], \[role="button"\]'\)/);
+    assert.match(keyHandler,/powerOn\)\s*\{\s*event\.preventDefault\(\);\s*if \(!event\.repeat\)\s*toggleRunPause\(\)/,
+      'Space should toggle only with power on, ignoring held-key repeats');
+    assert.match(source,/function toggleRunPause\(\)\s*(?:: void)?\s*\{[\s\S]*?if \(intervalId === null\) run\(\);\s*else stop\(\);/,
+      'shortcut reuses existing run/pause lifecycle');
+  }
+});
