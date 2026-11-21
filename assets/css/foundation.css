@@ -69,7 +69,8 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .isa-detail-table .isa-th-note{display:block;font:500 9px/1.4 sans-serif;color:#7c8c9c}
 .isa-detail-table .isa-subheads th{font-size:9px;background:#fff8e9;color:#85642f}
 .isa-detail-table .isa-subheads th:nth-child(n+9){background:#ecf7f5;color:#376a66}
-.isa-detail-table tbody tr.isa-instruction>*{padding:8px 2px 7px;border-top:7px solid #fff;border-bottom:1px solid #e3ebf0;text-align:center;font:750 11px/1.4 ui-monospace,Consolas,monospace;background:#f4f7fa;font-variant-numeric:tabular-nums}
+/* Put the inter-instruction white gap in the explanation row, not as a top border on each bit cell: otherwise vertical dividers bleed into the gap. */
+.isa-detail-table tbody tr.isa-instruction>*{padding:8px 2px 7px;border-bottom:1px solid #e3ebf0;text-align:center;font:750 11px/1.4 ui-monospace,Consolas,monospace;background:#f4f7fa;font-variant-numeric:tabular-nums}
 .isa-detail-table tbody tr.isa-instruction>.isa-command{text-align:left;padding-left:9px;background:#f2f7f5;color:#188364}
 .isa-detail-table .isa-command code{color:inherit;white-space:nowrap;font-size:11px}
 .isa-detail-table .isa-code code{color:#51657c;font-size:10px;white-space:nowrap}
@@ -82,7 +83,7 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 .isa-detail-table tbody tr.isa-instruction>.isa-high{background:#d6f3df;color:#207a4b}
 .isa-detail-table tbody tr.isa-instruction>.isa-low{background:#d8f1fb;color:#266d87}
 .isa-detail-table tbody tr.isa-instruction>.isa-conditional{background:linear-gradient(90deg,#d8f1fb 0 50%,#d6f3df 50% 100%);color:#294d5e;font-size:11px}
-.isa-detail-table .isa-explanation td{padding:4px 10px 11px;background:#fff;border-bottom:1px solid #e9eff2;font-size:11px;line-height:1.65;color:#41546b}
+.isa-detail-table .isa-explanation td{padding:4px 10px 18px;background:#fff;border-bottom:1px solid #e9eff2;font-size:11px;line-height:1.65;color:#41546b}
 .isa-detail-table .isa-explanation span{font-weight:650}
 .isa-detail-table .isa-explanation small{display:block;font-size:11px;color:#708296}
 .isa-detail-table .isa-explanation:last-child td{border-bottom:0}
