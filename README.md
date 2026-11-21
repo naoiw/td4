@@ -1,102 +1,87 @@
 # TD4 — Web Emulator
 
-『CPUの創りかた』に登場する4bit CPU「TD4」を、ブラウザで実行して観察するためのエミュレータです。
+> 『CPUの創りかた』に登場する4bit CPU「TD4」を、ブラウザ上で実行し、74HCロジックIC・ROMスイッチ・信号の変化を観察できるエミュレータです。
 
-- **本番ページ（main）**: https://naoiw.github.io/td4/
-- **開発プレビュー（develop）**: https://naoiw.github.io/td4/develop/
-- **GitHub**: https://github.com/naoiw/td4
+## 公開URL
 
-公開済みの `index.html` はバックエンド・外部ライブラリなしで動作します。開発用ソースはTypeScriptです。GitHub Actionsでmainとdevelopをビルドして、**本番 `/td4/` とプレビュー `/td4/develop/` を同時に公開**します。最初にPagesのSourceを **GitHub Actions** に切り替えてください。詳細は [`docs/deployment.md`](docs/deployment.md) を参照。
+| 環境 | ブランチ | URL | 状態 |
+| --- | --- | --- | --- |
+| 本番 | `main` | https://naoiw.github.io/td4/ | 公開中 |
+| 開発プレビュー | `develop` | https://naoiw.github.io/td4/develop/ | 公開中 |
 
-## 機能
+1つのGitHub Pagesサイトで本番と開発プレビューを同時公開しています。開発版への変更は、本番へのマージ前に `/develop/` で確認できます。
 
-- **MUX/ALU・REGISTERS・CLOCK/CONTROLを左列、74HC154・74HC540のROM/FETCHだけを中央の縦列**に配置。4機能エリアで密集表示し、ICクリック時のH/L詳細は基板外パネルへ展開
-- ICはDIP-14/16/20/24のピン数と2.54mmピッチ（画面上は18px）で描画。全ICのピン列間隔を統一し、通常は型番入りのDIPだけ表示。クリックで入出力H/L詳細を展開。足はH=緑／L=灰色、未モデル化は縞模様で区別
-- ROMを**8bit DIPスイッチ×16組（128bit）**として表示。ROMは**横置きの8bit DIPスイッチを4行×4列（上段0〜3、下段C〜F）**に配置し、各アドレスの選択LEDは74HC154の負論理出力を反映（点灯時 /ROM = L）
-- Input 4bitとOutput 4bitをROMの4×4マトリクスの下に横並びで配置し、直接操作・観察可能。従来の機能ブロック図は折りたたみ表示に保持
-- クロック H/L、キャリーフラグ、PC、A/Bレジスタ、ROMデータ、ALU出力などの**1bitごとの論理レベル**を表示
-- デジタル信号波形（基本信号／入力出力／レジスタ／ROM・ALUの4つのチャンネルグループ）、直近80サンプルを表示
-- CPUのクロック立ち上がりで命令を実行（ステップ・自動実行・速度変更・停止・リセット）
-- 8種類のサンプルプログラム（上部のクイックスタート6種、エディタ選択8種）
-- アセンブラ（ラベル、ORG、DBなど）、16×8bit ROMビット編集、ブレークポイント、実行履歴
-- ROM16バイトのバイナリ保存・読み込み
+## 主な機能
 
-- ICをクリックすると、基板の下に大きな専用詳細パネルを表示します。入出力のH/Lは更新され、基板とは重なりません。
-- 基板は緑レジスト、周囲は白背景。四隅の丸い取付穴を常時表示し、凡例と注意書きは基板の外側に配置しています。
+- **74HCロジックICを可視化**：13個のICを機能別に表示。左列にMUX / ALU・REGISTERS・CLOCK / CONTROL、中央列に74HC154と74HC540を配置します。
+- **DIPパッケージと信号表示**：DIP-14 / 16 / 20 / 24のピン本数とピッチ比を表現。脚のHは緑、Lは灰色、未モデル化の脚は縞模様です。ICをクリックすると基板の下に拡大した入出力詳細を表示し、信号を追跡できます。
+- **16×8bit ROMを直接編集**：128個のスイッチを横置き8bit DIP×16組、4行×4列に配置。現在選択中のアドレスを74HC154の負論理出力に対応するLEDで示します。
+- **4bit入出力と基板表示**：ROMの下にINPUTスイッチとOUTPUT LEDを横並びで配置。緑レジスト風の基板、四隅の取付穴、従来のCPU機能ブロック図も備えています。
+- **CPUの実行・デバッグ**：自動実行、停止、リセット、1クロック実行、速度切替、ブレークポイント、実行履歴を利用できます。
+- **論理波形の観察**：クロック・キャリー・レジスタ・ROM・ALUなどをH/Lで確認し、4グループの波形を直近80サンプルまで表示します。
+- **プログラム編集**：8種類のサンプルプログラム、アセンブラ、16バイトROMのバイナリ読み書きに対応します。
 
-## IC表示の見方
+**シミュレーション範囲**：TD4の命令実行と理想的な論理H/Lをモデル化しています。実ICの伝搬遅延・グリッチ・電圧波形や、実基板の全ネットリストを再現するものではありません。端子詳細の機能配置は、実物のパッケージ上の端子位置とは別です。
 
-ICボードは実物と同じDIPパッケージの**ピン本数**（14・16・20・24）を描画し、機能を理解しやすいよう入力端子を左、出力端子を右に配置しています。74HC153は上下の2回路に分割します。**端子名の位置は実ICの物理ピン配置を意味しません**。各機能信号をクリックするとH/Lと接続ネットを追跡できます。
+## 技術スタック
 
-## 操作方法
+- **TypeScript 5.8.3（strict）**：CPU、アセンブラ、信号、IC回路、基板表示、アプリ制御
+- **Vanilla JavaScript / DOM / SVG / CSS**：React・Vite・バンドラーを使わない静的Webアプリ
+- **Node.js 26 / npm**：GitHub Actionsでのビルド・型チェック・テスト（ローカル開発はNode.js 22以降）
+- **GitHub Actions / GitHub Pages**：`main` の本番公開と `develop` のプレビューを同時配信
 
-1. 「サンプルを試す」から例をクリックすると、ROM DIPスイッチの位置が更新され、実行が始まります。
-2. IC本体をクリックして基板下の詳細パネルを開き、端子を選択すると論理H/Lと対応ネットを強調します。
-3. ROMの青いスライドスイッチをクリックしてビットを反転できます。左の74HC154の /Y とROM横のLEDは、現在PCが指すアドレスを表します（選択出力はL）。
-4. 「スイッチ入力」を選んだ場合、ボード上のSW3〜SW0をクリックしてください。プログラムの `IN B` と `OUT B` によってLEDへ反映されます。
-5. 信号モニタのセレクタで、見たいチャンネルを切り替えてください。**Hは上段、Lは下段**です。
-6. 正確に命令単位で追うには停止・リセットして「1クロック」を押します。クリック後、H表示を約180ms保持してLに戻します。
-7. ROMビットをクリックして直接書き換えるか、アセンブラを編集して「ROMに書き込む」を押せます。
+実行時の外部ライブラリ・バックエンドは不要です。
 
-## 信号波形について
+## ローカル開発
 
-このプロジェクトはTD4の**命令レベル・論理レベル**のエミュレータです。信号はCPUの現在状態とROMから計算した理想的なH/Lです。クロックの立ち上がりでレジスタ状態が変化し、立ち下がりでは変わりません。ROM D0..7、ALU0..3の波形は、**現在のPCが指す次の命令**の組み合わせ論理値です。
-
-オシロスコープ風の表示は等間隔の論理サンプルです。74HC実ICの伝搬遅延、グリッチ、スイッチのチャタリングや実時間の電圧波形は再現しません。新しいICボードはTD4の代表的な74HC構成を参考に、**各ICの機能信号単位**で表示したものです。実基板のネットリストやパッケージ物理ピン番号をそのまま転記したものではなく、ジャンパや未使用ゲートまで含む基板の正確な配線図ではありません。
-
-詳細は [`docs/architecture.md`](docs/architecture.md) にあります。
-
-## 開発方法（TypeScript）
-
-Node.js 22以降とnpmが必要です。ブラウザ表示だけなら依存パッケージのインストールは不要です。
+Node.js 22以降とnpmを使用します。
 
 ```bash
-npm install
-npm run build      # src/**/*.ts を型チェックして、assets/js/ に出力
-npm test           # TypeScript型チェック + Node.jsの全テスト
-npm run verify     # ビルド + 型チェック + テスト
+npm ci
+npm run build
 ```
 
-`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。Pagesの公開アーティファクトにはmain/developそれぞれの `index.html` と `assets/` が含まれます。`assets/css/style.css` は読み込み順だけを定義するエントリーポイントで、実際のCSSは `foundation.css`（共通）、`workbench.css`（画面構成）、`circuit-board.css`（DIP・ROM・基板）に分離しています。`LICENSE`は変更しません。
+ビルドは `src/**/*.ts` を `assets/js/` に出力します。ブラウザから `index.html` を開いて確認できます。
 
-Vite/Reactは導入していません。公開は `.github/workflows/deploy-pages.yml` で両ブランチを合わせて実行します。開発時は `index.html` を直接開いても動作を確認できます。
-
-## ファイル構成
-
-```text
-.
-├── index.html              # GitHub Pagesのエントリーポイント（main / root）
-├── assets/
-│   ├── css/                # style.css → foundation / workbench / circuit-board
-│   └── js/                 # tscで生成、編集禁止・Git管理対象
-│       ├── core/           # td4-core.js, signals.js, ic-circuit.js
-│       ├── data/           # samples.js
-│       └── ui/             # board.js (DIP・H/L・SVG描画), app.js (CPU状態・操作)
-├── src/                    # TypeScriptの編集対象
-│   ├── core/               # CPU、アセンブラ、信号モデル、IC回路モデル
-│   ├── data/               # サンプルプログラム
-│   ├── ui/                 # board.ts: 基板DOM・H/L・配線描画、app.ts: CPU・実行・波形
-│   └── types/              # グローバル型定義
-├── tests/                  # Node.jsのテスト
-├── docs/                   # 設計資料
-├── .github/workflows/      # Pagesデプロイとdevelop検証
-├── package.json
-└── tsconfig.json
-```
-
-他のTypeScriptリポジトリと同様にソース／アセット／テスト／資料を分離しています。TD4は小規模な依存なしの静的サイトなのでReact・Viteは追加せず、GitHub Actionsで本番とプレビューを同時公開します。ルート直下にJavaScriptファイルは置きません。
-
-## テスト
-
-Node.js 22以降で：
+変更時のチェック：
 
 ```bash
-npm install
+npm run typecheck
 npm test
+npm run verify
 ```
 
-CPU命令、信号波形、ICの機能・物理ピン、ROMの4×4配置、DIPのH/L表示、CSS読み込み順、Pages用アセット参照をNode.jsの自動テストで確認します。画面操作の最終確認は `develop` プレビューで行います。
+- `src/` がTypeScriptの編集元、`assets/js/` は生成物です。**生成JavaScriptを直接編集せず**、ビルド後に生成物もコミットしてください。
+- スタイルは `assets/css/style.css` から `foundation.css`・`workbench.css`・`circuit-board.css` を順に読み込みます。
+- `src/ui/app.ts` はCPU状態・実行制御、`src/ui/board.ts` はDIP・ROMのDOM生成とH/L・配線描画を担当します。
+- `npm run verify` はビルド・型チェック・Node.jsテストをまとめて実行します。
+
+## 公開と開発フロー
+
+1. `develop` で実装し、Pull Requestで変更内容を管理します。
+2. `Validate develop` の成功後、GitHub Actionsが本番・プレビュー両方をビルドしてPagesへ公開します。
+3. [開発プレビュー](https://naoiw.github.io/td4/develop/) で表示・操作を確認します。
+4. 問題がなければ `main` にマージし、[本番ページ](https://naoiw.github.io/td4/) を確認します。
+
+GitHub Pagesの公開元は **Settings → Pages → Build and deployment → GitHub Actions** です。デプロイは `main` へのpush、または `develop` のpush検証成功後に実行され、`/td4/` と `/td4/develop/` を1つの公開アーティファクトへまとめます。
+
+- CI：`.github/workflows/validate-develop.yml`（`naoiw/.github` の共通Node.js CIをSHA固定で利用）
+- Pages：`.github/workflows/deploy-pages.yml`
+- 詳細：[デプロイ手順](docs/deployment.md)
+
+## 依存関係の保守
+
+- パッケージ管理は **npm** です。`package-lock.json` を使用し、依存関係を更新した場合はロックファイルもコミットします（pnpmは使用しません）。
+- TypeScriptは `package.json` でバージョン固定しています。更新時は `npm run verify` と `develop` プレビューで確認してください。
+- GitHub Actionsの共通CIはコミットSHAに固定しているため、更新時には `naoiw/.github` 側の変更を確認し、Pull Requestで検証します。
+- 現時点ではリポジトリに `dependabot.yml` はありません。Dependabotによる定期更新や自動マージを設定済みとは扱いません。
+
+## ドキュメント
+
+- [アーキテクチャ・IC信号モデル・画面構成](docs/architecture.md)
+- [開発・GitHub Pagesデプロイ](docs/deployment.md)
+- [共通開発規約](https://github.com/naoiw/.github)
 
 ## ライセンス
 
-Apache License 2.0（既存の [`LICENSE`](LICENSE) に準拠）。
+[Apache License 2.0](LICENSE)
