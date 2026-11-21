@@ -583,7 +583,7 @@ test('CR R/C silk avoids traces while remaining visible inside enlarged SVG view
 
 test('CR feedback branches have filled junction dots independent of the open inverter bubbles',()=>{
   const styles=fs.readFileSync(path.join(root,'assets/css/circuit-board.css'),'utf8');
-  assert.match(styles,/\.pcb-osc-junctions\{fill:#050907;stroke:#c6e4c8;stroke-width:1\}/);
+  assert.match(styles,/\.pcb-osc-junctions\{fill:#fff;stroke:none\}/);
   const start=html.indexOf('<svg class="pcb-osc-diagram"');
   const end=html.indexOf('</svg>',start);
   const svg=html.slice(start,end);
