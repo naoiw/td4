@@ -198,14 +198,14 @@
             sections
         });
         if (component.type === '74HC154') {
-            const left = [...lines('A', 'PC', 4), row(pin('G1#', 'GND')), row(pin('G2#', 'GND'))];
+            const left = lines('A', 'PC', 4);
             const right = Array.from({ length: 4 }, (_, index) => row(pin(`Y${(index * 4).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4}`), pin(`Y${(index * 4 + 1).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 1}`), pin(`Y${(index * 4 + 2).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 2}`), pin(`Y${(index * 4 + 3).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 3}`)));
-            return make('INPUT · A / G#', 'OUTPUT · Y', [{ left, right }]);
+            return make('INPUT · A', 'OUTPUT · Y', [{ left, right }]);
         }
         if (component.type === '74HC540') {
-            return make('INPUT · A / OE#', 'OUTPUT · Y', [
+            return make('INPUT · A', 'OUTPUT · Y', [
                 {
-                    left: [...lines('A', 'ROM_RAW', 8), row(pin('OE1#', 'GND')), row(pin('OE2#', 'GND'))],
+                    left: lines('A', 'ROM_RAW', 8),
                     right: lines('Y', 'D', 8)
                 }
             ]);
@@ -223,8 +223,7 @@
                 right: [
                     row(pin(`Y${n}`, `MUX${n}`)),
                     row(pin('S0', 'SEL_A')),
-                    row(pin('S1', 'SEL_B')),
-                    row(pin(`E${index + 1}#`, 'GND'))
+                    row(pin('S1', 'SEL_B'))
                 ]
             });
             return make('INPUT · 4:1', 'SELECT / Y', [section(first, 0), section(second, 1)]);
