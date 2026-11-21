@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "reviewed-core; incomplete gate/clock/reset wire routing",
+  "status": "reviewed-core; 74HC14 oscillator B/C mapped; remaining gate routing incomplete",
   "model": "TD4 / 74HC154 + 74HC540, 16x8-bit switch ROM",
   "conventions": {
     "pinReference": "U番号.物理DIPピン番号",
@@ -34,8 +34,11 @@
       "14": "VCC"
     },
     "U2": {
+      "3": "OSC_IN",
+      "4": "OSC_INV",
+      "5": "OSC_INV",
+      "6": "CLK",
       "7": "GND",
-      "10": "RST_N",
       "14": "VCC"
     },
     "U3": {
@@ -280,6 +283,7 @@
     ],
     "CLK": [
       "U1.11",
+      "U2.6",
       "U3.2",
       "U4.2",
       "U5.2",
@@ -291,7 +295,6 @@
     ],
     "RST_N": [
       "U1.13",
-      "U2.10",
       "U3.1",
       "U4.1",
       "U5.1",
@@ -1057,6 +1060,13 @@
     ],
     "ROM_CELL_15_7": [
       "SW_ROM_F.1"
+    ],
+    "OSC_IN": [
+      "U2.3"
+    ],
+    "OSC_INV": [
+      "U2.4",
+      "U2.5"
     ]
   },
   "romSwitches": [
@@ -2433,7 +2443,7 @@
   },
   "pending": [
     "74HC32/74HC10全入力ピンと内部中間ネットの実配線",
-    "74HC14のRC/手動/外部CLOCK切替の中間ネット",
+    "74HC14 CR発振回路の受動部品端子・2/10Hz切替抵抗の実配線と未使用ゲートの入力固定",
     "INPUTスイッチ・OUTPUT LEDの実パッドと受動部品端子",
     "ROMスイッチ下側と各ダイオードの正確な電気ネット",
     "既存ic-circuit.tsの74HC74使用回路/74HC540ビット順との差分の解消"

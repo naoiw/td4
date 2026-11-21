@@ -186,3 +186,31 @@ test('74HC154 decoder outputs are arranged in a 4x4 row-major grid', () => {
     }
   }
 });
+
+test('74HC14 uses only oscillator gates B and C and drives the common CLK net', () => {
+  const {layout,physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.id==='U2');
+  assert.deepEqual(chip.pins.map(p=>[p.name,p.net]),[
+    ['2A','OSC_IN'],['2Y','OSC_INV'],['3A','OSC_INV'],['3Y','CLK']
+  ]);
+  const pins=physicalPins(chip);
+  for(const [num,net] of [[3,'OSC_IN'],[4,'OSC_INV'],[5,'OSC_INV'],[6,'CLK']]){
+    assert.equal(pins[num-1].net,net);
+    assert.equal(netlist.pinNets.U2[num],net);
+    assert.ok(netlist.nets[net].includes('U2.'+num));
+  }
+  for(const num of [1,2,8,9,10,11,12,13])
+    assert.equal(pins[num-1].net,undefined,'unused gate '+num+' is not tied to CPU nets');
+  assert.ok(!netlist.nets.RST_N.includes('U2.10'));
+  for(const target of ['U1.11','U3.2','U4.2','U5.2','U6.2'])
+    assert.ok(netlist.nets.CLK.includes(target),target+' shares U2.6');
+  assert.ok(!netlist.nets.OSC_IN.includes('U2.6'),'RC feedback is not a direct copper net');
+  const layoutBC=layout(chip);
+  assert.deepEqual(layoutBC.sections.map(s=>s.label),['B · OSCILLATOR','C · CLOCK BUFFER']);
+  for(const high of [false,true]){
+    const values=levels(new CPU(),high);
+    assert.equal(values.CLK,high?1:0);
+    assert.equal(values.OSC_IN,high?1:0,'idealized post-threshold B input');
+    assert.equal(values.OSC_INV,high?0:1,'B output is inverted from CLK');
+  }
+});

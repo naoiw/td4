@@ -410,21 +410,20 @@ test('both board ROM slots and PROGRAM ROM addresses use 0x prefix',()=>{
   }
 });
 
-test('inverter CR feedback is closed and the output bubble has no wire through it',()=>{
+test('two 74HC14 Schmitt gates form a closed RC oscillator with CLK output',()=>{
   const start=html.indexOf('<svg class="pcb-osc-diagram"');
   const stop=html.indexOf('</svg>',start);
   assert.ok(start>0&&stop>start);
   const svg=html.slice(start,stop);
-  assert.doesNotMatch(html,/<span>INVERTER<\/span>/);
-  assert.doesNotMatch(svg,/>INV<\/text>/);
-  // In unmirrored SVG coordinates, the input joins R and C at x40.
-  assert.match(svg,/M40 45 H66 M119 45 H148 M148 45 V10 H125 M70 10 H40 V45/);
-  assert.doesNotMatch(svg,/M12 45 H66|M108 45 H148/);
-  // Triangle ends at x108, the inversion bubble occupies x109..119,
-  // and the output starts exactly at its outer tangent (x119).
-  assert.match(svg,/M66 27 V63 L108 45 Z/);
-  assert.match(svg,/<circle cx="114" cy="45" r="5"\/>/);
-  assert.match(svg,/M148 45 H184/);
+  assert.match(svg,/M25 45 H45 M88 45 H124 M166 45 H198/);
+  assert.match(svg,/M45 31 V59 L76 45 Z/);
+  assert.match(svg,/<circle cx="82" cy="45" r="5"\/>/);
+  assert.match(svg,/M124 31 V59 L154 45 Z/);
+  assert.match(svg,/<circle cx="160" cy="45" r="5"\/>/);
+  assert.match(svg,/M107 45 V10 H102 M60 10 H25 V45/);
+  assert.match(svg,/M25 45 V75 H38 M44 75 H198 V45/);
+  // No line crosses an inversion bubble, and the capacitor breaks direct nets.
+  assert.doesNotMatch(svg,/M76 45 H124|M154 45 H198|M25 75 H198/);
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
   assert.match(svg,/M8 33 H15 V22 H25 V33 H35 V22 H45 V33 H55/);
