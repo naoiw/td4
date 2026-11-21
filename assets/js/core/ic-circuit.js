@@ -289,7 +289,11 @@
         return Array.from({ length: layout(component).packagePins }, (_, index) => {
             const number = index + 1;
             const net = connected[String(number)];
-            return { number, name: names[String(number)] ?? '未モデル化', ...(net ? { net } : {}) };
+            return {
+                number,
+                name: names[String(number)] ?? '未モデル化',
+                ...(net ? { net } : {})
+            };
         });
     };
     function levels(cpu, clock) {
