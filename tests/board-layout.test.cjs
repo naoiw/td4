@@ -601,7 +601,11 @@ test('IC reference silk is clear of DIP bodies and role blocks have vertical bre
   assert.match(header,/height:\s*18px/,'chip reference header reserves clear vertical space');
   assert.match(footprint,/margin:\s*6px auto 0/,'DIP body sits below its reference text');
   assert.match(group,/padding:\s*9px 8px 15px/,'all IC role groups have larger top and bottom clearance');
-  assert.match(fetch,/gap:\s*28px/,'HC154 and HC540 have more space between packages');
+  assert.match(fetch,/gap:\s*28px/,'HC154 and HC540 retain minimum separation');
+  assert.match(fetch,/justify-content:\s*space-evenly/,'both ROM/FETCH chips spread vertically');
+  assert.match(fetch,/flex:\s*1/,'ROM/FETCH rack fills the available block height');
+  assert.match(lastRule('ic-role-fetch'),/display:\s*flex/);
+  assert.match(lastRule('ic-role-fetch'),/flex-direction:\s*column/);
   assert.match(lastRule('ic-chip-grid'),/grid-template-rows:\s*auto auto auto/);
   assert.match(lastRule('ic-role-fetch'),/grid-row:\s*1 \/ span 3/);
 });

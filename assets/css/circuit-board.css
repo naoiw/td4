@@ -540,15 +540,20 @@
   grid-column:2;
   grid-row:1 / span 3;
   align-self:stretch;
+  display:flex;
+  flex-direction:column;
 }
 .ic-role-fetch .ic-role-head{margin-bottom:10px}
 .ic-role-fetch .ic-role-head strong{font-size:10px}
 .ic-role-fetch .ic-role-rack{
   display:flex;
+  flex:1;
+  min-height:0;
   flex-direction:column;
   flex-wrap:nowrap;
   align-items:center;
-  justify-content:flex-start;
+  /* Spread U13/U12 throughout the full-height ROM/FETCH column. */
+  justify-content:space-evenly;
   gap:28px;
 }
 .ic-role-rack>.ic-chip{
