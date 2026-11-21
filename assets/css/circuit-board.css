@@ -708,6 +708,7 @@
 .pcb-osc-hardware{display:flex;align-items:center;justify-content:space-between;gap:3px;margin-top:3px}
 .pcb-osc-diagram{width:180px;max-width:100%;height:88px;flex:1;min-width:0}
 .pcb-osc-lines{fill:none;stroke:#c6e4c8;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
+.pcb-osc-junctions{fill:#050907;stroke:#c6e4c8;stroke-width:1}
 .pcb-osc-silk-text{fill:#e0f0d6;font:750 11px ui-monospace,monospace}
 .pcb-osc-selector{display:flex;align-items:center;gap:5px;flex:none}
 .pcb-osc-selector .pcb-switch-labels{font-size:11px}

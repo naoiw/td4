@@ -281,12 +281,13 @@ test('oscillator on left and power silk labels to the right of its switch',()=>{
   assert.match(lastRule('board-control-bay'),/grid-template-columns:minmax\(0,1\.4fr\) minmax\(0,\.8fr\)/);
 });
 
-test('CR silk schematic points CLK to the left without mirroring readable text',()=>{
+test('CR oscillator CLK exits left without a directional arrow or mirrored silk',()=>{
   const a=html.indexOf('<svg class="pcb-osc-diagram"');
   const b=html.indexOf('</svg>',a);
   const svg=html.slice(a,b);
   assert.match(svg,/class="pcb-osc-mirrored" transform="translate\(220 0\) scale\(-1 1\)"/);
-  assert.match(svg,/M36 45 l10 -6 M36 45 l10 6/);
+  assert.match(svg,/M165 45 H212/);
+  assert.doesNotMatch(svg,/M36 45 l10 -6 M36 45 l10 6/);
   assert.ok(svg.indexOf('class="pcb-osc-silk-text"')>svg.indexOf('class="pcb-osc-mirrored"'));
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
   assert.match(svg,/class="pcb-osc-lines pcb-osc-pulse"/);
@@ -415,13 +416,17 @@ test('two 74HC14 Schmitt gates form a closed RC oscillator with CLK output',()=>
   const stop=html.indexOf('</svg>',start);
   assert.ok(start>0&&stop>start);
   const svg=html.slice(start,stop);
-  assert.match(svg,/M25 45 H45 M87 45 H124 M165 45 H198/);
+  assert.match(svg,/M25 45 H45 M87 45 H124 M165 45 H212/);
   assert.match(svg,/M45 31 V59 L77 45 Z/);
   assert.match(svg,/<circle cx="82" cy="45" r="5"\/>/);
   assert.match(svg,/M124 31 V59 L155 45 Z/);
   assert.match(svg,/<circle cx="160" cy="45" r="5"\/>/);
   assert.match(svg,/M107 45 V10 H102 M60 10 H25 V45/);
-  assert.match(svg,/M25 45 V75 H38 M44 75 H198 V45/);
+  assert.match(svg,/M25 45 V75 H104 M110 75 H198 V45/);
+  assert.match(svg,/M104 64 V86 M110 64 V86/);
+  assert.match(svg,/class="pcb-osc-junctions"/);
+  for (const x of [25,107,198])
+    assert.match(svg,new RegExp('<circle cx="'+x+'" cy="45" r="3(?:\\.5)?"\\/>'));
   // No line crosses an inversion bubble, and the capacitor breaks direct nets.
   assert.doesNotMatch(svg,/M76 45 H124|M154 45 H198|M25 75 H198/);
   assert.doesNotMatch(svg,/<text[^>]*>CLK<\/text>/);
@@ -570,8 +575,20 @@ test('CR R/C silk avoids traces while remaining visible inside enlarged SVG view
   assert.ok(start>0 && end>start);
   const svg=html.slice(start,end);
   assert.match(svg,/viewBox="0 -7 220 99"/);
-  assert.match(svg,/class="pcb-osc-silk-text"><text x="130" y="3">R<\/text><text x="196" y="65">C<\/text>/);
-  assert.doesNotMatch(svg,/<text x="130" y="8">R<\/text>|<text x="190" y="65">C<\/text>/);
-  // Zigzag resistor peaks at y=5, so R baseline 3 stays above the trace.
-  // Capacitor ends at mirrored x=192, while C starts at x=196.
+  assert.match(svg,/class="pcb-osc-silk-text"><text x="147" y="1">R<\/text><text x="122" y="67">C<\/text>/);
+  assert.doesNotMatch(svg,/<text x="130" y="3">R<\/text>|<text x="196" y="65">C<\/text>/);
+  // R is above the resistor at y=5..15, and C sits between the two gates.
+  // With mirrored coordinates, the capacitor plates appear at x=110 and x=116.
+});
+
+test('CR feedback branches have filled junction dots independent of the open inverter bubbles',()=>{
+  const styles=fs.readFileSync(path.join(root,'assets/css/circuit-board.css'),'utf8');
+  assert.match(styles,/\.pcb-osc-junctions\{fill:#050907;stroke:#c6e4c8;stroke-width:1\}/);
+  const start=html.indexOf('<svg class="pcb-osc-diagram"');
+  const end=html.indexOf('</svg>',start);
+  const svg=html.slice(start,end);
+  const circleGroup=svg.match(/<g class="pcb-osc-junctions">([\s\S]*?)<\/g>/)?.[1] || '';
+  assert.equal((circleGroup.match(/<circle /g)||[]).length,3);
+  assert.match(circleGroup,/<circle cx="107" cy="45" r="3\.5"\/>/);
+  assert.doesNotMatch(svg,/<g class="pcb-osc-lines"><path d="M36 45/);
 });
