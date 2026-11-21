@@ -331,8 +331,7 @@
 
 .schematic-io-strip{
   display:grid;
-  gap:9px;
-  margin-top:16px
+  gap:9px
 }
 .schematic-io{padding:10px 7px}
 .schematic-io strong{font-size:10px}
@@ -511,21 +510,28 @@
   margin:0;
   transform:scale(var(--board-fit-scale,1));
   transform-origin:top center;
-  grid-template-columns:490px minmax(0,1fr);
+  /* The left IC rack is exactly 332 + 14 + 126 px wide.
+     The 14px board gap then matches the left/middle column gap. */
+  grid-template-columns:472px minmax(0,1fr);
   gap:14px;
-  align-items:start;
+  align-items:stretch;
   background-color:#166342;
   border:6px solid #0d4b32;
-  padding:28px 24px 30px;
+  padding:28px 24px;
 }
 .schematic-zone-head{display:none}
+.ic-zone{align-self:stretch}
 .ic-chip-grid{
   display:grid;
   grid-template-columns:minmax(0,332px) 126px;
   grid-template-rows:auto auto auto;
-  column-gap:10px;
-  row-gap:9px;
+  height:100%;
+  column-gap:14px;
+  row-gap:28px;
   align-items:start;
+  /* Keep the first/last IC blocks aligned with the PCB's 28px outer padding;
+     distribute any extra height between the three functional blocks. */
+  align-content:space-between;
 }
 .ic-role-control{grid-column:1;grid-row:1}
 .ic-role-alu{grid-column:1;grid-row:2}
@@ -571,7 +577,7 @@
 }
 .rom-dip-switches{display:flex;flex-direction:row}
 .rom-dip{flex-direction:column;flex:1 1 0}
-.schematic-io-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+.schematic-io-strip{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:0}
 .pcb-mount-hole{width:22px;height:22px;border-radius:50%;pointer-events:none}
 .pcb-mount-tl{top:6px;left:6px}
 .pcb-mount-tr{top:6px;right:6px}
@@ -687,7 +693,7 @@
 
 /* PCB-mounted power and inverter-oscillator controls (#15).
    Silk artwork is illustrative; timers model digital clocks only. */
-.rom-zone{display:flex;flex-direction:column;gap:14px;align-self:stretch}
+.rom-zone{display:flex;flex-direction:column;gap:28px;align-self:stretch}
 .board-control-bay{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr);grid-template-rows:auto auto;gap:7px 14px;border:1px solid #a9d4b4;border-radius:7px;padding:9px 12px 9px;background:linear-gradient(155deg,#165d42,#145138);box-shadow:inset 0 0 0 2px #1d704d}
 .pcb-control-heading{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #8abda188;padding-bottom:8px;color:#d4efd8;font:800 13px/1.2 ui-monospace,monospace;letter-spacing:.7px}
 .pcb-control-heading span{font-size:9px;font-weight:650;letter-spacing:.2px;color:#9fcfb2}

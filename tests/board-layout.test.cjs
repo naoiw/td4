@@ -40,7 +40,7 @@ test('Input and Output panels are horizontal beneath the ROM',()=>{
 
 test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>{
   const board=css.match(/\/\* PCB placement:[\s\S]*$/)[0];
-  assert.match(board,/\.schematic-board\s*\{[^}]*grid-template-columns:\s*490px\s+minmax\(0,\s*1fr\)/);
+  assert.match(board,/\.schematic-board\s*\{[^}]*grid-template-columns:\s*472px\s+minmax\(0,\s*1fr\)/);
   assert.match(lastRule('ic-chip-grid'),/grid-template-columns:\s*minmax\(0,332px\)\s+126px/);
   for(const [role,row] of [['control',1],['alu',2],['registers',3]]){
     assert.match(board,new RegExp('\\.ic-role-'+role+'\\{grid-column:1;grid-row:'+row+'\\}'));
@@ -612,4 +612,27 @@ test('IC reference silkscreen is legible without shrinking DIP clearance',()=>{
   assert.match(silk,/color:\s*#d3ead7/);
   assert.match(lastRule('ic-role-rack .ic-dip .ic-head'),/height:\s*18px/);
   assert.match(lastRule('ic-role-rack .ic-dip .ic-footprint'),/margin:\s*6px auto 0/);
+});
+
+test('PCB columns and vertical section spacing use a shared, balanced layout',()=>{
+  const board=css.match(/\/\* PCB placement:[\s\S]*?\.schematic-board\s*\{([^}]*)\}/);
+  assert.ok(board,'PCB placement block must exist');
+  assert.match(board[1],/grid-template-columns:472px minmax\(0,1fr\)/);
+  assert.match(board[1],/gap:14px/);
+  assert.match(board[1],/padding:28px 24px/);
+  assert.match(board[1],/align-items:stretch/);
+  const columns=lastRule('ic-chip-grid');
+  assert.match(columns,/grid-template-columns:minmax\(0,332px\) 126px/);
+  assert.match(columns,/column-gap:14px/);
+  assert.match(columns,/row-gap:28px/);
+  assert.match(columns,/height:100%/);
+  assert.match(columns,/align-content:space-between/);
+  assert.match(lastRule('ic-zone'),/align-self:stretch/);
+  // 332 + 126 + 14 = 472px, leaving exactly the same 14px
+  // between the middle IC group and the right POWER / ROM column.
+  assert.equal(332 + 126 + 14,472);
+  const right=lastRule('rom-zone');
+  assert.match(right,/flex-direction:column/);
+  assert.match(right,/gap:28px/);
+  assert.match(lastRule('schematic-io-strip'),/margin-top:0/);
 });
