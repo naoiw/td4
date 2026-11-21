@@ -215,24 +215,26 @@
             const high = component.id === 'U8', first = high ? 2 : 0, second = first + 1;
             const section = (n, index) => ({
                 label: `回路${index + 1} · bit${n}`,
+                // S0 and S1 are shared select inputs; C3 is tied LOW and hidden.
                 left: [
+                    row(pin('S0', 'SEL_A')),
+                    row(pin('S1', 'SEL_B')),
                     row(pin(`A${n}`, `A${n}`)),
                     row(pin(`B${n}`, `B${n}`)),
-                    row(pin(`IN${n}`, `IN${n}`)),
-                    row(pin('0', 'GND'))
+                    row(pin(`IN${n}`, `IN${n}`))
                 ],
-                right: [row(pin(`Y${n}`, `MUX${n}`)), row(pin('S0', 'SEL_A')), row(pin('S1', 'SEL_B'))]
+                leftColumnBreak: 2,
+                right: [row(pin(`Y${n}`, `MUX${n}`))]
             });
-            return make('INPUT · 4:1', 'SELECT / Y', [section(first, 0), section(second, 1)]);
+            return make('INPUT · SELECT / DATA', 'OUTPUT · Y', [section(first, 0), section(second, 1)]);
         }
         if (component.type === '74HC283') {
-            return make('INPUT · A / B / CIN', 'OUTPUT · SUM / COUT', [
+            return make('INPUT · A / B', 'OUTPUT · SUM / COUT', [
                 {
-                    left: [
-                        ...Array.from({ length: 4 }, (_, n) => row(pin(`A${n}`, `MUX${n}`), pin(`B${n}`, `D${n}`))),
-                        row(pin('CIN', 'GND'))
-                    ],
-                    right: [...lines('SUM', 'ALU', 4), row(pin('COUT', 'COUT'))]
+                    // CIN/C0 is permanently tied LOW: retain physical wiring, hide probe.
+                    left: Array.from({ length: 4 }, (_, n) => row(pin(`A${n}`, `MUX${n}`), pin(`B${n}`, `D${n}`))),
+                    right: [...lines('SUM', 'ALU', 4), row(pin('COUT', 'COUT'))],
+                    rightColumnBreak: 4
                 }
             ]);
         }

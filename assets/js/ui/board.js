@@ -117,15 +117,28 @@
                 unit.append(headings);
                 const columns = document.createElement('div');
                 columns.className = 'ic-function-columns';
-                for (const side of [section.left, section.right]) {
+                for (const [sideIndex, side] of [section.left, section.right].entries()) {
                     const column = document.createElement('div');
                     column.className = 'ic-function-column';
-                    for (const rowPins of side) {
+                    const columnBreak = sideIndex === 0 ? section.leftColumnBreak : section.rightColumnBreak;
+                    let destinations = [column];
+                    if (columnBreak !== undefined) {
+                        const subcolumns = document.createElement('div');
+                        subcolumns.className = 'ic-function-subcolumns';
+                        destinations = [0, 1].map(() => {
+                            const subcolumn = document.createElement('div');
+                            subcolumn.className = 'ic-function-subcolumn';
+                            subcolumns.append(subcolumn);
+                            return subcolumn;
+                        });
+                        column.append(subcolumns);
+                    }
+                    for (const [rowIndex, rowPins] of side.entries()) {
                         const row = document.createElement('div');
                         row.className = 'ic-function-row';
                         for (const pin of rowPins)
                             row.append(createProbe(pin, rowPins.length > 1));
-                        column.append(row);
+                        destinations[columnBreak !== undefined && rowIndex >= columnBreak ? 1 : 0].append(row);
                     }
                     columns.append(column);
                 }
