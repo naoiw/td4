@@ -35,7 +35,7 @@
       const address = document.createElement('button');
       address.className = 'address-btn';
       address.type = 'button';
-      address.textContent = HEX(addr);
+      address.textContent = `0x${HEX(addr)}`;
       address.title = 'クリックでブレークポイント切替';
       address.setAttribute('aria-label', `アドレス${HEX(addr)}のブレークポイント`);
       address.addEventListener('click', () => {
@@ -364,7 +364,8 @@
     waveSamples.splice(0);
     renderCPU(); renderHistory();
     syncRunControls();
-    startClock(true);
+    // Keep ROM address 0x00 visible on power-up until the first clock edge.
+    startClock(false);
   }
 
   /** The PCB two-way switch always chooses an actual 2/10 Hz clock. */
