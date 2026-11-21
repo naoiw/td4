@@ -468,7 +468,8 @@ test('ROM edits and breakpoints pause CPU without shutting off the PCB power',()
     assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/);
     assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
     assert.match(source,/\('powerOffBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);
-    assert.match(source,/event\.preventDefault\(\);\s*stop\(\);\s*return;/);
+    assert.match(source,/if \(intervalId !== null\)\s*\{\s*event\.preventDefault\(\);\s*stop\(\);/,
+      'Esc still stops a running CPU when IC details are not open');
   }
 });
 
