@@ -16,8 +16,10 @@
 .sample-card strong,.sample-card small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sample-card strong{font-size:11px}.sample-card small{font-size:9px;color:#7a8998;margin-top:4px}
 .board-panel{padding:18px 20px 15px}
-.board-heading{margin-bottom:14px}
-.board-panel .runbar{margin:0 0 14px;padding:12px 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;flex-wrap:wrap;row-gap:10px}
+.board-heading{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:10px}
+.board-panel .runbar{margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:flex-end;flex-direction:row;flex-wrap:wrap;gap:10px 16px}
+.board-panel .run-buttons{display:flex;align-items:center;gap:8px}
+.board-panel .run-settings{display:flex;align-items:center}
 .board-panel .cycle-counter{border-left:0;margin-left:0;padding-left:0}
 .rom-panel .rom-footer{margin:0 0 11px}
 .scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);gap:15px;align-items:stretch}
