@@ -671,7 +671,8 @@ test('POWER / CLOCK remains without the redundant TD4 CONTROL CIRCUIT caption',(
 
 
 test('all IC detail signals share the same box size, type, and spacing',()=>{
-  const panel=lastRule('ic-detail-panel');
+  const panel=css.match(/\.ic-detail-panel\s*\{([^}]*)\}/)?.[1];
+  assert.ok(panel,'IC detail container exists');
   assert.match(panel,/--ic-detail-probe-width:112px/);
   assert.match(panel,/--ic-detail-probe-height:42px/);
   assert.match(panel,/--ic-detail-probe-gap:8px/);
@@ -690,6 +691,7 @@ test('all IC detail signals share the same box size, type, and spacing',()=>{
 });
 
 test('uniform detail styles do not change IC-specific probe arrangements',()=>{
+  require('../assets/js/data/netlist.js');
   const {chips,layout}=require('../assets/js/core/ic-circuit.js');
   assert.equal(chips.length,13);
   const hc154=layout(chips.find(c=>c.type==='74HC154')).sections[0];
