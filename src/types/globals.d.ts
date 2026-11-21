@@ -178,3 +178,24 @@ interface BoardViewApi {
 interface Window {
   TD4BoardView: BoardViewApi;
 }
+
+/** Schematic-derived physical pin and ROM matrix metadata. */
+interface TD4NetlistData {
+  schemaVersion: number;
+  components: Record<string, IcPackageType>;
+  pinNets: Record<string, Record<string, string>>;
+  pinNames: Record<string, Record<string, string>>;
+  romSwitches: {
+    id: string;
+    address: number;
+    bits: {
+      bit: number;
+      upperNet: string;
+      lowerNet: string;
+      selectedRow: string;
+    }[];
+  }[];
+}
+interface Window {
+  TD4Netlist: TD4NetlistData;
+}
