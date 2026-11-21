@@ -28,11 +28,25 @@ start: OUT 1
             id: 'echo',
             icon: '⇄',
             title: 'スイッチ入力',
-            description: '4bitスイッチをLEDに表示',
-            source: `; 実行中にSW0〜SW3を切り替えよう
-read:  IN B
+            description: '4bitスイッチを2クロックごとにLED表示（16命令）',
+            source: `; 4bit入力を2クロックごとにLEDへ反映
+; IN B → OUT B を8組実行し、PCの0xF→0x0で繰り返す
+       IN B
        OUT B
-       JMP read`
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B`
         },
         {
             id: 'counter',

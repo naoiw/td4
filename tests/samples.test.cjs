@@ -21,6 +21,37 @@ test('sample catalog keeps original programs and features the 16-byte adder',()=
   }
 });
 
+
+test('switch echo samples and outputs every two clocks across the PC wrap',()=>{
+  const {rom,count}=assemble(byId.echo.source);
+  assert.equal(count,16,'eight input/output pairs fill ROM exactly');
+  assert.deepEqual(rom,Array.from({length:16},(_,addr)=>addr%2===0?0x60:0x90),
+    'ROM alternates IN B and OUT B without jumps or padding');
+  const cpu=new CPU(rom);
+  for(let input=0;input<16;input++){
+    const address=(input*2)%16;
+    cpu.setInput(input);
+    const previousOutput=cpu.out;
+    const read=cpu.step();
+    assert.equal(read.pc,address);
+    assert.equal(read.destination,'B');
+    assert.equal(cpu.b,input,'each IN B captures the latest switches');
+    assert.equal(cpu.out,previousOutput,'sampling does not alter OUTPUT');
+    assert.equal(cpu.pc,address+1);
+
+    // The output is the previously sampled B, even if switches move
+    // before the following OUT B instruction.
+    cpu.setInput((input+7)&15);
+    const write=cpu.step();
+    assert.equal(write.pc,address+1);
+    assert.equal(write.destination,'OUT');
+    assert.equal(cpu.out,input,'each OUT B displays the last sampled value');
+    assert.equal(cpu.pc,(address+2)&15,'PC wraps 0xF to 0 without JMP');
+  }
+  assert.equal(cpu.cycles,32);
+  assert.equal(cpu.pc,0);
+});
+
 test('LED scanner returns to LED0 and holds it through the jump',()=>{
   const sample=byId.led;
   const {rom,count}=assemble(sample.source);
