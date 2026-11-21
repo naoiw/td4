@@ -217,7 +217,7 @@ test('board controls start power OFF and 2Hz, then synchronize with legacy butto
   for(const source of [js,appTs]){
     assert.match(source,/let powerOn = false/);
     assert.match(source,/let boardClockHz(?:\s*:\s*2\s*\|\s*10)? = 2/);
-    assert.match(source,/onPowerToggle\(\) \{ setPower\(!powerOn\); \}/);
+    assert.match(source,/onPowerToggle\(\)\s*\{\s*if\s*\(powerOn\)\s*setPower\(false\);\s*else\s*run\(\);\s*\}/);
     assert.match(source,/onFrequencyToggle\(\) \{ setBoardFrequency\(boardClockHz === 2 \? 10 : 2\); \}/);
     assert.match(source,/function setPower\(/);
     assert.match(source,/function restartRunningClock\(/);
@@ -235,4 +235,46 @@ test('board controls start power OFF and 2Hz, then synchronize with legacy butto
   assert.match(html,/id="runBtn"/);
   assert.match(html,/id="stopBtn"/);
   assert.match(html,/id="stepBtn"/);
+});
+
+test('oscillator is on the left, power on the right, and both left-of-switch labels and pilot match silk',()=>{
+  const left=html.indexOf('<div class="pcb-osc-area">');
+  const right=html.indexOf('<div class="pcb-power-area">');
+  const rom=html.indexOf('id="romDipGrid"');
+  assert.ok(left>0 && right>left && rom>right,'left CR/right power must precede ROM');
+  const power=html.slice(right,html.indexOf('<span class="pcb-silk-note"',right));
+  const led=power.indexOf('id="boardPowerLed"');
+  const labels=power.indexOf('class="pcb-switch-labels"');
+  const toggle=power.indexOf('id="boardPowerSwitch"');
+  assert.ok(led>=0 && led<labels && labels<toggle,'pilot LED and ON/OFF labels sit to left of power switch');
+  assert.match(lastRule('board-control-bay'),/grid-template-columns:minmax\(0,1\.4fr\) minmax\(0,\.8fr\)/);
+});
+
+test('CR silk schematic points CLK to the left without mirroring readable text',()=>{
+  const a=html.indexOf('<svg class="pcb-osc-diagram"');
+  const b=html.indexOf('</svg>',a);
+  const svg=html.slice(a,b);
+  assert.match(svg,/class="pcb-osc-mirrored" transform="translate\(220 0\) scale\(-1 1\)"/);
+  assert.match(svg,/M36 45 l10 -6 M36 45 l10 6/);
+  assert.ok(svg.indexOf('class="pcb-osc-silk-text"')>svg.indexOf('class="pcb-osc-mirrored"'));
+  assert.match(svg,/<text x="15" y="36">CLK<\/text>/);
+});
+
+test('PCB power toggle runs and stops the CPU and CLK toggles precisely 2/10Hz',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/onPowerToggle\(\)\s*\{\s*if\s*\(powerOn\)\s*setPower\(false\);\s*else\s*run\(\);\s*\}/);
+    assert.match(source,/onFrequencyToggle\(\)\s*\{\s*setBoardFrequency\(boardClockHz === 2 \? 10 : 2\);\s*\}/);
+    assert.match(source,/function run\(\)\s*(?:: void)?\s*\{[\s\S]{0,120}?if\s*\(!powerOn\)\s*\{\s*setPower\(true\);/);
+    assert.match(source,/function setPower\(on(?:\: boolean)?\)[\s\S]{0,1400}?powerOn = true;/);
+    assert.match(source,/function setPower\(on(?:\: boolean)?\)[\s\S]{0,1700}?startClock\(true\);/);
+    assert.match(source,/function setBoardFrequency\(frequency(?:\: 2 \| 10)?\)[\s\S]{0,300}?boardClockHz = frequency;/);
+    assert.match(source,/function setBoardFrequency\(frequency(?:\: 2 \| 10)?\)[\s\S]{0,300}?restartRunningClock\(\)/);
+  }
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    assert.match(source,/powerSwitch\.classList\.toggle\('is-on', powerOn\)/);
+    assert.match(source,/pilot\.classList\.toggle\('is-on', powerOn\)/);
+    assert.match(source,/frequencySwitch\.classList\.toggle\('is-ten-hz', boardClockHz === 10\)/);
+    assert.match(source,/onPowerToggle/);
+    assert.match(source,/onFrequencyToggle/);
+  }
 });

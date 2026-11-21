@@ -120,7 +120,7 @@
         cpu.setInput(cpu.input ^ (1 << bit));
         renderCPU(); recordSignals();
       },
-      onPowerToggle() { setPower(!powerOn); },
+      onPowerToggle() { if (powerOn) setPower(false); else run(); },
       onFrequencyToggle() { setBoardFrequency(boardClockHz === 2 ? 10 : 2); }
     });
     if (typeof ResizeObserver !== 'undefined') {
