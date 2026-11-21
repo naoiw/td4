@@ -19,3 +19,29 @@ button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.43}button:focu
 @media(max-width:1320px){.page{padding:0 20px 20px}.app-grid{grid-template-columns:minmax(300px,1fr) minmax(360px,1.15fr)}.editor-panel{grid-column:1/-1}.editor-panel .code-editor{height:250px}.rom-bit{width:20px}.register-grid{max-width:600px}.board-card{min-height:540px}}
 @media(max-width:760px){.page{padding:0 11px 18px}.masthead{padding:14px 3px;min-height:75px}.chip-mark{width:40px;height:40px;font-size:22px}.brand-title{font-size:20px}.brand-subtitle{font-size:10px}.header-right .connection{margin-left:0}.runbar{align-items:stretch;flex-direction:column;padding:10px;gap:10px}.run-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.run-buttons .btn{padding:10px 5px;font-size:10px}.run-settings{justify-content:space-between}.cycle-counter{margin-left:auto}.app-grid{grid-template-columns:1fr;gap:10px}.panel{padding:14px}.editor-panel{grid-column:auto}.rom-bit{width:clamp(16px,4.5vw,24px)}.rom-table td{padding:5px 3px}.rom-asm{font-size:9px!important}.rom-table thead th{padding:8px 3px}.board-card{min-height:auto}.reference-card summary{padding:14px}.reference-content{padding:0 14px 14px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important}}
+
+/* Shared Pages footer: follows geo-quiz / react-gui-tool site chrome. */
+.site-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+  padding:28px 0 32px;
+  border-top:1px solid var(--line);
+  color:#72849a;
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.02em
+}
+.site-footer a{
+  margin-left:auto;
+  color:#465c76;
+  text-decoration:none;
+  white-space:nowrap
+}
+.site-footer a:hover{color:var(--blue);text-decoration:underline}
+.site-footer a:focus-visible{outline:3px solid #8eb8ff;outline-offset:3px}
+@media(max-width:760px){
+  .site-footer{padding:22px 0 26px;font-size:11px}
+}
