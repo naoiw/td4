@@ -197,3 +197,31 @@ test('analyzer group change starts a new capture instead of replaying previous s
     assert.doesNotMatch(reset, /cpu\.reset\(|history\.splice\(/);
   }
 });
+
+test('binary ROM file controls and handlers are fully removed while in-page editing remains', () => {
+  for (const id of ['exportBtn', 'importBtn', 'importFile']) {
+    assert.doesNotMatch(html, new RegExp('id="' + id + '"'));
+  }
+  assert.doesNotMatch(html, /ROM保存 \(\.bin\)|ROM読込 \(\.bin\)|file-actions|editor-divider/);
+  for (const source of [ts, js]) {
+    assert.doesNotMatch(source, /downloadROM|importROM|exportBtn|importBtn|importFile|createObjectURL|\.arrayBuffer\(\)/);
+    assert.match(source, /\$\('assembleBtn'\)\.addEventListener\('click', compileSource\)/);
+    assert.match(source, /\$\('fromRomBtn'\)\.addEventListener\('click'/);
+    assert.match(source, /function installROM\(/, 'internal ROM loading must remain for assembly and samples');
+  }
+  for (const id of ['assembleBtn', 'fromRomBtn', 'romRows', 'source']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  const foundation = fs.readFileSync(path.join(root, 'assets/css/foundation.css'), 'utf8');
+  assert.doesNotMatch(foundation, /\.file-actions|\.editor-divider|\.btn-small/);
+});
+
+test('PROGRAM ROM and PROGRAM EDITOR panels have equal height in the side-by-side grid', () => {
+  assert.match(html, /class="app-grid detail-grid"/);
+  assert.match(html, /class="panel rom-panel"/);
+  assert.match(html, /class="panel editor-panel"/);
+  const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.match(css, /\.detail-grid\{[^}]*display:grid;[^}]*align-items:stretch\}/);
+  assert.doesNotMatch(css, /\.detail-grid\{[^}]*align-items:start/);
+  assert.match(css, /@media\(max-width:900px\)\{[^\n]*\.detail-grid[^\n]*grid-template-columns:minmax\(0,1fr\)/);
+});
