@@ -671,9 +671,9 @@
   color:#bcffd2;
 }
 .schematic-io-led.is-on:before {
-  background:#55e997;
-  border-color:#b2fbd0;
-  box-shadow:0 0 14px #68e7a4,0 0 6px #84ffc0,inset 0 0 5px #e3fff0;
+  background:radial-gradient(circle at 35% 28%,#ffffff 0%,#e9fff3 22%,#99ffbd 53%,#32ed7d 100%);
+  border-color:#e3ffe9;
+  box-shadow:0 0 26px 6px #67ffb58c,0 0 11px 3px #bbffdcaa,inset 0 0 4px #ffffff;
 }
 
 /* PCB-mounted power and inverter-oscillator controls (#15).

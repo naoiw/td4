@@ -111,11 +111,11 @@ test('execution controls share the TD4 board title row above the divider', () =>
   const headerMarkup = html.slice(heading, pcb);
   assert.match(headerMarkup, /<section class="runbar"[\s\S]*?<\/section>\s*<\/div>/);
   assert.equal((html.match(/class="runbar"/g) || []).length, 1);
-  for (const id of ['runBtn', 'stopBtn', 'cycles']) {
+  for (const id of ['powerOnBtn', 'powerOffBtn', 'runPauseBtn', 'cycles']) {
     assert.ok(html.indexOf('id="' + id + '"', control) > control);
     assert.ok(html.indexOf('id="' + id + '"', control) < pcb);
   }
-  for (const removed of ['stepBtn', 'resetBtn', 'speed']) {
+  for (const removed of ['stepBtn', 'resetBtn', 'speed', 'runBtn', 'stopBtn']) {
     assert.doesNotMatch(html, new RegExp('id="' + removed + '"'));
   }
   const workbench = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');

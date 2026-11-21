@@ -336,9 +336,21 @@
         $('editorMessage').textContent = message;
         $('editorMessage').className = 'editor-message' + (kind ? ` ${kind}` : '');
     }
+    /** Power and execution are independent: OFF, ON/paused, and ON/running. */
     function syncRunControls() {
-        $('runBtn').disabled = intervalId !== null;
-        $('stopBtn').disabled = !powerOn;
+        const running = powerOn && intervalId !== null;
+        $('powerOnBtn').disabled = powerOn;
+        $('powerOffBtn').disabled = !powerOn;
+        const toggle = $('runPauseBtn');
+        toggle.disabled = !powerOn;
+        toggle.classList.toggle('btn-primary', !running);
+        toggle.setAttribute('aria-label', running ? 'CPUを停止する' : 'CPUを実行する');
+        $('runPauseIcon').textContent = running ? 'Ⅱ' : '▶';
+        $('runPauseLabel').textContent = running ? '停止' : '実行';
+        const status = $('runStatus');
+        status.classList.toggle('running', running);
+        status.classList.toggle('is-powered-on', powerOn);
+        status.lastChild.textContent = !powerOn ? '電源OFF' : running ? '電源ON · 実行中' : '電源ON · CPU停止中';
     }
     /** An OFF→ON transition resets volatile CPU state; ROM and switches persist. */
     function setPower(on) {
@@ -382,8 +394,6 @@
         }
         setClockLow();
         syncRunControls();
-        $('runStatus').classList.remove('running');
-        $('runStatus').lastChild.textContent = '停止中';
         renderWaveforms(snapshot(cpu, clockHigh));
         if (reason)
             showMessage(reason);
@@ -402,6 +412,11 @@
         if (!powerOn) { setPower(true); return; }
         startClock(true);
     }
+    function toggleRunPause() {
+        if (!powerOn) return;
+        if (intervalId === null) run();
+        else stop();
+    }
     function startClock(immediate) {
         if (intervalId !== null || !powerOn) return;
         if (breakpoints.has(cpu.pc)) {
@@ -410,8 +425,6 @@
             return;
         }
         setClockLow();
-        $('runStatus').classList.add('running');
-        $('runStatus').lastChild.textContent = '実行中';
         const halfPeriod = 500 / boardClockHz;
         intervalId = setInterval(() => {
             if (clockHigh) { setClockLow(); return; }
@@ -472,8 +485,9 @@
         $('lineCount').textContent = `${count} / 16 instructions`;
     }
     function connectActions() {
-        $('runBtn').addEventListener('click', run);
-        $('stopBtn').addEventListener('click', () => setPower(false));
+        $('powerOnBtn').addEventListener('click', () => setPower(true));
+        $('powerOffBtn').addEventListener('click', () => setPower(false));
+        $('runPauseBtn').addEventListener('click', toggleRunPause);
         $('clearLogBtn').addEventListener('click', () => { history.splice(0); renderHistory(); });
         $('clearBpBtn').addEventListener('click', () => { breakpoints.clear(); renderROM(); });
         $('clearWaveBtn').addEventListener('click', restartWaveCapture);
