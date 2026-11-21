@@ -18,12 +18,12 @@
     const history = [];
     const breakpoints = new Set();
     let intervalId = null;
-    let sourceMatchesROM = true;
     let clockHigh = false;
-  let powerOn = false;
-  let boardClockHz = 2;
+    let powerOn = false;
+    let boardClockHz = 2;
     const waveSamples = [];
     const MAX_WAVE_SAMPLES = 80;
+    const MAX_TRACE_ENTRIES = 25;
     // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
     // 'cpu' is still selectable internally for clock-only capture.
     let waveCaptureMode = 'oscilloscope';
@@ -32,6 +32,7 @@
     const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40;
     let scopeCaptureIntervalId = null;
     let lastWaveDrawAt = 0;
+    const scopeRows = [];
     let boardResizeObserver = null;
     function buildRomRows() {
         const tbody = $('romRows');
@@ -67,11 +68,7 @@
                 button.addEventListener('click', () => {
                     stop();
                     cpu.rom[addr] ^= 1 << bit;
-                    sourceMatchesROM = false;
-                    renderROM();
-                    renderCPU();
-                    recordSignals();
-                    showMessage('ROMを直接変更しました。ソースとの内容が異なります。', 'unsynced');
+                    refreshRomAfterEdit('ROMを直接変更しました。ソースとの内容が異なります。');
                 });
                 bits.append(button);
             }
@@ -111,8 +108,13 @@
         renderROM();
         updateCircuitBoard();
     }
-
-  /** Each switch is a real editable ROM bit; all display surfaces share cpu.rom. */
+    /** Apply the same UI refresh after editing ROM from either board surface. */
+    function refreshRomAfterEdit(message) {
+        renderCPU();
+        recordSignals();
+        showMessage(message, 'unsynced');
+    }
+    /** Each switch is a real editable ROM bit; all display surfaces share cpu.rom. */
     /** Assemble the PCB view; application state stays here, rendering stays in board.ts. */
     function buildCircuitBoard() {
         window.TD4BoardView.mount({
@@ -123,15 +125,17 @@
             onRomBitToggle(addr, bit) {
                 stop();
                 cpu.rom[addr] ^= (1 << bit);
-                sourceMatchesROM = false;
-                renderROM(); renderCPU(); recordSignals();
-                showMessage('ROM ' + HEX(addr) + '番地 D' + bit + 'を変更しました。ソースとROMの内容が異なります。', 'unsynced');
+                refreshRomAfterEdit('ROM ' + HEX(addr) + '番地 D' + bit + 'を変更しました。ソースとROMの内容が異なります。');
             },
             onInputBitToggle(bit) {
                 cpu.setInput(cpu.input ^ (1 << bit));
-                renderCPU(); recordSignals('input');
+                renderCPU();
+                recordSignals('input');
             },
-            onPowerToggle() { if (powerOn) setPower(false); else run(); },
+            onPowerToggle() { if (powerOn)
+                setPower(false);
+            else
+                run(); },
             onFrequencyToggle() { setBoardFrequency(boardClockHz === 2 ? 10 : 2); }
         });
         if (typeof ResizeObserver !== 'undefined') {
@@ -143,63 +147,68 @@
         fitCircuitBoard();
         setSelectedNet('CLK');
     }
-
-/** Full-width, below-board detail panel. Existing signal probes are preserved. */
-  function toggleIcDetails(chipId) {
-    const host = $('icDetailPanel');
-    const previous = host.dataset.chip || '';
-    if (previous) {
-      const oldCard = document.querySelector('.ic-chip[data-chip="' + previous + '"]');
-      const oldPins = document.getElementById('ic-details-' + previous);
-      if (oldCard && oldPins) {
-        oldPins.hidden = true;
-        oldCard.append(oldPins);
-        oldCard.classList.remove('is-expanded');
-        oldCard.querySelector('.ic-open-details')?.setAttribute('aria-expanded', 'false');
-      }
+    /** Full-width, below-board detail panel. Existing signal probes are preserved. */
+    function toggleIcDetails(chipId) {
+        const host = $('icDetailPanel');
+        const previous = host.dataset.chip || '';
+        if (previous) {
+            const oldCard = document.querySelector('.ic-chip[data-chip="' + previous + '"]');
+            const oldPins = document.getElementById('ic-details-' + previous);
+            if (oldCard && oldPins) {
+                oldPins.hidden = true;
+                oldCard.append(oldPins);
+                oldCard.classList.remove('is-expanded');
+                oldCard.querySelector('.ic-open-details')?.setAttribute('aria-expanded', 'false');
+            }
+        }
+        host.replaceChildren();
+        const next = previous === chipId ? '' : chipId;
+        host.dataset.chip = next;
+        host.hidden = !next;
+        if (!next) {
+            updateCircuitBoard();
+            return;
+        }
+        const card = document.querySelector('.ic-chip[data-chip="' + next + '"]');
+        const pins = document.getElementById('ic-details-' + next);
+        const chip = circuit.chips.find(item => item.id === next);
+        if (!card || !pins || !chip)
+            return;
+        const head = document.createElement('div');
+        head.className = 'ic-detail-panel-head';
+        const heading = document.createElement('div');
+        const title = document.createElement('h3');
+        title.textContent = chip.id + ' · ' + chip.type;
+        const description = document.createElement('p');
+        description.textContent = chip.description + ' · DIP-' + circuit.layout(chip).packagePins;
+        heading.append(title, description);
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'btn btn-small ic-detail-close';
+        close.textContent = '閉じる ×';
+        close.addEventListener('click', () => toggleIcDetails(next));
+        head.append(heading, close);
+        pins.hidden = false;
+        card.classList.add('is-expanded');
+        card.querySelector('.ic-open-details')?.setAttribute('aria-expanded', 'true');
+        host.append(head, pins);
+        updateCircuitBoard();
+        host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    host.replaceChildren();
-    const next = previous === chipId ? '' : chipId;
-    host.dataset.chip = next;
-    host.hidden = !next;
-    if (!next) { updateCircuitBoard(); return; }
-    const card = document.querySelector('.ic-chip[data-chip="' + next + '"]');
-    const pins = document.getElementById('ic-details-' + next);
-    const chip = circuit.chips.find(item => item.id === next);
-    if (!card || !pins || !chip) return;
-    const head = document.createElement('div');
-    head.className = 'ic-detail-panel-head';
-    const heading = document.createElement('div');
-    const title = document.createElement('h3');
-    title.textContent = chip.id + ' · ' + chip.type;
-    const description = document.createElement('p');
-    description.textContent = chip.description + ' · DIP-' + circuit.layout(chip).packagePins;
-    heading.append(title, description);
-    const close = document.createElement('button');
-    close.type = 'button';
-    close.className = 'btn btn-small ic-detail-close';
-    close.textContent = '閉じる ×';
-    close.addEventListener('click', () => toggleIcDetails(next));
-    head.append(heading, close);
-    pins.hidden = false;
-    card.classList.add('is-expanded');
-    card.querySelector('.ic-open-details')?.setAttribute('aria-expanded', 'true');
-    host.append(head, pins);
-    updateCircuitBoard();
-    host.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-  }
-
     function setSelectedNet(net) {
         selectedNet = net;
         updateCircuitBoard();
         drawSelectedWires();
     }
     /** Keep CPU state in the application; delegate all board DOM updates. */
+    function boardRenderOptions() {
+        return { cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz };
+    }
     function updateCircuitBoard() {
-        window.TD4BoardView.render({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz});
+        window.TD4BoardView.render(boardRenderOptions());
     }
     function drawSelectedWires() {
-        window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz});
+        window.TD4BoardView.drawWires(boardRenderOptions());
     }
     /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
     function fitCircuitBoard() {
@@ -208,7 +217,8 @@
         const style = window.getComputedStyle(viewport);
         const availableWidth = viewport.clientWidth -
             parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-        if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0) return;
+        if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0)
+            return;
         // Shrink as much as necessary; gently enlarge on wide screens.
         const scale = Math.min(1.2, availableWidth / board.offsetWidth);
         board.style.setProperty('--board-fit-scale', String(scale));
@@ -217,8 +227,6 @@
         viewport.style.height = Math.ceil(board.offsetHeight * scale + verticalSpace) + 'px';
         drawSelectedWires();
     }
-
-
     function renderHistory() {
         const list = $('traceList');
         list.replaceChildren();
@@ -243,42 +251,54 @@
             list.append(li);
         }
     }
+    /** Create the ten waveform channels once; only signal paths and levels change afterward. */
     function renderWaveforms(levels) {
         const area = $('scopeView');
-        area.replaceChildren();
         const group = GROUPS[$('signalGroup').value] || GROUPS.basic;
         const svgNS = 'http://www.w3.org/2000/svg';
-        // Keep a stable ten-row analyzer; unused slots contain no waveform data.
+        if (!scopeRows.length) {
+            for (let index = 0; index < 10; index++) {
+                const row = document.createElement('div');
+                const name = document.createElement('span');
+                name.className = 'scope-name';
+                const graph = document.createElementNS(svgNS, 'svg');
+                graph.setAttribute('viewBox', '0 0 640 36');
+                graph.setAttribute('preserveAspectRatio', 'none');
+                graph.classList.add('scope-graph');
+                graph.setAttribute('aria-hidden', 'true');
+                for (let x = 0; x <= 640; x += 80) {
+                    const grid = document.createElementNS(svgNS, 'path');
+                    grid.setAttribute('d', `M${x} 0 V36`);
+                    grid.setAttribute('class', 'scope-gridline');
+                    graph.append(grid);
+                }
+                const trace = document.createElementNS(svgNS, 'path');
+                trace.setAttribute('class', 'wave-trace');
+                graph.append(trace);
+                const status = document.createElement('strong');
+                row.append(name, graph, status);
+                scopeRows.push({ row, name, trace, status });
+                area.append(row);
+            }
+        }
         for (let index = 0; index < 10; index++) {
             const signal = group[index];
-            const row = document.createElement('div');
+            const { row, name, trace, status } = scopeRows[index];
             row.className = signal ? 'scope-row' : 'scope-row is-unused';
-            const name = document.createElement('span');
-            name.className = 'scope-name';
             name.textContent = signal || '-';
-            const graph = document.createElementNS(svgNS, 'svg');
-            graph.setAttribute('viewBox', '0 0 640 36');
-            graph.setAttribute('preserveAspectRatio', 'none');
-            graph.classList.add('scope-graph');
-            graph.setAttribute('aria-hidden', 'true');
-            for (let x = 0; x <= 640; x += 80) {
-                const grid = document.createElementNS(svgNS, 'path');
-                grid.setAttribute('d', `M${x} 0 V36`);
-                grid.setAttribute('class', 'scope-gridline');
-                graph.append(grid);
-            }
             if (signal) {
-                const high = document.createElementNS(svgNS, 'path');
-                high.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
-                high.setAttribute('class', 'wave-trace');
-                graph.append(high);
+                trace.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
+                trace.style.display = '';
             }
-            const status = document.createElement('strong');
+            else {
+                trace.style.display = 'none';
+            }
             status.className = signal ? 'scope-level ' + (levels[signal] ? 'hi' : 'lo') : 'scope-level unused';
             status.textContent = signal ? (levels[signal] ? 'H' : 'L') : '×';
-            if (!powerOn && signal) { status.className = 'scope-level unused'; status.textContent = '—'; }
-            row.append(name, graph, status);
-            area.append(row);
+            if (!powerOn && signal) {
+                status.className = 'scope-level unused';
+                status.textContent = '—';
+            }
         }
     }
     /** Start a fresh capture at the currently selected probe group. */
@@ -399,7 +419,8 @@
     }
     /** An OFF→ON transition resets volatile CPU state; ROM and switches persist. */
     function setPower(on) {
-        if (powerOn === on) return;
+        if (powerOn === on)
+            return;
         if (!on) {
             stop();
             stopScopeCapture();
@@ -407,7 +428,8 @@
             cpu.reset();
             history.splice(0);
             waveSamples.splice(0);
-            renderCPU(); renderHistory();
+            renderCPU();
+            renderHistory();
             renderWaveforms(snapshot(cpu, clockHigh));
             syncRunControls();
             showMessage('電源OFF：CPUを初期化しました（ROM・入力スイッチは保持）');
@@ -417,7 +439,8 @@
         cpu.reset();
         history.splice(0);
         waveSamples.splice(0);
-        renderCPU(); renderHistory();
+        renderCPU();
+        renderHistory();
         syncRunControls();
         // Keep ROM address 0x00 visible on power-up until the first clock edge.
         startScopeCapture();
@@ -431,7 +454,10 @@
     /** Reschedule without injecting an extra rising edge on speed changes. */
     function restartRunningClock() {
         const wasRunning = intervalId !== null;
-        if (wasRunning) { stop(); startClock(false); }
+        if (wasRunning) {
+            stop();
+            startClock(false);
+        }
         updateCircuitBoard();
     }
     function stop(reason = '') {
@@ -450,22 +476,29 @@
         clockHigh = true;
         const outcome = cpu.step();
         history.unshift(outcome);
-        history.splice(25);
+        history.splice(MAX_TRACE_ENTRIES);
         renderCPU();
         renderHistory();
         recordSignals();
     }
     function run() {
-        if (!powerOn) { setPower(true); return; }
+        if (!powerOn) {
+            setPower(true);
+            return;
+        }
         startClock(true);
     }
     function toggleRunPause() {
-        if (!powerOn) return;
-        if (intervalId === null) run();
-        else stop();
+        if (!powerOn)
+            return;
+        if (intervalId === null)
+            run();
+        else
+            stop();
     }
     function startClock(immediate) {
-        if (intervalId !== null || !powerOn) return;
+        if (intervalId !== null || !powerOn)
+            return;
         if (breakpoints.has(cpu.pc)) {
             showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。BPを解除してから実行してください。`);
             syncRunControls();
@@ -474,7 +507,10 @@
         setClockLow();
         const halfPeriod = 500 / boardClockHz;
         intervalId = setInterval(() => {
-            if (clockHigh) { setClockLow(); return; }
+            if (clockHigh) {
+                setClockLow();
+                return;
+            }
             if (breakpoints.has(cpu.pc)) {
                 stop(`PC=${HEX(cpu.pc)} のブレークポイントで停止しました。`);
                 renderCPU();
@@ -483,9 +519,9 @@
             risingEdge();
         }, halfPeriod);
         syncRunControls();
-        if (immediate) risingEdge();
+        if (immediate)
+            risingEdge();
     }
-
     function installROM(bytes, message) {
         stop();
         cpu.loadROM(bytes);
@@ -503,7 +539,6 @@
         try {
             const result = assemble($('source').value);
             installROM(result.rom, `書込完了：${result.count}命令 / 16バイトROM`);
-            sourceMatchesROM = true;
             return true;
         }
         catch (error) {
@@ -542,7 +577,6 @@
         $('assembleBtn').addEventListener('click', compileSource);
         $('fromRomBtn').addEventListener('click', () => {
             $('source').value = romToSource(cpu.rom);
-            sourceMatchesROM = true;
             $('examples').selectedIndex = -1;
             updateCount();
             showMessage('現在のROMを16行のDB形式でソースへ反映しました');
@@ -550,7 +584,6 @@
         $('examples').addEventListener('change', event => switchExample($('examples').value));
         $('source').addEventListener('input', () => {
             updateCount();
-            sourceMatchesROM = false;
             showMessage('ソースを変更しました。ROMに書き込むと実行内容に反映されます。', 'unsynced');
         });
         document.addEventListener('keydown', event => {

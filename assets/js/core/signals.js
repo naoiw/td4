@@ -11,6 +11,10 @@
         root.TD4Signals = exported;
 })(globalThis, function () {
     'use strict';
+    // Reuse the CPU's exact combinational decoder in Node tests and in the browser.
+    const decodeALU = (typeof module === 'object' && module.exports
+        ? require('./td4-core.js')
+        : globalThis.TD4).decodeALU;
     const GROUPS = Object.freeze({
         basic: ['CLK', 'C', 'IN0', 'OUT0', 'A0', 'B0', 'PC0', 'D0'],
         io: ['CLK', 'IN3', 'IN2', 'IN1', 'IN0', 'OUT3', 'OUT2', 'OUT1', 'OUT0'],
@@ -20,14 +24,7 @@
     });
     const bit = (n, i) => ((n >> i) & 1);
     function preview(cpu) {
-        const byte = cpu.rom[cpu.pc];
-        const opcode = byte >> 4;
-        const imm = byte & 15;
-        const selectA = ((opcode >> 3) & 1) | (opcode & 1);
-        const selectB = (opcode >> 1) & 1;
-        const source = [cpu.a, cpu.b, cpu.input, 0][(selectB << 1) | selectA];
-        const sum = source + imm;
-        return { byte, source, imm, sum, result: sum & 15, carry: Number(sum > 15) };
+        return decodeALU(cpu.rom[cpu.pc], cpu.a, cpu.b, cpu.input);
     }
     function snapshot(cpu, clockHigh) {
         const result = { CLK: Number(Boolean(clockHigh)), C: cpu.carry };

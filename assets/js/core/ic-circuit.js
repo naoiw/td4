@@ -11,6 +11,9 @@
         root.TD4Circuit = exported;
 })(globalThis, function () {
     'use strict';
+    const decodeALU = (typeof module === 'object' && module.exports
+        ? require('./td4-core.js')
+        : globalThis.TD4).decodeALU;
     const bit = (value, i) => ((value >> i) & 1);
     const p = (name, net) => ({ name, net });
     const nibble = (name, net) => [0, 1, 2, 3].map(i => p(`${name}${i}`, `${net}${i}`));
@@ -30,165 +33,180 @@
         { id: 'U6', type: '74HC161', description: 'PC counter / parallel load', group: 'register', pins: [p('CLK', 'CLK'), p('CLR#', 'RST_N'), p('PE#', 'LOAD_PC_N'), ...nibble('D', 'ALU'), ...nibble('Q', 'PC')] },
         { id: 'U2', type: '74HC14', description: 'Schmitt clock/reset stage', group: 'clock', pins: [p('CLK', 'CLK'), p('RESET#', 'RST_N')] }
     ];
-  // DIP physical pad count is independent from the functional terminal positions.
-  // Left/right terminal groups follow signal flow, not physical package pin numbers.
-  const pin = (name, net) => ({name, net});
-  const row = (...pins) => pins;
-  const lines = (prefix, net, size) =>
-    Array.from({length: size}, (_, index) => row(pin(`${prefix}${index}`, `${net}${index}`)));
-  const layout = (component) => {
-    const common = {packagePins: ({
-      '74HC154': 24, '74HC540': 20,
-      '74HC161': 16, '74HC153': 16, '74HC283': 16,
-      '74HC74': 14, '74HC32': 14, '74HC10': 14, '74HC14': 14
-    })[component.type]};
-    const make = (leftLabel, rightLabel, sections) => ({...common, leftLabel, rightLabel, sections});
-    if(component.type === '74HC154') {
-      const left = [...lines('A', 'PC', 4), row(pin('G1#', 'GND')), row(pin('G2#', 'GND'))];
-      const right = Array.from({length: 8}, (_, index) => row(
-        pin(`Y${(index*2).toString(16).toUpperCase()}#`, `ROM_SEL_${index*2}`),
-        pin(`Y${(index*2+1).toString(16).toUpperCase()}#`, `ROM_SEL_${index*2+1}`)
-      ));
-      return make('INPUT · A / G#', 'OUTPUT · Y', [{left, right}]);
-    }
-    if(component.type === '74HC540') {
-      return make('INPUT · A / OE#', 'OUTPUT · Y', [{
-        left:[...lines('A','ROM_RAW',8), row(pin('OE1#','OE_N')), row(pin('OE2#','OE_N'))],
-        right:lines('Y','D',8)
-      }]);
-    }
-    if(component.type === '74HC153') {
-      const high=component.id==='U8', first=high?2:0, second=first+1;
-      const section=(n,index)=>({
-        label:`回路${index+1} · bit${n}`,
-        left:[row(pin(`A${n}`,`A${n}`)),row(pin(`B${n}`,`B${n}`)),
-          row(pin(`IN${n}`,`IN${n}`)),row(pin('0','GND'))],
-        right:[row(pin(`Y${n}`,`MUX${n}`)),row(pin('S0','SEL_A')),
-          row(pin('S1','SEL_B')),row(pin(`E${index+1}#`,'GND'))]
-      });
-      return make('INPUT · 4:1', 'SELECT / Y', [section(first,0),section(second,1)]);
-    }
-    if(component.type === '74HC283') {
-      return make('INPUT · A / B / CIN','OUTPUT · SUM / COUT',[{
-        left:[...Array.from({length:4},(_,n)=>row(pin(`A${n}`,`MUX${n}`),pin(`B${n}`,`D${n}`))),row(pin('CIN','GND'))],
-        right:[...lines('SUM','ALU',4),row(pin('COUT','COUT'))]
-      }]);
-    }
-    if(component.type === '74HC161') {
-      return make('INPUT · D / CTRL','OUTPUT · Q',[{
-        left:[row(pin('CLK','CLK')),row(pin('CLR#','RST_N')),
-          ...component.pins.filter(x=>x.name==='PE#').map(x=>row(x)),
-          ...lines('D','ALU',4)],
-        right:component.pins.filter(x=>/^Q[0-3]$/.test(x.name)).map(x=>row(x))
-      }]);
-    }
-    if(component.type === '74HC74') {
-      return make('INPUT','OUTPUT',[{
-        left:component.pins.filter(x=>!/^Q/.test(x.name)).map(x=>row(x)),
-        right:component.pins.filter(x=>/^Q/.test(x.name)).map(x=>row(x))
-      }]);
-    }
-    if(component.type === '74HC14') {
-      return make('INPUT','OUTPUT',[{
-        left:component.pins.map(x=>row(x)),
-        right:[row(pin('CLK','CLK')),row(pin('RESET#','RST_N'))]
-      }]);
-    }
-    const index=component.pins.findIndex(x=>/^SEL_|^LD_/.test(x.name));
-    return make('INPUT','OUTPUT',[{
-      left:component.pins.slice(0,index>=0?index:component.pins.length).map(x=>row(x)),
-      right:component.pins.slice(index>=0?index:component.pins.length).map(x=>row(x))
-    }]);
-  };
-
-
-  // Only pins with a computable CPU-level net receive a live H/L state.
-  // Remaining gate pins retain their real pin names, but not a fabricated voltage.
-  const physicalPins = (component) => {
-    const count = layout(component).packagePins;
-    const pins = Array.from({length: count}, (_, i) => ({number: i + 1, name: '未モデル化'}));
-    const bind = (number, name, net) => {
-      pins[number - 1] = {number, name, ...(net ? {net} : {})};
+    // DIP physical pad count is independent from the functional terminal positions.
+    // Left/right terminal groups follow signal flow, not physical package pin numbers.
+    const pin = (name, net) => ({ name, net });
+    const row = (...pins) => pins;
+    const lines = (prefix, net, size) => Array.from({ length: size }, (_, index) => row(pin(`${prefix}${index}`, `${net}${index}`)));
+    const layout = (component) => {
+        const common = { packagePins: {
+                '74HC154': 24, '74HC540': 20,
+                '74HC161': 16, '74HC153': 16, '74HC283': 16,
+                '74HC74': 14, '74HC32': 14, '74HC10': 14, '74HC14': 14
+            }[component.type] };
+        const make = (leftLabel, rightLabel, sections) => ({ ...common, leftLabel, rightLabel, sections });
+        if (component.type === '74HC154') {
+            const left = [...lines('A', 'PC', 4), row(pin('G1#', 'GND')), row(pin('G2#', 'GND'))];
+            const right = Array.from({ length: 8 }, (_, index) => row(pin(`Y${(index * 2).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 2}`), pin(`Y${(index * 2 + 1).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 2 + 1}`)));
+            return make('INPUT · A / G#', 'OUTPUT · Y', [{ left, right }]);
+        }
+        if (component.type === '74HC540') {
+            return make('INPUT · A / OE#', 'OUTPUT · Y', [{
+                    left: [...lines('A', 'ROM_RAW', 8), row(pin('OE1#', 'OE_N')), row(pin('OE2#', 'OE_N'))],
+                    right: lines('Y', 'D', 8)
+                }]);
+        }
+        if (component.type === '74HC153') {
+            const high = component.id === 'U8', first = high ? 2 : 0, second = first + 1;
+            const section = (n, index) => ({
+                label: `回路${index + 1} · bit${n}`,
+                left: [row(pin(`A${n}`, `A${n}`)), row(pin(`B${n}`, `B${n}`)),
+                    row(pin(`IN${n}`, `IN${n}`)), row(pin('0', 'GND'))],
+                right: [row(pin(`Y${n}`, `MUX${n}`)), row(pin('S0', 'SEL_A')),
+                    row(pin('S1', 'SEL_B')), row(pin(`E${index + 1}#`, 'GND'))]
+            });
+            return make('INPUT · 4:1', 'SELECT / Y', [section(first, 0), section(second, 1)]);
+        }
+        if (component.type === '74HC283') {
+            return make('INPUT · A / B / CIN', 'OUTPUT · SUM / COUT', [{
+                    left: [...Array.from({ length: 4 }, (_, n) => row(pin(`A${n}`, `MUX${n}`), pin(`B${n}`, `D${n}`))), row(pin('CIN', 'GND'))],
+                    right: [...lines('SUM', 'ALU', 4), row(pin('COUT', 'COUT'))]
+                }]);
+        }
+        if (component.type === '74HC161') {
+            return make('INPUT · D / CTRL', 'OUTPUT · Q', [{
+                    left: [row(pin('CLK', 'CLK')), row(pin('CLR#', 'RST_N')),
+                        ...component.pins.filter(x => x.name === 'PE#').map(x => row(x)),
+                        ...lines('D', 'ALU', 4)],
+                    right: component.pins.filter(x => /^Q[0-3]$/.test(x.name)).map(x => row(x))
+                }]);
+        }
+        if (component.type === '74HC74') {
+            return make('INPUT', 'OUTPUT', [{
+                    left: component.pins.filter(x => !/^Q/.test(x.name)).map(x => row(x)),
+                    right: component.pins.filter(x => /^Q/.test(x.name)).map(x => row(x))
+                }]);
+        }
+        if (component.type === '74HC14') {
+            return make('INPUT', 'OUTPUT', [{
+                    left: component.pins.map(x => row(x)),
+                    right: [row(pin('CLK', 'CLK')), row(pin('RESET#', 'RST_N'))]
+                }]);
+        }
+        const index = component.pins.findIndex(x => /^SEL_|^LD_/.test(x.name));
+        return make('INPUT', 'OUTPUT', [{
+                left: component.pins.slice(0, index >= 0 ? index : component.pins.length).map(x => row(x)),
+                right: component.pins.slice(index >= 0 ? index : component.pins.length).map(x => row(x))
+            }]);
     };
-    bind(count, 'VCC', 'VCC');
-    bind(count / 2, 'GND', 'GND');
-    switch (component.type) {
-      case '74HC154':
-        for (let i = 0; i <= 10; i++) bind(i + 1, 'Y' + i + '#', 'ROM_SEL_' + i);
-        for (let i = 11; i < 16; i++) bind(i + 2, 'Y' + i + '#', 'ROM_SEL_' + i);
-        bind(18, 'E0#', 'GND'); bind(19, 'E1#', 'GND');
-        for (let i = 0; i < 4; i++) bind(23 - i, 'A' + i, 'PC' + i);
-        break;
-      case '74HC540':
-        bind(1, 'OE1#', 'OE_N'); bind(19, 'OE2#', 'OE_N');
-        for (let i = 0; i < 8; i++) {
-          bind(i + 2, 'A' + i, 'ROM_RAW' + i);
-          bind(18 - i, 'Y' + i, 'D' + i);
+    // Only pins with a computable CPU-level net receive a live H/L state.
+    // Remaining gate pins retain their real pin names, but not a fabricated voltage.
+    const physicalPins = (component) => {
+        const count = layout(component).packagePins;
+        const pins = Array.from({ length: count }, (_, i) => ({ number: i + 1, name: '未モデル化' }));
+        const bind = (number, name, net) => {
+            pins[number - 1] = { number, name, ...(net ? { net } : {}) };
+        };
+        bind(count, 'VCC', 'VCC');
+        bind(count / 2, 'GND', 'GND');
+        switch (component.type) {
+            case '74HC154':
+                for (let i = 0; i <= 10; i++)
+                    bind(i + 1, 'Y' + i + '#', 'ROM_SEL_' + i);
+                for (let i = 11; i < 16; i++)
+                    bind(i + 2, 'Y' + i + '#', 'ROM_SEL_' + i);
+                bind(18, 'E0#', 'GND');
+                bind(19, 'E1#', 'GND');
+                for (let i = 0; i < 4; i++)
+                    bind(23 - i, 'A' + i, 'PC' + i);
+                break;
+            case '74HC540':
+                bind(1, 'OE1#', 'OE_N');
+                bind(19, 'OE2#', 'OE_N');
+                for (let i = 0; i < 8; i++) {
+                    bind(i + 2, 'A' + i, 'ROM_RAW' + i);
+                    bind(18 - i, 'Y' + i, 'D' + i);
+                }
+                break;
+            case '74HC153': {
+                const first = component.id === 'U8' ? 2 : 0;
+                const second = first + 1;
+                bind(1, '1E#', 'GND');
+                bind(2, 'S1', 'SEL_B');
+                bind(3, '1I3', 'GND');
+                bind(4, '1I2', 'IN' + first);
+                bind(5, '1I1', 'B' + first);
+                bind(6, '1I0', 'A' + first);
+                bind(7, '1Y', 'MUX' + first);
+                bind(9, '2Y', 'MUX' + second);
+                bind(10, '2I0', 'A' + second);
+                bind(11, '2I1', 'B' + second);
+                bind(12, '2I2', 'IN' + second);
+                bind(13, '2I3', 'GND');
+                bind(14, 'S0', 'SEL_A');
+                bind(15, '2E#', 'GND');
+                break;
+            }
+            case '74HC283': {
+                const mapping = [
+                    [1, 'S2', 'ALU1'], [2, 'B2', 'D1'], [3, 'A2', 'MUX1'],
+                    [4, 'S1', 'ALU0'], [5, 'A1', 'MUX0'], [6, 'B1', 'D0'],
+                    [7, 'CIN', 'GND'], [9, 'COUT', 'COUT'], [10, 'S4', 'ALU3'],
+                    [11, 'B4', 'D3'], [12, 'A4', 'MUX3'], [13, 'S3', 'ALU2'],
+                    [14, 'A3', 'MUX2'], [15, 'B3', 'D2']
+                ];
+                for (const [number, name, net] of mapping)
+                    bind(number, name, net);
+                break;
+            }
+            case '74HC161': {
+                const output = component.id === 'U3' ? 'A' : component.id === 'U4' ? 'B' : component.id === 'U5' ? 'OUT' : 'PC';
+                const load = component.id === 'U3' ? 'LOAD_A_N' : component.id === 'U4' ? 'LOAD_B_N' : component.id === 'U5' ? 'LOAD_OUT_N' : 'LOAD_PC_N';
+                bind(1, 'CLR#', 'RST_N');
+                bind(2, 'CLK', 'CLK');
+                for (let i = 0; i < 4; i++) {
+                    bind(i + 3, 'D' + i, 'ALU' + i);
+                    bind(14 - i, 'Q' + i, output + i);
+                }
+                bind(7, 'ENP');
+                bind(9, 'LOAD#', load);
+                bind(10, 'ENT');
+                bind(15, 'RCO');
+                break;
+            }
+            case '74HC74':
+                bind(1, '1CLR#', 'RST_N');
+                bind(2, '1D', 'COUT');
+                bind(3, '1CLK', 'CLK');
+                bind(4, '1PRE#');
+                bind(5, '1Q', 'C');
+                bind(6, '1Q#', 'C_N');
+                for (const [number, name] of [[8, '2Q#'], [9, '2Q'], [10, '2PRE#'], [11, '2CLK'], [12, '2D'], [13, '2CLR#']])
+                    bind(number, name);
+                break;
+            case '74HC32':
+                for (const [number, name] of [[1, '1A'], [2, '1B'], [3, '1Y'], [4, '2A'], [5, '2B'], [6, '2Y'], [8, '3Y'], [9, '3A'], [10, '3B'], [11, '4Y'], [12, '4A'], [13, '4B']])
+                    bind(number, name);
+                break;
+            case '74HC10':
+                for (const [number, name] of [[1, '1A'], [2, '1B'], [3, '2A'], [4, '2B'], [5, '2C'], [6, '2Y'], [8, '3Y'], [9, '3A'], [10, '3B'], [11, '3C'], [12, '1Y'], [13, '1C']])
+                    bind(number, name);
+                break;
+            case '74HC14':
+                for (const [number, name] of [[1, '1A'], [2, '1Y'], [3, '2A'], [4, '2Y'], [5, '3A'], [6, '3Y'], [8, '4Y'], [9, '4A'], [10, '5Y'], [11, '5A'], [12, '6Y'], [13, '6A']])
+                    bind(number, name);
+                break;
         }
-        break;
-      case '74HC153': {
-        const first = component.id === 'U8' ? 2 : 0;
-        const second = first + 1;
-        bind(1, '1E#', 'GND'); bind(2, 'S1', 'SEL_B');
-        bind(3, '1I3', 'GND'); bind(4, '1I2', 'IN' + first);
-        bind(5, '1I1', 'B' + first); bind(6, '1I0', 'A' + first);
-        bind(7, '1Y', 'MUX' + first); bind(9, '2Y', 'MUX' + second);
-        bind(10, '2I0', 'A' + second); bind(11, '2I1', 'B' + second);
-        bind(12, '2I2', 'IN' + second); bind(13, '2I3', 'GND');
-        bind(14, 'S0', 'SEL_A'); bind(15, '2E#', 'GND');
-        break;
-      }
-      case '74HC283': {
-        const mapping = [
-          [1, 'S2', 'ALU1'], [2, 'B2', 'D1'], [3, 'A2', 'MUX1'],
-          [4, 'S1', 'ALU0'], [5, 'A1', 'MUX0'], [6, 'B1', 'D0'],
-          [7, 'CIN', 'GND'], [9, 'COUT', 'COUT'], [10, 'S4', 'ALU3'],
-          [11, 'B4', 'D3'], [12, 'A4', 'MUX3'], [13, 'S3', 'ALU2'],
-          [14, 'A3', 'MUX2'], [15, 'B3', 'D2']
-        ];
-        for (const [number,name,net] of mapping) bind(number,name,net);
-        break;
-      }
-      case '74HC161': {
-        const output = component.id === 'U3' ? 'A' : component.id === 'U4' ? 'B' : component.id === 'U5' ? 'OUT' : 'PC';
-        const load = component.id === 'U3' ? 'LOAD_A_N' : component.id === 'U4' ? 'LOAD_B_N' : component.id === 'U5' ? 'LOAD_OUT_N' : 'LOAD_PC_N';
-        bind(1,'CLR#','RST_N'); bind(2,'CLK','CLK');
-        for(let i=0;i<4;i++) {
-          bind(i+3,'D'+i,'ALU'+i);
-          bind(14-i,'Q'+i,output+i);
-        }
-        bind(7,'ENP'); bind(9,'LOAD#',load); bind(10,'ENT'); bind(15,'RCO');
-        break;
-      }
-      case '74HC74':
-        bind(1,'1CLR#','RST_N'); bind(2,'1D','COUT'); bind(3,'1CLK','CLK');
-        bind(4,'1PRE#'); bind(5,'1Q','C'); bind(6,'1Q#','C_N');
-        for(const [number,name] of [[8,'2Q#'],[9,'2Q'],[10,'2PRE#'],[11,'2CLK'],[12,'2D'],[13,'2CLR#']]) bind(number,name);
-        break;
-      case '74HC32':
-        for(const [number,name] of [[1,'1A'],[2,'1B'],[3,'1Y'],[4,'2A'],[5,'2B'],[6,'2Y'],[8,'3Y'],[9,'3A'],[10,'3B'],[11,'4Y'],[12,'4A'],[13,'4B']]) bind(number,name);
-        break;
-      case '74HC10':
-        for(const [number,name] of [[1,'1A'],[2,'1B'],[3,'2A'],[4,'2B'],[5,'2C'],[6,'2Y'],[8,'3Y'],[9,'3A'],[10,'3B'],[11,'3C'],[12,'1Y'],[13,'1C']]) bind(number,name);
-        break;
-      case '74HC14':
-        for(const [number,name] of [[1,'1A'],[2,'1Y'],[3,'2A'],[4,'2Y'],[5,'3A'],[6,'3Y'],[8,'4Y'],[9,'4A'],[10,'5Y'],[11,'5A'],[12,'6Y'],[13,'6A']]) bind(number,name);
-        break;
-    }
-    return pins;
-  };
-
+        return pins;
+    };
     function levels(cpu, clock) {
         const instruction = cpu.rom[cpu.pc];
-        const d4 = bit(instruction, 4), d5 = bit(instruction, 5), d6 = bit(instruction, 6), d7 = bit(instruction, 7);
-        const selA = (d4 | d7), selB = d5;
-        const input = [cpu.a, cpu.b, cpu.input, 0][(selB << 1) | selA];
-        const imm = instruction & 15;
-        const sum = input + imm;
+        const d4 = bit(instruction, 4), d6 = bit(instruction, 6), d7 = bit(instruction, 7);
+        const { selectA: selA, selectB: selB, source: input, sum, carry } = decodeALU(instruction, cpu.a, cpu.b, cpu.input);
         const nets = {
             CLK: clock ? 1 : 0, RST_N: 1, GND: 0, VCC: 1, OE_N: 0,
             C: cpu.carry, C_N: (1 - cpu.carry),
-            COUT: Number(sum > 15),
+            COUT: carry,
             SEL_A: selA, SEL_B: selB,
             LOAD_A_N: (d6 | d7),
             LOAD_B_N: ((1 - d6) | d7),
@@ -212,5 +230,5 @@
         }
         return nets;
     }
-    return {chips,levels,layout,physicalPins};
+    return { chips, levels, layout, physicalPins };
 });
