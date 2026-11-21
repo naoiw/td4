@@ -261,7 +261,7 @@
 
 .ic-role-rack .ic-dip .ic-head{
   display:block;
-  height:13px;
+  height:18px;
   margin:0;
   padding:0;
   text-align:center;
@@ -296,7 +296,7 @@
 /* Legacy ROM sizing; current horizontal 4×4 presentation is defined later. */
 
 .ic-chip-grid {gap:7px}
-.ic-role-group{padding:7px 8px 9px}
+.ic-role-group{padding:9px 8px 15px}
 .ic-role-rack {
   display:flex;
   flex-wrap:wrap;
@@ -543,7 +543,7 @@
   flex-wrap:nowrap;
   align-items:center;
   justify-content:flex-start;
-  gap:12px;
+  gap:28px;
 }
 .ic-role-rack>.ic-chip{
   border:0;
@@ -555,7 +555,7 @@
 .ic-role-rack>.ic-chip:after{display:none}
 .ic-role-rack .ic-dip .ic-footprint{
   width:var(--dip-span);
-  margin:1px auto 0;
+  margin:6px auto 0;
 }
 /* Explicitly keep DIP (two long pin banks, not four-sided QFP). */
 .ic-footprint .ic-leg-left{left:-4px;right:auto}
