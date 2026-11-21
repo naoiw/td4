@@ -278,6 +278,25 @@
         }
       ]);
     }
+    if (component.type === '74HC32' || component.type === '74HC10') {
+      // Use the PDF-derived electrical netlist, including every gate and its actual pin numbers.
+      const netlist = (globalThis as unknown as Window).TD4Netlist;
+      if (!netlist) throw new Error('TD4 netlist is missing: load data/netlist.js first');
+      const gateGroups = netlist.gateGroups[component.id];
+      if (!gateGroups) throw new Error('Missing gate groups for ' + component.id);
+      const fromPin = (number: number): IcPin =>
+        pin(netlist.pinNames[component.id][String(number)], netlist.pinNets[component.id][String(number)]);
+      const inputLabel = component.type === '74HC32' ? 'INPUT · A/B' : 'INPUT · A/B/C';
+      return make(
+        inputLabel,
+        'OUTPUT · Y',
+        gateGroups.map((gate) => ({
+          label: `${gate.gate} · ${gate.purpose}`,
+          left: gate.inputPins.map((number) => row(fromPin(number))),
+          right: [row(fromPin(gate.outputPin))]
+        }))
+      );
+    }
     if (component.type === '74HC14') {
       // B and C are the only fitted oscillator gates; the RC network is analogue.
       return make('INPUT · A', 'OUTPUT · Y', [
@@ -332,6 +351,8 @@
       sum,
       carry
     } = decodeALU(instruction, cpu.a, cpu.b, cpu.input);
+    const invertedD6 = (1 - d6) as BinaryLevel;
+    const jumpOr = (d4 | (1 - cpu.carry)) as BinaryLevel;
     const nets: IcLevels = {
       CLK: clock ? 1 : 0,
       // Idealized logic states, not the analogue RC voltage or propagation delay.
@@ -346,10 +367,12 @@
       COUT: carry as BinaryLevel,
       SEL_A: selA,
       SEL_B: selB,
+      D6_N: invertedD6,
+      JUMP_OR: jumpOr,
       LOAD_A_N: (d6 | d7) as BinaryLevel,
-      LOAD_B_N: ((1 - d6) | d7) as BinaryLevel,
-      LOAD_OUT_N: ((1 - d7) | d6) as BinaryLevel,
-      LOAD_PC_N: Number(!(d6 && d7 && (d4 || !cpu.carry))) as BinaryLevel
+      LOAD_B_N: (invertedD6 | d7) as BinaryLevel,
+      LOAD_OUT_N: Number(!(invertedD6 && d7)) as BinaryLevel,
+      LOAD_PC_N: Number(!(d6 && d7 && jumpOr)) as BinaryLevel
     };
     for (let i = 0; i < 16; i++) nets[`ROM_SEL_${i}`] = cpu.pc === i ? 0 : 1;
     for (let i = 0; i < 8; i++) {
