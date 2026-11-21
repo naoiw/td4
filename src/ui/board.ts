@@ -278,7 +278,7 @@
       cell.classList.toggle('is-current',selected && powerOn);
       const lamp=cell.querySelector<HTMLElement>('.rom-select-lamp')!;
       lamp.classList.toggle('is-on',selected && powerOn);
-      lamp.classList.toggle('is-selected',powerOn && powerOn && selectedNet === `ROM_SEL_${addr}`);
+      lamp.classList.toggle('is-selected',powerOn && selectedNet === `ROM_SEL_${addr}`);
       cell.querySelector<HTMLElement>('.rom-slot-value')!.textContent=byte.toString(16).toUpperCase().padStart(2,'0');
       for(const btn of cell.querySelectorAll<HTMLButtonElement>('.rom-dip')){
         const bit=Number(btn.dataset.bit);
