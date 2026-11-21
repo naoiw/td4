@@ -66,8 +66,19 @@ interface TD4SignalsApi {
   preview(cpu: CpuState): ALUPreview;
   snapshot(cpu: CpuState, clockHigh: boolean | number): SignalLevels;
   appendSample(samples: SignalLevels[], sample: SignalLevels, capacity?: number): SignalLevels[];
-  shouldCaptureSample(mode: WaveCaptureMode, powerOn: boolean, cpuRunning: boolean, source: WaveSampleTrigger): boolean;
-  waveformPath(samples: readonly SignalLevels[], signal: string, width?: number, height?: number, capacity?: number): string;
+  shouldCaptureSample(
+    mode: WaveCaptureMode,
+    powerOn: boolean,
+    cpuRunning: boolean,
+    source: WaveSampleTrigger
+  ): boolean;
+  waveformPath(
+    samples: readonly SignalLevels[],
+    signal: string,
+    width?: number,
+    height?: number,
+    capacity?: number
+  ): string;
 }
 interface SampleProgram {
   id: string;
@@ -86,16 +97,40 @@ interface Window {
   };
   TD4Samples: SampleProgram[];
 }
-declare const module: {exports?: unknown};
+declare const module: { exports?: unknown };
 declare function require(path: string): TD4Api;
 
 /** Named IC functional probes; not literal package pin numbers. */
-interface IcPin { name: string; net: string }
-interface IcSection {label?: string; left: IcPin[][]; right: IcPin[][]}
-interface IcLayout {packagePins: number; leftLabel: string; rightLabel: string; sections: IcSection[]}
-interface IcPhysicalPin {number: number; name: string; net?: string}
-type IcPackageType = '74HC154' | '74HC540' | '74HC161' | '74HC153' |
-  '74HC283' | '74HC74' | '74HC32' | '74HC10' | '74HC14';
+interface IcPin {
+  name: string;
+  net: string;
+}
+interface IcSection {
+  label?: string;
+  left: IcPin[][];
+  right: IcPin[][];
+}
+interface IcLayout {
+  packagePins: number;
+  leftLabel: string;
+  rightLabel: string;
+  sections: IcSection[];
+}
+interface IcPhysicalPin {
+  number: number;
+  name: string;
+  net?: string;
+}
+type IcPackageType =
+  | '74HC154'
+  | '74HC540'
+  | '74HC161'
+  | '74HC153'
+  | '74HC283'
+  | '74HC74'
+  | '74HC32'
+  | '74HC10'
+  | '74HC14';
 interface IcComponent {
   id: string;
   type: IcPackageType;
@@ -110,7 +145,9 @@ interface IcCircuitApi {
   layout(chip: IcComponent): IcLayout;
   physicalPins(chip: IcComponent): IcPhysicalPin[];
 }
-interface Window { TD4Circuit: IcCircuitApi }
+interface Window {
+  TD4Circuit: IcCircuitApi;
+}
 
 /** Stateless view builder. All mutations return through app-provided callbacks. */
 interface BoardViewOptions {
@@ -138,4 +175,6 @@ interface BoardViewApi {
   render(options: BoardRenderOptions): void;
   drawWires(options: BoardRenderOptions): void;
 }
-interface Window { TD4BoardView: BoardViewApi }
+interface Window {
+  TD4BoardView: BoardViewApi;
+}

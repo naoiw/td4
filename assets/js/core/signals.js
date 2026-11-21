@@ -27,7 +27,10 @@
         return decodeALU(cpu.rom[cpu.pc], cpu.a, cpu.b, cpu.input);
     }
     function snapshot(cpu, clockHigh) {
-        const result = { CLK: Number(Boolean(clockHigh)), C: cpu.carry };
+        const result = {
+            CLK: Number(Boolean(clockHigh)),
+            C: cpu.carry
+        };
         const p = preview(cpu);
         for (let i = 0; i < 4; i++) {
             result['IN' + i] = bit(cpu.input, i);
@@ -60,7 +63,7 @@
             return '';
         const step = width / Math.max(1, capacity - 1);
         const startX = width - (samples.length - 1) * step;
-        const y = (value) => value ? 7 : height - 7;
+        const y = (value) => (value ? 7 : height - 7);
         const fmt = (value) => Math.round(value * 100) / 100;
         let path = `M ${fmt(startX)} ${y(samples[0][signal])}`;
         for (let i = 1; i < samples.length; i++) {

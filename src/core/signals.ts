@@ -5,14 +5,16 @@
 (function (root: typeof globalThis, factory: () => TD4SignalsApi) {
   const exported = factory();
   if (typeof module === 'object' && module.exports) module.exports = exported;
-  else (root as typeof globalThis & {TD4Signals: TD4SignalsApi}).TD4Signals = exported;
+  else (root as typeof globalThis & { TD4Signals: TD4SignalsApi }).TD4Signals = exported;
 })(globalThis, function (): TD4SignalsApi {
   'use strict';
 
   // Reuse the CPU's exact combinational decoder in Node tests and in the browser.
-  const decodeALU: TD4Api['decodeALU'] = (typeof module === 'object' && module.exports
-    ? require('./td4-core.js')
-    : (globalThis as typeof globalThis & {TD4: TD4Api}).TD4).decodeALU;
+  const decodeALU: TD4Api['decodeALU'] = (
+    typeof module === 'object' && module.exports
+      ? require('./td4-core.js')
+      : (globalThis as typeof globalThis & { TD4: TD4Api }).TD4
+  ).decodeALU;
   const GROUPS: SignalGroups = Object.freeze({
     basic: ['CLK', 'C', 'IN0', 'OUT0', 'A0', 'B0', 'PC0', 'D0'],
     io: ['CLK', 'IN3', 'IN2', 'IN1', 'IN0', 'OUT3', 'OUT2', 'OUT1', 'OUT0'],
@@ -27,22 +29,30 @@
   }
 
   function snapshot(cpu: CpuState, clockHigh: boolean | number): SignalLevels {
-    const result: SignalLevels = {CLK:Number(Boolean(clockHigh)) as BinaryLevel, C:cpu.carry as BinaryLevel};
+    const result: SignalLevels = {
+      CLK: Number(Boolean(clockHigh)) as BinaryLevel,
+      C: cpu.carry as BinaryLevel
+    };
     const p = preview(cpu);
     for (let i = 0; i < 4; i++) {
-      result['IN' + i] = bit(cpu.input,i);
-      result['OUT' + i] = bit(cpu.out,i);
-      result['A' + i] = bit(cpu.a,i);
-      result['B' + i] = bit(cpu.b,i);
-      result['PC' + i] = bit(cpu.pc,i);
-      result['ALU' + i] = bit(p.result,i);
+      result['IN' + i] = bit(cpu.input, i);
+      result['OUT' + i] = bit(cpu.out, i);
+      result['A' + i] = bit(cpu.a, i);
+      result['B' + i] = bit(cpu.b, i);
+      result['PC' + i] = bit(cpu.pc, i);
+      result['ALU' + i] = bit(p.result, i);
     }
-    for (let i = 0; i < 8; i++) result['D' + i] = bit(p.byte,i);
+    for (let i = 0; i < 8; i++) result['D' + i] = bit(p.byte, i);
     return result;
   }
 
   /** CPU capture follows clock activity; oscilloscope capture follows an independent timer. */
-  function shouldCaptureSample(mode: WaveCaptureMode, powerOn: boolean, cpuRunning: boolean, source: WaveSampleTrigger): boolean {
+  function shouldCaptureSample(
+    mode: WaveCaptureMode,
+    powerOn: boolean,
+    cpuRunning: boolean,
+    source: WaveSampleTrigger
+  ): boolean {
     if (!powerOn) return false;
     return mode === 'cpu' ? cpuRunning && source !== 'timer' : source === 'timer' || source === 'input';
   }
@@ -50,16 +60,22 @@
   // Each sample represents one observed level, normally one clock half-cycle.
   function appendSample(samples: SignalLevels[], sample: SignalLevels, capacity = 80): SignalLevels[] {
     samples.push(sample);
-    if(samples.length > capacity) samples.splice(0, samples.length - capacity);
+    if (samples.length > capacity) samples.splice(0, samples.length - capacity);
     return samples;
   }
 
   // Staircase transitions: hold old level until a new sampling instant.
-  function waveformPath(samples: readonly SignalLevels[], signal: string, width = 640, height = 36, capacity = 80): string {
+  function waveformPath(
+    samples: readonly SignalLevels[],
+    signal: string,
+    width = 640,
+    height = 36,
+    capacity = 80
+  ): string {
     if (!samples.length) return '';
     const step = width / Math.max(1, capacity - 1);
     const startX = width - (samples.length - 1) * step;
-    const y = (value: number): number => value ? 7 : height - 7;
+    const y = (value: number): number => (value ? 7 : height - 7);
     const fmt = (value: number): number => Math.round(value * 100) / 100;
     let path = `M ${fmt(startX)} ${y(samples[0][signal])}`;
     for (let i = 1; i < samples.length; i++) {
