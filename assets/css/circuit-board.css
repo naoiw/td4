@@ -1,12 +1,4 @@
 /* IC-level TD4 board: stylized functional probe diagram, not physical pinout. */
-.ic-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:12px;flex-wrap:wrap}
-.ic-toolbar>div:first-child{display:flex;flex-direction:column;gap:4px}
-.ic-toolbar strong{font-weight:800;font-size:13px;color:#2a4450}
-.ic-toolbar span{font-size:10px;color:#718594}
-.ic-probe-control{display:flex;align-items:center;gap:9px;font:650 11px ui-monospace,monospace}
-.ic-probe-control code{background:#e5f1ed;color:#176547;padding:5px 9px;border-radius:5px}
-.ic-probe-control b{padding:4px 8px;border-radius:5px;background:#2a5248;color:#caffd6}
-.ic-probe-control b.lo{background:#dce4e8;color:#425964}
 .schematic-scroll{overflow-x:auto;overflow-y:hidden;}
 .schematic-board{position:relative;display:grid;margin:auto;overflow:hidden;}
 .schematic-zone-head{justify-content:space-between;align-items:center;color:#dbecd6;font:800 15px ui-monospace,monospace;letter-spacing:.7px;margin:0 0 12px}
@@ -54,7 +46,7 @@
 .ic-wire-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .ic-wire{fill:none;stroke-linejoin:round;stroke-linecap:round;stroke-width:3.5;vector-effect:non-scaling-stroke;opacity:.9}
 .ic-wire.hi{stroke:#a8ffb7;filter:drop-shadow(0 0 5px #98ffc7)}.ic-wire.lo{stroke:#718ea3;stroke-dasharray:7 5;opacity:.72}
-@media(max-width:650px){.ic-toolbar{align-items:start;flex-direction:column}.schematic-board{margin:0}.ic-probe-control{width:100%;justify-content:space-between}}
+@media(max-width:650px){.schematic-board{margin:0}}
 
 
 /* Functional pin-oriented IC layout. Physical DIP leg count is precise but

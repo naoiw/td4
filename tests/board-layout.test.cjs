@@ -130,7 +130,7 @@ test('board H/L and selected-net SVG renderers stay separate from CPU state',()=
   assert.match(boardJs,/function render\(options\)/);
   assert.match(boardJs,/function drawWires\(options\)/);
   assert.match(boardJs,/drawWires\(options\)/);
-  assert.match(boardJs,/selectedNetName/);
+  assert.match(boardJs,/classList\.toggle\('net-selected'/);
   assert.match(boardJs,/getBoundingClientRect\(\)/);
   assert.match(boardJs,/classList\.toggle\('is-high'/);
   assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');

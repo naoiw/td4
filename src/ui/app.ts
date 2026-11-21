@@ -118,7 +118,6 @@
         renderCPU(); recordSignals();
       }
     });
-    $('resetNetBtn').addEventListener('click', () => setSelectedNet('CLK'));
     window.addEventListener('resize', drawSelectedWires);
     setSelectedNet('CLK');
   }

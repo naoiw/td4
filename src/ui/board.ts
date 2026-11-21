@@ -260,10 +260,6 @@
       btn.textContent=`LED${bit}`;
       btn.title=`OUT${bit} = ${+on}（クリックで信号を追跡）`;
     });
-    $('selectedNetName').textContent=selectedNet.replace(/^ROM_SEL_(\d+)$/,(_,n)=>`/ROM${Number(n).toString(16).toUpperCase()}`);
-    const level=values[selectedNet];
-    $('selectedNetLevel').textContent=level?'H':'L';
-    $('selectedNetLevel').className=level?'hi':'lo';
     for(const el of document.querySelectorAll<HTMLElement>('[data-net]')){
       el.classList.toggle('net-selected',!!el.dataset.net&&el.dataset.net===selectedNet);
     }
