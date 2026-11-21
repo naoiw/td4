@@ -31,7 +31,7 @@ ICボードは実物と同じDIPパッケージの**ピン本数**（14・16・2
 ## 操作方法
 
 1. 「サンプルを試す」から例をクリックすると、ROM DIPスイッチの位置が更新され、実行が始まります。
-2. 各IC上の機能ピンをクリックすると、選択信号の論理H/Lと接続線を強調します。
+2. IC本体をクリックして基板下の詳細パネルを開き、端子を選択すると論理H/Lと対応ネットを強調します。
 3. ROMの青いスライドスイッチをクリックしてビットを反転できます。左の74HC154の /Y とROM横のLEDは、現在PCが指すアドレスを表します（選択出力はL）。
 4. 「スイッチ入力」を選んだ場合、ボード上のSW3〜SW0をクリックしてください。プログラムの `IN B` と `OUT B` によってLEDへ反映されます。
 5. 信号モニタのセレクタで、見たいチャンネルを切り替えてください。**Hは上段、Lは下段**です。
@@ -57,7 +57,7 @@ npm test           # TypeScript型チェック + Node.jsの全テスト
 npm run verify     # ビルド + 型チェック + テスト
 ```
 
-`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。Pagesの公開アーティファクトにはmain/developそれぞれの `index.html` と `assets/` が含まれます。`assets/css/style.css` は直接編集するCSSです。`LICENSE`は変更しません。
+`src/` を**唯一のTypeScript編集元**とし、`assets/js/` はビルド生成物です。生成したJavaScriptもソースと一緒にcommitしてください。Pagesの公開アーティファクトにはmain/developそれぞれの `index.html` と `assets/` が含まれます。`assets/css/style.css` は読み込み順だけを定義するエントリーポイントで、実際のCSSは `foundation.css`（共通）、`workbench.css`（画面構成）、`circuit-board.css`（DIP・ROM・基板）に分離しています。`LICENSE`は変更しません。
 
 Vite/Reactは導入していません。公開は `.github/workflows/deploy-pages.yml` で両ブランチを合わせて実行します。開発時は `index.html` を直接開いても動作を確認できます。
 
@@ -67,15 +67,15 @@ Vite/Reactは導入していません。公開は `.github/workflows/deploy-page
 .
 ├── index.html              # GitHub Pagesのエントリーポイント（main / root）
 ├── assets/
-│   ├── css/style.css       # スタイル（直接編集）
+│   ├── css/                # style.css → foundation / workbench / circuit-board
 │   └── js/                 # tscで生成、編集禁止・Git管理対象
 │       ├── core/           # td4-core.js, signals.js, ic-circuit.js
 │       ├── data/           # samples.js
-│       └── ui/             # app.js
+│       └── ui/             # board.js (DIP・H/L・SVG描画), app.js (CPU状態・操作)
 ├── src/                    # TypeScriptの編集対象
 │   ├── core/               # CPU、アセンブラ、信号モデル、IC回路モデル
 │   ├── data/               # サンプルプログラム
-│   ├── ui/                 # DOM・SVG画面制御
+│   ├── ui/                 # board.ts: 基板DOM・H/L・配線描画、app.ts: CPU・実行・波形
 │   └── types/              # グローバル型定義
 ├── tests/                  # Node.jsのテスト
 ├── docs/                   # 設計資料
@@ -95,7 +95,7 @@ npm install
 npm test
 ```
 
-新規の信号・サンプルを含む計18件のテストを用意しています。ブラウザ操作はサンプル選択、スイッチ切替、LED表示、波形チャンネル切替、ステップを確認しました。
+CPU命令、信号波形、ICの機能・物理ピン、ROMの4×4配置、DIPのH/L表示、CSS読み込み順、Pages用アセット参照をNode.jsの自動テストで確認します。画面操作の最終確認は `develop` プレビューで行います。
 
 ## ライセンス
 

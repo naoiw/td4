@@ -43,7 +43,7 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 ## ファイル依存
 
-読み込み順は`assets/js/core/td4-core.js` → `assets/js/data/samples.js` → `assets/js/core/signals.js` → `assets/js/ui/app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
+読み込み順は`assets/js/core/td4-core.js` → `assets/js/data/samples.js` → `assets/js/core/signals.js` → `assets/js/core/ic-circuit.js` → `assets/js/ui/board.js` → `assets/js/ui/app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
 
 ## TypeScript移行・GitHub Pagesデプロイ
 
@@ -58,13 +58,13 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 ## ディレクトリ変更時の注意
 
-`tsconfig.json` の `rootDir` が `src`、`outDir` が `assets/js` のため、TypeScriptのディレクトリ階層が生成物にもそのまま反映されます。HTMLの4つの `<script defer>` は依存順を維持してください。`assets/js/` のファイルは手作業で変更せず、`npm run verify` で再生成してください。
+`tsconfig.json` の `rootDir` が `src`、`outDir` が `assets/js` のため、TypeScriptのディレクトリ階層が生成物にもそのまま反映されます。HTMLの6つの `<script defer>` は依存順を維持してください。`assets/js/` のファイルは手作業で変更せず、`npm run verify` で再生成してください。
 
 ## ICレベル回路モデル（2026年11月）
 
 - 13個の74HCパッケージを機能単位で可視化：74HC161×4、74HC153×2、74HC283、74HC74、74HC32、74HC10、74HC14、74HC154、74HC540。
 - `src/core/ic-circuit.ts` がICごとの機能信号（ピン名ラベル）と論理ネットを定義し、`levels(cpu, clock)` から現在の0/1を計算する。
-- `src/ui/app.ts` がIC/DIPカードとネット接続SVGを構築し、ROM/入力/出力/クロックの変化時に同期表示する。
+- `src/ui/board.ts` がIC/DIPカード・ROMスイッチを構築し、H/L表示とネット接続SVGを同期描画する。`src/ui/app.ts` はCPUの実行・状態変更と画面更新の呼び出しを管理する。
 - ROM 16×8bitは`cpu.rom`と双方向に連動。アドレスランプは74HC154の負論理選択出力(`/ROMn` = 0)で点灯。
 - ROMの生バスは負論理の`ROM_RAW0..7`で、74HC540を介したCPU命令バス`D0..7`はその反転値。
 - MUX選択: `SEL_A=D4 OR D7`、`SEL_B=D5`。4bit ALUの`COUT`と74HC74に保持された`C`は別信号。
@@ -82,7 +82,7 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 ## DIPパッケージの表示スケール
 
-ICカードは4列表示とし、物理パッケージは**2.54mmを18px**に換算した共通の画面スケールで描画します。DIP-14/16/20/24は左右それぞれ7/8/10/12本のピンを一定間隔で配置し、外形長さを126/144/180/216pxに設定します。一般的なナローDIPは両ピン列間7.62mm相当（54px）、74HC154も表示上のピン列間隔を他ICと同じ54pxへ揃えます（実際のワイドDIPの寸法比を厳密に再現する設定ではありません）。画面の表示倍率・DPIを固定するものではなく、各部品間の**寸法比**を合わせるためのスケールです。
+ICは左列のMUX/ALU・レジスタ・制御エリアと、中央の74HC154/540縦列に並べます。物理パッケージは**2.54mmを18px**に換算した共通の画面スケールで描画します。DIP-14/16/20/24は左右それぞれ7/8/10/12本のピンを一定間隔で配置し、外形長さを126/144/180/216pxに設定します。一般的なナローDIPは両ピン列間7.62mm相当（54px）、74HC154も表示上のピン列間隔を他ICと同じ54pxへ揃えます（実際のワイドDIPの寸法比を厳密に再現する設定ではありません）。画面の表示倍率・DPIを固定するものではなく、各部品間の**寸法比**を合わせるためのスケールです。
 
 物理ピン列の表示と、各ICの機能に沿って左右にまとめたH/Lプローブは**別の表現**です。機能プローブは実際のパッケージ端子番号への結線表を意味しません。74HC154など出力端子が多いICでも、物理パッケージを無理に伸縮せず、機能プローブ側で必要な行数を確保します。
 
@@ -105,3 +105,15 @@ ICカードは4列表示とし、物理パッケージは**2.54mmを18px**に換
 ## FETCH/ROM 中央縦列（2026-11）
 
 4区画のうち、左列には MUX/ALU（74HC153×2、74HC283×1）、REGISTERS（74HC161×4）、CLOCK/CONTROL（74HC74・32・10・14）を上から順に配置します。中央の細い縦列（ROM/FETCH）に置くのは **74HC154 と 74HC540 の2個のみ**で、DIPの左右2列にピンを配置し、H/L表示を維持します。ROMの16個の8bit DIPスイッチは右側の4×4（行順0〜F）のままです。基板上端の装飾的なLogic ICs/ROMの見出しは除去し、HIGH/LOWや注意書きは基板外の下段に表示します。緑色基板・白背景・四隅の取付穴を維持します。
+
+## スタイルシートの責務
+
+`assets/css/style.css` は `foundation.css` → `workbench.css` → `circuit-board.css` を順番に `@import` するだけの入口です。共通デザイン／画面・エディタ／IC基板・DIP・ROM配置を別ファイルで管理します。**CSSのカスケード順序は従来の単一ファイルと同一**であり、レイアウトや色の変更を目的とした分割ではありません。基板関連CSSの追加・変更は `circuit-board.css` にまとめてください。
+
+## 基板DOMの分離
+
+`src/ui/board.ts` はDIP脚・機能別エリア・ROM 4×4スイッチ・Input/Outputの**DOM生成とH/L・SVG配線の更新**を担当します。`src/ui/app.ts` はCPU状態・ROM編集・実行制御・IC詳細を管理します。イベントは `BoardViewOptions` のコールバックを通してアプリ側で処理します。公開JSの読み込み順は `ic-circuit.js` → `board.js` → `app.js` です。
+
+基板表示モジュールの `render({cpu, circuit, clockHigh, selectedNet})` はIC脚・ROMスイッチ・入出力LED・選択信号ラベルを同期し、`drawWires()` は選択ネットのSVG配線を描画します。CPU状態の読み取りは行いますが、CPU命令実行やROM書換えは行いません。
+
+基板CSSの整理では、同一セレクタ／同一条件で**後続の宣言に完全に上書きされる宣言**だけを削除しています。適用される最終プロパティと値が一致することを機械的に照合し、カスケード順・DIP寸法・ROMの4×4配置・配線色は変更していません。

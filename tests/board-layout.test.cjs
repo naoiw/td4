@@ -3,8 +3,11 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const css=fs.readFileSync(path.join(root,'assets/css/style.css'),'utf8');
+// Keep assertions on the composed CSS in the exact browser import order.
+const cssFiles=['foundation.css','workbench.css','circuit-board.css'];
+const css=cssFiles.map(name=>fs.readFileSync(path.join(root,'assets/css',name),'utf8')).join('\n');
 const js=fs.readFileSync(path.join(root,'assets/js/ui/app.js'),'utf8');
+const boardJs=fs.readFileSync(path.join(root,'assets/js/ui/board.js'),'utf8');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const lastRule=(selector)=>{
   const matches=[...css.matchAll(new RegExp('\\.'+selector+'\\s*\\{([^}]*)\\}','g'))];
@@ -17,7 +20,7 @@ test('ROM DIP 8-bit modules make a 4 by 4 address matrix',()=>{
   assert.match(grid,/grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(grid,/grid-template-rows:\s*repeat\(4,\s*max-content\)/);
   assert.match(grid,/grid-auto-flow:\s*row/);
-  assert.match(js,/for\s*\(let addr\s*=\s*0;\s*addr\s*<\s*16/);
+  assert.match(boardJs,/for\s*\(let addr\s*=\s*0;\s*addr\s*<\s*16/);
 });
 
 test('each ROM address contains eight horizontally arranged DIP toggles',()=>{
@@ -25,7 +28,7 @@ test('each ROM address contains eight horizontally arranged DIP toggles',()=>{
   assert.match(lastRule('rom-dip'),/flex-direction:\s*column/);
   assert.match(lastRule('rom-dip'),/flex:\s*1 1 0/);
   assert.match(lastRule('rom-dip.is-on'),/justify-content:\s*flex-start/);
-  assert.match(js,/footer\.textContent\s*=\s*'D7 → D0'/);
+  assert.match(boardJs,/footer\.textContent\s*=\s*'D7 → D0'/);
 });
 
 test('Input and Output panels are horizontal beneath the ROM',()=>{
@@ -46,7 +49,7 @@ test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>
   const fetch=circuit.chips.filter(c=>c.group==='rom').map(c=>c.type).sort();
   assert.deepEqual(fetch,['74HC154','74HC540']);
   for(const role of ['fetch','alu','registers','control'])
-    assert.match(js,new RegExp("key:\\s*'"+role+"'"));
+    assert.match(boardJs,new RegExp("key:\\s*'"+role+"'"));
 });
 
 test('IC detail is outside board and large enough to inspect H/L probes',()=>{
@@ -63,10 +66,10 @@ test('IC detail is outside board and large enough to inspect H/L probes',()=>{
 test('IC physical pins, net coloring and click toggles are preserved',()=>{
   assert.match(css,/\.ic-footprint \.ic-leg\.is-high:before/);
   assert.match(css,/\.ic-footprint \.ic-leg\.is-low:before/);
-  assert.match(js,/physicalPins\[pinNumber - 1\]/);
-  assert.match(js,/document\.querySelectorAll\('\.ic-probe'\)/);
-  assert.match(js,/chipToggle\.addEventListener\('click'/);
-  assert.match(js,/pinList\.hidden\s*=\s*true/);
+  assert.match(boardJs,/physicalPins\[pinNumber - 1\]/);
+  assert.match(boardJs,/document\.querySelectorAll\('\.ic-probe'\)/);
+  assert.match(boardJs,/chipToggle\.addEventListener\('click'/);
+  assert.match(boardJs,/pinList\.hidden\s*=\s*true/);
 });
 
 
@@ -91,9 +94,9 @@ test('four circular mounting holes occupy the PCB corners',()=>{
 
 
 test('DIP footprints retain two opposing pin banks and functional signal colors',()=>{
-  assert.match(js,/createLegs\('left'\)/);
-  assert.match(js,/createLegs\('right'\)/);
-  assert.match(js,/physicalPins\[pinNumber - 1\]/);
+  assert.match(boardJs,/createLegs\('left'\)/);
+  assert.match(boardJs,/createLegs\('right'\)/);
+  assert.match(boardJs,/physicalPins\[pinNumber - 1\]/);
   assert.match(css,/\.ic-footprint \.ic-leg\.is-high:before/);
   assert.match(css,/\.ic-footprint \.ic-leg\.is-low:before/);
   assert.match(lastRule('ic-footprint .ic-leg-bank'),/flex-direction:\s*column/);
@@ -111,4 +114,25 @@ test('upper board text is removed and the signal legend sits entirely below the 
   assert.ok(boardClose>html.indexOf('id="romDipGrid"'));
   assert.ok(boardClose<html.indexOf('id="icDetailPanel"'));
   assert.ok(!html.slice(html.indexOf('id="schematicBoard"'),boardClose).includes('class="schematic-explain"'));
+});
+
+test('DOM construction is delegated to stateless board renderer',()=>{
+  assert.match(js,/TD4BoardView\.mount\(/);
+  assert.match(boardJs,/function mount\(options\)/);
+  assert.match(boardJs,/onRomBitToggle\(addr, bit\)/);
+  assert.match(boardJs,/onInputBitToggle\(bit\)/);
+  assert.doesNotMatch(boardJs,/cpu\.rom\[[^\]]+\]\s*(?:\^=|=)/,'renderer must not mutate ROM');
+  assert.ok(!boardJs.includes('cpu.setInput('),'renderer must not mutate input');
+});
+
+test('board H/L and selected-net SVG renderers stay separate from CPU state',()=>{
+  assert.match(js,/TD4BoardView\.render\(/);
+  assert.match(js,/TD4BoardView\.drawWires\(/);
+  assert.match(boardJs,/function render\(options\)/);
+  assert.match(boardJs,/function drawWires\(options\)/);
+  assert.match(boardJs,/drawWires\(options\)/);
+  assert.match(boardJs,/selectedNetName/);
+  assert.match(boardJs,/getBoundingClientRect\(\)/);
+  assert.match(boardJs,/classList\.toggle\('is-high'/);
+  assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');
 });

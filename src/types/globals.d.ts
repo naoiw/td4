@@ -97,3 +97,27 @@ interface IcCircuitApi {
   physicalPins(chip: IcComponent): IcPhysicalPin[];
 }
 interface Window { TD4Circuit: IcCircuitApi }
+
+/** Stateless view builder. All mutations return through app-provided callbacks. */
+interface BoardViewOptions {
+  circuit: IcCircuitApi;
+  HEX: (value: number) => string;
+  toggleIcDetails(chipId: string): void;
+  setSelectedNet(net: string): void;
+  onRomBitToggle(address: number, bit: number): void;
+  onInputBitToggle(bit: number): void;
+}
+
+interface BoardRenderOptions {
+  circuit: IcCircuitApi;
+  HEX: (value: number) => string;
+  cpu: CpuState;
+  clockHigh: boolean;
+  selectedNet: string;
+}
+interface BoardViewApi {
+  mount(options: BoardViewOptions): void;
+  render(options: BoardRenderOptions): void;
+  drawWires(options: BoardRenderOptions): void;
+}
+interface Window { TD4BoardView: BoardViewApi }
