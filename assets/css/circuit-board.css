@@ -592,3 +592,95 @@
   font:500 11px/1.6 sans-serif;
 }
 @media(max-width:650px){.schematic-board{width:1135px}}
+
+
+/* Pin roles override H/L: actual supply pins use fixed colors, unmodelled/NC
+   pads stay charcoal, and only logic signals use the live green/grey palette. */
+.ic-footprint .ic-leg[data-pin-role="vcc"]:before {
+  background:linear-gradient(90deg,#ff9292,#e7474d);
+  border-color:#ffb1b1;
+  box-shadow:0 0 5px #e94747a1;
+  opacity:1;
+}
+.ic-footprint .ic-leg[data-pin-role="gnd"]:before {
+  background:linear-gradient(90deg,#333b40,#0c1115);
+  border-color:#59646b;
+  box-shadow:0 1px 1px #080e11;
+  opacity:1;
+}
+.ic-footprint .ic-leg[data-pin-role="nc"]:before {
+  background:#48535a;
+  border-color:#66747a;
+  box-shadow:none;
+  opacity:.83;
+}
+.ic-probe.is-low {
+  border-color:#61717a;
+  background:#303c43;
+  color:#ccd4d8;
+}
+.ic-probe.is-low b {
+  background:#687780;
+  color:#f2f6f8;
+}
+
+/* Each 8-way ROM DIP has just two end labels aligned to the first/last key. */
+.rom-slot-bits {
+  display:grid;
+  grid-template-columns:repeat(8,minmax(0,1fr));
+  gap:2px;
+  padding:0 4px;
+  margin-top:5px;
+  font-size:9px;
+  line-height:1.2;
+  color:#cadfd2;
+  text-align:center;
+}
+.rom-slot-bits span:first-child{grid-column:1}
+.rom-slot-bits span:last-child{grid-column:8}
+
+/* Green address-selection LED (active-low 74HC154). */
+.rom-select-lamp {
+  border-color:#7b9e8c;
+  background:#3c574e;
+  box-shadow:inset 0 0 3px #1c3329;
+}
+.rom-select-lamp.is-on {
+  background:#63efa2;
+  border-color:#b9ffd2;
+  box-shadow:0 0 10px #68e7a4,inset 0 0 2px #edfff4;
+}
+.rom-slot.is-current {
+  border-color:#75db9c;
+  box-shadow:0 0 0 1px #91e6ae,0 4px 0 #092c29,0 0 20px #6bdaa644;
+}
+
+/* H=green, L=grey on the input switches and output LED readouts. */
+.schematic-io-switch {
+  background:#39464c;
+  border-color:#72828a;
+  color:#d0d8dc;
+  font-size:11px;
+}
+.schematic-io-switch.is-on {
+  background:#246c4e;
+  border-color:#6ada9f;
+  color:#bbffcf;
+}
+.schematic-io-led {
+  color:#c4cdd1;
+  font-size:11px;
+}
+.schematic-io-led:before {
+  background:#75838a;
+  border-color:#a2adb3;
+  box-shadow:inset 0 0 5px #354149;
+}
+.schematic-io-led.is-on {
+  color:#bcffd2;
+}
+.schematic-io-led.is-on:before {
+  background:#55e997;
+  border-color:#b2fbd0;
+  box-shadow:0 0 14px #68e7a4,0 0 6px #84ffc0,inset 0 0 5px #e3fff0;
+}

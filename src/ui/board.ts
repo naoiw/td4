@@ -55,6 +55,10 @@
           const pinNumber=side==='left'? position+1 : layout.packagePins-position;
           const physicalPin = physicalPins[pinNumber - 1];
           leg.dataset.pinName = physicalPin.name;
+          // Power terminals keep dedicated colors; only real logic nets show H/L.
+          leg.dataset.pinRole = physicalPin.name === 'VCC' ? 'vcc'
+            : physicalPin.name === 'GND' ? 'gnd'
+            : physicalPin.net ? 'signal' : 'nc';
           if (physicalPin.net) leg.dataset.net = physicalPin.net;
           leg.title = '#' + pinNumber + ' ' + physicalPin.name + ': ' + (physicalPin.net || '未モデル化');
           leg.dataset.pinNumber=String(pinNumber);
@@ -174,7 +178,11 @@
         button.addEventListener('click', () => onRomBitToggle(addr, bit));
         bits.append(button);
       }
-      const footer=document.createElement('div');footer.className='rom-slot-bits';footer.textContent = 'D7 → D0';
+      const footer=document.createElement('div');footer.className='rom-slot-bits';
+      // Match the two end markers to the first (D7) and last (D0) switch.
+      const firstBit=document.createElement('span');firstBit.textContent='7';
+      const lastBit=document.createElement('span');lastBit.textContent='0';
+      footer.append(firstBit,lastBit);
       cell.append(head,bits,footer);
       grid.append(cell);
     }
@@ -213,9 +221,10 @@
     for (const leg of board.querySelectorAll<HTMLElement>('.ic-leg')) {
       const net = leg.dataset.net;
       const level = net ? values[net] : undefined;
-      leg.classList.toggle('is-high', level === 1);
-      leg.classList.toggle('is-low', level === 0);
-      leg.classList.toggle('is-unmodelled', level === undefined);
+      const role = leg.dataset.pinRole;
+      leg.classList.toggle('is-high', role === 'signal' && level === 1);
+      leg.classList.toggle('is-low', role === 'signal' && level === 0);
+      leg.classList.toggle('is-unmodelled', role === 'nc');
       leg.title = '#' + leg.dataset.pinNumber + ' ' + leg.dataset.pinName + ': ' +
         (level === undefined ? '未モデル化' : level === 1 ? 'H (1)' : 'L (0)');
     }

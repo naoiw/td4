@@ -28,7 +28,9 @@ test('each ROM address contains eight horizontally arranged DIP toggles',()=>{
   assert.match(lastRule('rom-dip'),/flex-direction:\s*column/);
   assert.match(lastRule('rom-dip'),/flex:\s*1 1 0/);
   assert.match(lastRule('rom-dip.is-on'),/justify-content:\s*flex-start/);
-  assert.match(boardJs,/footer\.textContent\s*=\s*'D7 → D0'/);
+  assert.match(boardJs,/firstBit\.textContent\s*=\s*'7'/);
+  assert.match(boardJs,/lastBit\.textContent\s*=\s*'0'/);
+  assert.match(boardJs,/footer\.append\(firstBit,\s*lastBit\)/);
 });
 
 test('Input and Output panels are horizontal beneath the ROM',()=>{
@@ -135,4 +137,33 @@ test('board H/L and selected-net SVG renderers stay separate from CPU state',()=
   assert.match(boardJs,/getBoundingClientRect\(\)/);
   assert.match(boardJs,/classList\.toggle\('is-high'/);
   assert.ok(!boardJs.includes('cpu.step('),'view layer must not execute instructions');
+});
+
+
+test('IC VCC red, GND black, NC dark and signal pins live green/grey',()=>{
+  assert.match(boardJs,/dataset\.pinRole = physicalPin\.name === 'VCC'/);
+  assert.match(boardJs,/physicalPin\.name === 'GND' \? 'gnd'/);
+  assert.match(boardJs,/physicalPin\.net \? 'signal' : 'nc'/);
+  assert.match(boardJs,/role === 'signal' && level === 1/);
+  assert.match(boardJs,/role === 'signal' && level === 0/);
+  for (const kind of ['vcc','gnd','nc'])
+    assert.match(css,new RegExp('\\.ic-footprint \\.ic-leg\\[data-pin-role="'+kind+'"\\]:before'));
+  assert.match(lastRule('ic-footprint .ic-leg[data-pin-role="vcc"]:before'),/background:linear-gradient\(90deg,#ff9292,#e7474d\)/);
+  assert.match(lastRule('ic-footprint .ic-leg[data-pin-role="gnd"]:before'),/background:linear-gradient\(90deg,#333b40,#0c1115\)/);
+  assert.match(lastRule('ic-footprint .ic-leg[data-pin-role="nc"]:before'),/background:#48535a/);
+  assert.match(lastRule('ic-probe.is-low'),/background:#303c43/);
+});
+test('ROM end labels align with first D7 and last D0 switch',()=>{
+  assert.match(lastRule('rom-slot-bits'),/grid-template-columns:repeat\(8,minmax\(0,1fr\)\)/);
+  assert.match(lastRule('rom-slot-bits span:first-child'),/grid-column:1/);
+  assert.match(lastRule('rom-slot-bits span:last-child'),/grid-column:8/);
+  assert.match(boardJs,/footer\.append\(firstBit,\s*lastBit\)/);
+});
+test('ROM active LED is green and IO labels grow to 11px with green/grey state',()=>{
+  assert.match(lastRule('rom-select-lamp.is-on'),/background:#63efa2/);
+  assert.match(lastRule('schematic-io-switch'),/font-size:11px/);
+  assert.match(lastRule('schematic-io-led'),/font-size:11px/);
+  assert.match(lastRule('schematic-io-switch.is-on'),/background:#246c4e/);
+  assert.match(lastRule('schematic-io-led:before'),/background:#75838a/);
+  assert.match(lastRule('schematic-io-led.is-on:before'),/background:#55e997/);
 });
