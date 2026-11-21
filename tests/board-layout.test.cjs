@@ -592,3 +592,16 @@ test('CR feedback branches have filled junction dots independent of the open inv
   assert.match(circleGroup,/<circle cx="107" cy="45" r="3\.5"\/>/);
   assert.doesNotMatch(svg,/<g class="pcb-osc-lines"><path d="M36 45/);
 });
+
+test('IC reference silk is clear of DIP bodies and role blocks have vertical breathing room',()=>{
+  const header=lastRule('ic-role-rack .ic-dip .ic-head');
+  const footprint=lastRule('ic-role-rack .ic-dip .ic-footprint');
+  const group=lastRule('ic-role-group');
+  const fetch=lastRule('ic-role-fetch .ic-role-rack');
+  assert.match(header,/height:\s*18px/,'chip reference header reserves clear vertical space');
+  assert.match(footprint,/margin:\s*6px auto 0/,'DIP body sits below its reference text');
+  assert.match(group,/padding:\s*9px 8px 15px/,'all IC role groups have larger top and bottom clearance');
+  assert.match(fetch,/gap:\s*28px/,'HC154 and HC540 have more space between packages');
+  assert.match(lastRule('ic-chip-grid'),/grid-template-rows:\s*auto auto auto/);
+  assert.match(lastRule('ic-role-fetch'),/grid-row:\s*1 \/ span 3/);
+});
