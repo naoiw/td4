@@ -45,6 +45,12 @@
             result['D' + i] = bit(p.byte, i);
         return result;
     }
+    /** CPU capture follows clock activity; oscilloscope capture follows an independent timer. */
+    function shouldCaptureSample(mode, powerOn, cpuRunning, source) {
+        if (!powerOn)
+            return false;
+        return mode === 'cpu' ? cpuRunning && source === 'clock' : source === 'timer';
+    }
     // Each sample represents one observed level, normally one clock half-cycle.
     function appendSample(samples, sample, capacity = 80) {
         samples.push(sample);
@@ -67,5 +73,5 @@
         }
         return `${path} H ${width}`;
     }
-    return { GROUPS, preview, snapshot, appendSample, waveformPath };
+    return { GROUPS, preview, snapshot, appendSample, waveformPath, shouldCaptureSample };
 });
