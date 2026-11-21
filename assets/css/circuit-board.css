@@ -417,11 +417,15 @@
 
 /* PCB finish: green solder mask, white surround, and four mounting holes. */
 .schematic-scroll{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  min-width:0;
+  overflow:hidden;
   background:#ffffff;
   padding:14px;
   border:1px solid #e0e7e2;
-  border-radius:12px;
-  scrollbar-color:#9aaca2 #f2f5f2
+  border-radius:12px
 }
 .schematic-board{
   background-image:
@@ -492,6 +496,10 @@
 .schematic-board{
   width:1135px;
   min-height:0;
+  flex:none;
+  margin:0;
+  transform:scale(var(--board-fit-scale,1));
+  transform-origin:top center;
   grid-template-columns:490px minmax(0,1fr);
   gap:14px;
   align-items:start;

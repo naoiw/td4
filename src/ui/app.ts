@@ -22,6 +22,7 @@
   const waveSamples: SignalLevels[] = [];
   const MAX_WAVE_SAMPLES = 80;
   let lastWaveDrawAt = 0;
+  let boardResizeObserver: ResizeObserver | null = null;
 
   function buildRomRows(): void {
     const tbody = $<HTMLTableSectionElement>('romRows');
@@ -118,7 +119,13 @@
         renderCPU(); recordSignals();
       }
     });
-    window.addEventListener('resize', drawSelectedWires);
+    if (typeof ResizeObserver !== 'undefined') {
+      boardResizeObserver = new ResizeObserver(fitCircuitBoard);
+      boardResizeObserver.observe($('schematicViewport'));
+      boardResizeObserver.observe($('schematicBoard'));
+    }
+    window.addEventListener('resize', fitCircuitBoard);
+    fitCircuitBoard();
     setSelectedNet('CLK');
   }
 
@@ -181,6 +188,24 @@
     window.TD4BoardView.drawWires({cpu, clockHigh, selectedNet, circuit, HEX});
   }
 
+  /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
+  function fitCircuitBoard():void {
+    const viewport = $<HTMLElement>('schematicViewport');
+    const board = $<HTMLElement>('schematicBoard');
+    const style = window.getComputedStyle(viewport);
+    const availableWidth = viewport.clientWidth -
+      parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0) return;
+    // Shrink as much as necessary; gently enlarge on wide screens.
+    const scale = Math.min(1.2, availableWidth / board.offsetWidth);
+    board.style.setProperty('--board-fit-scale', String(scale));
+    const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
+      parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+    viewport.style.height = Math.ceil(board.offsetHeight * scale + verticalSpace) + 'px';
+    drawSelectedWires();
+  }
+
+
   function renderHistory(): void {
     const list = $('traceList');
     list.replaceChildren();
@@ -210,12 +235,14 @@
     area.replaceChildren();
     const group = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
     const svgNS = 'http://www.w3.org/2000/svg';
-    for (const signal of group) {
+    // Keep a stable ten-row analyzer; unused slots contain no waveform data.
+    for (let index = 0; index < 10; index++) {
+      const signal = group[index];
       const row = document.createElement('div');
-      row.className = 'scope-row';
+      row.className = signal ? 'scope-row' : 'scope-row is-unused';
       const name = document.createElement('span');
       name.className = 'scope-name';
-      name.textContent = signal;
+      name.textContent = signal || '-';
       const graph = document.createElementNS(svgNS,'svg');
       graph.setAttribute('viewBox','0 0 640 36');
       graph.setAttribute('preserveAspectRatio','none');
@@ -227,17 +254,27 @@
         grid.setAttribute('class', 'scope-gridline');
         graph.append(grid);
       }
-      const high = document.createElementNS(svgNS,'path');
-      high.setAttribute('d',waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
-      high.setAttribute('class','wave-trace');
-      graph.append(high);
+      if (signal) {
+        const high = document.createElementNS(svgNS,'path');
+        high.setAttribute('d',waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
+        high.setAttribute('class','wave-trace');
+        graph.append(high);
+      }
       const status = document.createElement('strong');
-      status.className = 'scope-level ' + (levels[signal] ? 'hi' : 'lo');
-      status.textContent = levels[signal] ? 'H' : 'L';
+      status.className = signal ? 'scope-level ' + (levels[signal] ? 'hi' : 'lo') : 'scope-level unused';
+      status.textContent = signal ? (levels[signal] ? 'H' : 'L') : '×';
       row.append(name, graph, status);
       area.append(row);
     }
-    $('sampleCount').textContent = `${waveSamples.length} samples / ${MAX_WAVE_SAMPLES}`;
+  }
+
+  /** Start a fresh capture at the currently selected probe group. */
+  function restartWaveCapture(): void {
+    waveSamples.splice(0);
+    const levels = snapshot(cpu, clockHigh);
+    appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    renderWaveforms(levels);
+    lastWaveDrawAt = performance.now();
   }
 
   function recordSignals(): void {
@@ -448,8 +485,8 @@
     });
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
-    $('clearWaveBtn').addEventListener('click', () => {waveSamples.splice(0);recordSignals();});
-    $('signalGroup').addEventListener('change', () => renderWaveforms(snapshot(cpu,clockHigh)));
+    $('clearWaveBtn').addEventListener('click', restartWaveCapture);
+    $('signalGroup').addEventListener('change', restartWaveCapture);
     $('assembleBtn').addEventListener('click', compileSource);
     $('fromRomBtn').addEventListener('click', () => {
       $<HTMLTextAreaElement>('source').value = romToSource(cpu.rom);

@@ -29,6 +29,15 @@
       </div>
     </header>
 
+    <main class="workbench">
+    <section class="quick-start" aria-label="サンプルプログラムをすぐに実行">
+      <div class="quick-heading"><div><p class="eyebrow">QUICK START</p><h2>サンプルを試す</h2></div><p>選ぶとROMを書き換えてそのまま実行します</p></div>
+      <div class="sample-cards" id="sampleCards"></div>
+    </section>
+    <section class="panel board-panel" aria-labelledby="boardTitle">
+      <div class="panel-heading board-heading">
+        <div><p class="eyebrow">HARDWARE WORKBENCH</p><h1 id="boardTitle">TD4 ボード</h1></div>
+      </div>
     <section class="runbar" aria-label="実行操作">
       <div class="run-buttons">
         <button type="button" class="btn btn-primary" id="runBtn"><span aria-hidden="true">▶</span> 実行</button>
@@ -48,17 +57,7 @@
         <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
       </div>
     </section>
-
-    <main class="workbench">
-    <section class="quick-start" aria-label="サンプルプログラムをすぐに実行">
-      <div class="quick-heading"><div><p class="eyebrow">QUICK START</p><h2>サンプルを試す</h2></div><p>選ぶとROMを書き換えてそのまま実行します</p></div>
-      <div class="sample-cards" id="sampleCards"></div>
-    </section>
-    <section class="panel board-panel" aria-labelledby="boardTitle">
-      <div class="panel-heading board-heading">
-        <div><p class="eyebrow">HARDWARE WORKBENCH</p><h1 id="boardTitle">TD4 ボード</h1><p class="board-subtitle">スイッチを動かし、LEDと信号の変化を観察する</p></div>
-      </div>
-      <div class="schematic-scroll" tabindex="0" aria-label="IC単位の論理回路と16個のROM DIPスイッチ">
+      <div class="schematic-scroll" id="schematicViewport" tabindex="0" aria-label="IC単位の論理回路と16個のROM DIPスイッチ">
         <div class="schematic-board" id="schematicBoard">
           <span class="pcb-mount-hole pcb-mount-tl" aria-hidden="true"></span>
           <span class="pcb-mount-hole pcb-mount-tr" aria-hidden="true"></span>
@@ -84,11 +83,12 @@
       <section class="panel scope-panel" aria-labelledby="scopeTitle">
         <div class="panel-heading">
           <div><p class="eyebrow">LOGIC ANALYZER</p><h2 id="scopeTitle">信号波形</h2></div>
-          <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ (4bit)</option><option value="rom">ROM / ALU</option></select></label>
+          <div class="scope-controls">
+            <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ A/B</option><option value="pc">PC</option><option value="rom">ROM</option><option value="alu">ALU</option></select></label>
+            <button type="button" class="text-button" id="clearWaveBtn">波形を消去</button>
+          </div>
         </div>
-        <div class="scope-meta"><span>立ち上がりでCPU状態を更新 · 右端が最新</span><button type="button" class="text-button" id="clearWaveBtn">波形を消去</button></div>
         <div class="scope-view" id="scopeView" aria-label="デジタル信号波形。Hは上段、Lは下段に表示"></div>
-        <div class="scope-footer"><span>H = HIGH (1) / L = LOW (0)</span><span id="sampleCount">0 samples</span></div>
       </section>
       <section class="panel trace-panel" aria-label="実行履歴">
         <div class="panel-heading"><div><p class="eyebrow">EXECUTION TRACE</p><h2>実行履歴</h2></div><button type="button" id="clearLogBtn" class="text-button">クリア</button></div>
@@ -100,14 +100,13 @@
         <div class="panel-heading">
           <div><p class="eyebrow">PROGRAM ROM</p><h2 id="romTitle">16バイト ROM</h2></div>
         </div>
-        <div class="rom-info">実行中の命令がハイライトされます。<strong>0 / 1</strong> を押すとビットを反転できます。</div>
+        <div class="rom-footer"><span><i class="legend-marker"></i> PC（次の命令）</span><span><i class="legend-marker breakpoint"></i> ブレークポイント</span><button id="clearBpBtn" type="button" class="text-button">BPを解除</button></div>
         <div class="rom-table-wrap">
           <table class="rom-table" aria-label="プログラムROM">
             <thead><tr><th>ADDR <small>BP</small></th><th>DATA <small>D7 → D0</small></th><th>HEX</th><th>ASSEMBLY</th></tr></thead>
             <tbody id="romRows"></tbody>
           </table>
         </div>
-        <div class="rom-footer"><span><i class="legend-marker"></i> PC（次の命令）</span><span><i class="legend-marker breakpoint"></i> ブレークポイント</span><button id="clearBpBtn" type="button" class="text-button">BPを解除</button></div>
       </section>
 
       <section class="panel editor-panel" aria-labelledby="editorTitle">

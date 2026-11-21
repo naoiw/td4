@@ -297,14 +297,20 @@
         const bounds = board.getBoundingClientRect();
         if (!bounds.width || !bounds.height)
             return;
-        svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+        // Normalise pointer/element rectangles into the unscaled board's SVG space.
+        // A CSS transform changes getBoundingClientRect(), not offsetWidth/Height.
+        const width = board.offsetWidth, height = board.offsetHeight;
+        if (!width || !height)
+            return;
+        const scaleX = width / bounds.width, scaleY = height / bounds.height;
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
         svg.replaceChildren();
         const matches = [...board.querySelectorAll('[data-net]')].filter(el => el.dataset.net === selectedNet && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0);
         if (matches.length < 2)
             return;
         const point = (node) => {
             const r = node.getBoundingClientRect();
-            return { x: r.left - bounds.left + r.width / 2, y: r.top - bounds.top + r.height / 2 };
+            return { x: (r.left - bounds.left + r.width / 2) * scaleX, y: (r.top - bounds.top + r.height / 2) * scaleY };
         };
         const anchor = point(matches[0]);
         const level = circuit.levels(cpu, clockHigh)[selectedNet];
