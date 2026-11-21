@@ -746,7 +746,7 @@ test('Space toggles CPU run/pause without editing or button-keyboard conflicts',
     assert.match(keyHandler,/event\.target\.closest\('input, textarea, select, button, a\[href\], summary, \[contenteditable\], \[role="button"\]'\)/);
     assert.match(keyHandler,/powerOn\)\s*\{\s*event\.preventDefault\(\);\s*if \(!event\.repeat\)\s*toggleRunPause\(\)/,
       'Space should toggle only with power on, ignoring held-key repeats');
-    assert.match(source,/function toggleRunPause\(\)\s*(?:: void)?\s*\{[\s\S]*?if \(intervalId === null\) run\(\);\s*else stop\(\);/,
+    assert.match(source,/function toggleRunPause\(\)\s*(?:: void)?\s*\{[\s\S]*?if \(intervalId === null\)\s*run\(\);\s*else\s*stop\(\);/,
       'shortcut reuses existing run/pause lifecycle');
   }
 });
