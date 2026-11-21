@@ -13,7 +13,7 @@
             id: 'led',
             icon: '↔',
             title: 'LEDスキャナ',
-            description: 'LEDが左右に流れる',
+            description: 'LED0点灯で折り返す往復スキャナ',
             source: `; LEDを左右に流す
 start: OUT 1
        OUT 2
@@ -21,17 +21,32 @@ start: OUT 1
        OUT 8
        OUT 4
        OUT 2
+       OUT 1
        JMP start`
         },
         {
             id: 'echo',
             icon: '⇄',
             title: 'スイッチ入力',
-            description: '4bitスイッチをLEDに表示',
-            source: `; 実行中にSW0〜SW3を切り替えよう
-read:  IN B
+            description: '4bitスイッチを2クロックごとにLED表示（16命令）',
+            source: `; 4bit入力を2クロックごとにLEDへ反映
+; IN B → OUT B を8組実行し、PCの0xF→0x0で繰り返す
+       IN B
        OUT B
-       JMP read`
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B
+       IN B
+       OUT B`
         },
         {
             id: 'counter',
@@ -58,15 +73,51 @@ loop:  OUT 15
             id: 'bounce',
             icon: '◆',
             title: '2進パターン',
-            description: 'ビットを順に点灯',
-            source: `; 1, 3, 7, F の2進パターン
-loop:  OUT 1
-       OUT 3
-       OUT 7
-       OUT 15
-       OUT 7
-       OUT 3
-       JMP loop`
+            description: '左向き→右向きウェーブ（16バイト）',
+            source: `; 左向きウェーブ8命令 → 右向きウェーブ8命令
+; 16バイトの最後からPC=0x0へ自然に戻る
+DB 0xB1
+DB 0xB3
+DB 0xB7
+DB 0xBF
+DB 0xB7
+DB 0xB3
+DB 0xB1
+DB 0xB0
+DB 0xB8
+DB 0xBC
+DB 0xBE
+DB 0xBF
+DB 0xBE
+DB 0xBC
+DB 0xB8
+DB 0xB0`
+        },
+        {
+            id: 'sum2',
+            icon: '∑',
+            title: '2bit加算（16命令）',
+            description: 'SW01+SW23 → LED210（LED2は桁上がり）',
+            source: `; SW1:0 (下位2bit) + SW3:2 (上位2bit) -> LED2:0
+; Aで入力範囲を判別し、Bを0〜6の結果に変換
+start:  IN A
+        MOV B, A
+        ADD A, 4
+        JNC under12
+        ADD B, 7
+        JMP show
+under12:
+        ADD A, 4
+        JNC under8
+        ADD B, 10
+        JMP show
+under8:
+        ADD A, 4
+        JNC show
+        ADD B, 13
+show:   OUT B
+        ADD B, 12    ; 1クロックの間、CPUのCにも桁上がりを表示
+        JMP start`
         },
         {
             id: 'countdown',

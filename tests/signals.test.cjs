@@ -5,7 +5,7 @@ const { GROUPS, preview, snapshot, appendSample, waveformPath, shouldCaptureSamp
 const examples = require('../assets/js/data/samples.js');
 
 test('all sample programs assemble inside TD4 16-byte ROM', () => {
-  assert.equal(examples.length, 8);
+  assert.equal(examples.length, 9);
   for (const example of examples) {
     assert.ok(example.id && example.title && example.description);
     const rom = assemble(example.source);

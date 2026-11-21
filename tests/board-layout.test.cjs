@@ -191,7 +191,10 @@ test('ROM active LED is green and IO labels grow to 11px with green/grey state',
   assert.match(lastRule('schematic-io-switch.is-on'),/background:#246c4e/);
   assert.match(lastRule('schematic-io-led:before'),/background:#75838a/);
   assert.match(lastRule('schematic-io-led.is-on:before'),/background:radial-gradient/);
-  assert.match(lastRule('schematic-io-led.is-on:before'),/box-shadow:0 0 26px 6px/);
+  const lit=lastRule('schematic-io-led.is-on:before');
+  assert.match(lit,/background:radial-gradient\(circle at 35% 28%,#ffffff 0%,#f5fff9 24%,#b3ffd2 54%,#48f991 100%\)/);
+  assert.match(lit,/box-shadow:0 0 30px 8px #67ffb5ad,0 0 14px 4px #bbffdcce/);
+  assert.match(lastRule('schematic-board.is-powered-off .schematic-io-led.is-on:before'),/box-shadow:none/);
 });
 
 test('whole PCB auto-fits viewport while preserving original geometry',()=>{
