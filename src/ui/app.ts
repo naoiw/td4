@@ -196,7 +196,6 @@
   function setSelectedNet(net:string):void {
     selectedNet=net;
     updateCircuitBoard();
-    drawSelectedWires();
   }
 
   /** Keep CPU state in the application; delegate all board DOM updates. */
@@ -206,10 +205,6 @@
   function updateCircuitBoard(): void {
     window.TD4BoardView.render(boardRenderOptions());
   }
-  function drawSelectedWires(): void {
-    window.TD4BoardView.drawWires(boardRenderOptions());
-  }
-
   /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
   function fitCircuitBoard():void {
     const viewport = $<HTMLElement>('schematicViewport');
