@@ -225,7 +225,7 @@
     }
 
       function render(options) {
-    const {cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz, actualClockHz}=options;
+    const {cpu, clockHigh, selectedNet, circuit, HEX, powerOn, boardClockHz}=options;
         const board = document.getElementById('schematicBoard');
         if (!board)
             return;
@@ -241,9 +241,6 @@
         frequencySwitch.classList.toggle('is-ten-hz', boardClockHz === 10);
         frequencySwitch.setAttribute('aria-pressed', String(boardClockHz === 10));
         frequencySwitch.setAttribute('aria-label', 'クロック周波数 ' + boardClockHz + 'Hz、クリックで' + (boardClockHz === 2 ? '10' : '2') + 'Hzに変更');
-        const override = actualClockHz !== boardClockHz;
-        $('boardOscReadout').textContent = override ? 'PANEL OVERRIDE · ' + actualClockHz + ' Hz' : 'CLOCK · ' + boardClockHz + ' Hz';
-        frequencySwitch.closest('.pcb-osc-area')?.classList.toggle('is-override', override);
         const values = circuit.levels(cpu, clockHigh);
         for (const element of document.querySelectorAll('.ic-probe')) {
             const net = element.dataset.net || '';
@@ -270,7 +267,7 @@
             const addr = Number(cell.dataset.addr);
             const selected = cpu.pc === addr;
             const byte = cpu.rom[addr];
-            cell.classList.toggle('is-current', selected);
+            cell.classList.toggle('is-current', selected && powerOn);
             const lamp = cell.querySelector('.rom-select-lamp');
             lamp.classList.toggle('is-on', selected && powerOn);
             lamp.classList.toggle('is-selected', selectedNet === `ROM_SEL_${addr}`);
