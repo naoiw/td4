@@ -167,6 +167,7 @@
         host.hidden = !next;
         if (!next) {
             updateCircuitBoard();
+            document.querySelector('.ic-chip[data-chip="' + previous + '"] .ic-open-details')?.focus({ preventScroll: true });
             return;
         }
         const card = document.querySelector('.ic-chip[data-chip="' + next + '"]');
@@ -194,6 +195,8 @@
         host.append(head, pins);
         updateCircuitBoard();
         host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        host.tabIndex = -1;
+        host.focus({ preventScroll: true });
     }
     function setSelectedNet(net) {
         selectedNet = net;
@@ -587,10 +590,27 @@
                 compileSource();
                 return;
             }
-            if (event.key === 'Escape' && intervalId !== null) {
-                event.preventDefault();
-                stop();
+            if (event.key === 'Escape') {
+                const detail = $('icDetailPanel');
+                if (!detail.hidden && detail.dataset.chip) {
+                    event.preventDefault();
+                    toggleIcDetails(detail.dataset.chip);
+                    return;
+                }
+                if (intervalId !== null) {
+                    event.preventDefault();
+                    stop();
+                }
                 return;
+            }
+            if (event.key === ' ' && !event.isComposing &&
+                !event.ctrlKey && !event.metaKey && !event.altKey &&
+                !(event.target instanceof HTMLElement &&
+                    event.target.closest('input, textarea, select, button, a[href], summary, [contenteditable], [role="button"]')) &&
+                powerOn) {
+                event.preventDefault();
+                if (!event.repeat)
+                    toggleRunPause();
             }
         });
     }

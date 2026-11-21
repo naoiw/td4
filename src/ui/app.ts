@@ -166,7 +166,11 @@
     const next = previous === chipId ? '' : chipId;
     host.dataset.chip = next;
     host.hidden = !next;
-    if (!next) { updateCircuitBoard(); return; }
+    if (!next) {
+      updateCircuitBoard();
+      document.querySelector<HTMLButtonElement>('.ic-chip[data-chip="' + previous + '"] .ic-open-details')?.focus({preventScroll: true});
+      return;
+    }
     const card = document.querySelector<HTMLElement>('.ic-chip[data-chip="' + next + '"]');
     const pins = document.getElementById('ic-details-' + next);
     const chip = circuit.chips.find(item => item.id === next);
@@ -191,6 +195,8 @@
     host.append(head, pins);
     updateCircuitBoard();
     host.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    host.tabIndex = -1;
+    host.focus({preventScroll: true});
   }
 
   function setSelectedNet(net:string):void {
@@ -574,8 +580,25 @@
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault(); compileSource(); return;
       }
-      if (event.key === 'Escape' && intervalId !== null) {
-        event.preventDefault(); stop(); return;
+      if (event.key === 'Escape') {
+        const detail = $('icDetailPanel');
+        if (!detail.hidden && detail.dataset.chip) {
+          event.preventDefault();
+          toggleIcDetails(detail.dataset.chip);
+          return;
+        }
+        if (intervalId !== null) {
+          event.preventDefault(); stop();
+        }
+        return;
+      }
+      if (event.key === ' ' && !event.isComposing &&
+          !event.ctrlKey && !event.metaKey && !event.altKey &&
+          !(event.target instanceof HTMLElement &&
+            event.target.closest('input, textarea, select, button, a[href], summary, [contenteditable], [role="button"]')) &&
+          powerOn) {
+        event.preventDefault();
+        if (!event.repeat) toggleRunPause();
       }
     });
   }
