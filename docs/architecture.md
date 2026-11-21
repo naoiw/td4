@@ -41,6 +41,8 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 
 `src/data/samples.ts` にROMに収まる8種類のサンプルを収録しています。画面上部の6カードはROMロードと実行をワンクリックで行います。プログラムエディタのプルダウンから8種類すべてを選択できます。
 
+PROGRAM ROMとPROGRAM EDITORは同じ`detail-grid`に配置し、横並び時は`align-items:stretch`で両パネルの高さを統一します。狭い画面で1列になる場合はコンテンツごとの高さに戻ります。ROMの.binファイル保存・読込UIおよびイベント処理は撤去しましたが、サンプルのROMロード、アセンブル、ROM直接編集、「ROM → ソース」機能は維持します。
+
 ## ファイル依存
 
 読み込み順は`assets/js/core/td4-core.js` → `assets/js/data/samples.js` → `assets/js/core/signals.js` → `assets/js/core/ic-circuit.js` → `assets/js/ui/board.js` → `assets/js/ui/app.js`です。いずれもJavaScriptで、外部サービスへのアクセスは必要ありません。
