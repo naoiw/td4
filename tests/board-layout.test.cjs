@@ -268,7 +268,7 @@ test('PCB power toggle runs and stops the CPU and CLK toggles precisely 2/10Hz',
     assert.match(source,/onFrequencyToggle\(\)\s*\{\s*setBoardFrequency\(boardClockHz === 2 \? 10 : 2\);\s*\}/);
     assert.match(source,/function run\(\)\s*(?:: void)?\s*\{[\s\S]{0,120}?if\s*\(!powerOn\)\s*\{\s*setPower\(true\);/);
     assert.match(source,/function setPower\(on(?:\: boolean)?\)[\s\S]{0,1400}?powerOn = true;/);
-    assert.match(source,/function setPower\(on(?:\: boolean)?\)[\s\S]{0,1700}?startClock\(true\);/);
+    assert.match(source,/function setPower\(on(?:\: boolean)?\)[\s\S]{0,1700}?startClock\(false\);/);
     assert.match(source,/function setBoardFrequency\(frequency(?:\: 2 \| 10)?\)[\s\S]{0,300}?boardClockHz = frequency;/);
     assert.match(source,/function setBoardFrequency\(frequency(?:\: 2 \| 10)?\)[\s\S]{0,300}?restartRunningClock\(\)/);
   }
@@ -296,7 +296,7 @@ test('power OFF hides the highlighted ROM module without losing ROM bits',()=>{
     assert.match(power,/cpu\.reset\(\)/);
     assert.match(power,/renderCPU\(\)/);
     assert.match(power,/powerOn = true;/);
-    assert.match(power,/startClock\(true\)/);
+    assert.match(power,/startClock\(false\)/);
   }
 });
 
@@ -351,4 +351,46 @@ test('VCC supply pins lose their red glow only when PCB POWER is OFF',()=>{
     assert.match(source,/board\.classList\.toggle\('is-powered-off', !powerOn\)/);
     assert.match(source,/physicalPin\.name === 'VCC'/);
   }
+});
+
+test('power-on displays 0x00 until the first scheduled clock',()=>{
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    const begin=source.indexOf('function setPower(');
+    const end=source.indexOf('function setBoardFrequency(',begin);
+    assert.ok(begin>0&&end>begin,'power lifecycle must exist');
+    const body=source.slice(begin,end);
+    assert.match(body,/powerOn = true;/);
+    assert.match(body,/cpu\.reset\(\);/);
+    assert.match(body,/renderCPU\(\)/);
+    assert.match(body,/startClock\(false\);/);
+    assert.doesNotMatch(body,/startClock\(true\)/);
+    assert.match(source,/if\s*\(immediate\)\s*risingEdge\(\)/);
+    assert.match(source,/intervalId = setInterval\(/);
+  }
+});
+
+test('both board ROM slots and PROGRAM ROM addresses use 0x prefix',()=>{
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8'),
+                       js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/address\.textContent\s*=/);
+    assert.ok(source.includes('0x'+'$'+'{HEX(addr)}'),'ROM label must use 0x before the hex address');
+  }
+});
+
+test('inverter CR feedback is closed and the output bubble has no wire through it',()=>{
+  const start=html.indexOf('<svg class="pcb-osc-diagram"');
+  const stop=html.indexOf('</svg>',start);
+  assert.ok(start>0&&stop>start);
+  const svg=html.slice(start,stop);
+  assert.doesNotMatch(html,/<span>INVERTER<\/span>/);
+  assert.doesNotMatch(svg,/>INV<\/text>/);
+  // In unmirrored SVG coordinates, the input joins R and C at x40.
+  assert.match(svg,/M40 45 H66 M119 45 H148 M148 45 V10 H125 M70 10 H40 V45/);
+  assert.doesNotMatch(svg,/M12 45 H66|M108 45 H148/);
+  // Triangle ends at x108, the inversion bubble occupies x109..119,
+  // and the output starts exactly at its outer tangent (x119).
+  assert.match(svg,/M66 27 V63 L108 45 Z/);
+  assert.match(svg,/<circle cx="114" cy="45" r="5"\/>/);
+  assert.match(svg,/M148 45 H184/);
+  assert.match(svg,/<text x="15" y="36">CLK<\/text>/);
 });

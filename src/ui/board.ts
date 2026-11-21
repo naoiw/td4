@@ -166,7 +166,7 @@
       led.setAttribute('aria-label',`ROMアドレス${HEX(addr)}の選択信号を追跡`);
       led.title='74HC154の出力は負論理です。LED点灯時は/ROM=L';
       led.addEventListener('click',()=>setSelectedNet(`ROM_SEL_${addr}`));
-      const address=document.createElement('strong'); address.textContent=HEX(addr);
+      const address=document.createElement('strong'); address.textContent=`0x${HEX(addr)}`;
       const value=document.createElement('span');value.className='rom-slot-value';
       head.append(led,address,value);
       const bits=document.createElement('div');bits.className='rom-dip-switches';
