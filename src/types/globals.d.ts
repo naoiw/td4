@@ -109,6 +109,9 @@ interface IcSection {
   label?: string;
   left: IcPin[][];
   right: IcPin[][];
+  /** Index dividing two subcolumns within one input/output side. */
+  leftColumnBreak?: number;
+  rightColumnBreak?: number;
 }
 interface IcLayout {
   packagePins: number;

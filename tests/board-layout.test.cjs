@@ -640,3 +640,13 @@ test('PCB columns and vertical section spacing use a shared, balanced layout',()
   assert.match(right,/gap:28px/);
   assert.match(lastRule('schematic-io-strip'),/margin-top:0/);
 });
+
+test('IC detail renderer supports nested input/output probe columns',()=>{
+  const source=fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8');
+  assert.match(source,/section\.leftColumnBreak/);
+  assert.match(source,/section\.rightColumnBreak/);
+  assert.match(source,/ic-function-subcolumns/);
+  assert.match(boardJs,/ic-function-subcolumns/);
+  assert.match(lastRule('ic-detail-panel .ic-function-subcolumns'),/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(lastRule('ic-detail-panel .ic-function-subcolumn'),/flex-direction:column/);
+});

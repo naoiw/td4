@@ -99,7 +99,7 @@ test('DIP pin counts and functional signal orientation', () => {
   }
   const adder=require('../assets/js/core/ic-circuit.js').layout(named.U9);
   assert.deepEqual(adder.sections[0].right.flat().map(x=>x.name),['SUM0','SUM1','SUM2','SUM3','COUT']);
-  assert.deepEqual(adder.sections[0].left.flat().map(x=>x.name),['A0','B0','A1','B1','A2','B2','A3','B3','CIN']);
+  assert.deepEqual(adder.sections[0].left.flat().map(x=>x.name),['A0','B0','A1','B1','A2','B2','A3','B3']);
 });
 
 
@@ -240,7 +240,8 @@ test('IC details omit fixed enable controls but retain dynamic and non-enable pi
   for(const id of ['U3','U4','U5','U6']){
     assert.ok(names(id).includes('PE#'),id+' must retain dynamic parallel-load control');
   }
-  assert.ok(names('U9').includes('CIN'),'fixed adder carry input is not an enable');
+  assert.ok(!names('U9').includes('CIN'),'fixed LOW carry input hidden from detail view');
+  assert.equal(physicalPins(byId.U9)[6].net,'GND','physical CIN remains tied LOW');
 
   // Hidden probes must not erase real physical terminals or the canonical wiring.
   assert.equal(physicalPins(byId.U12)[0].net,'GND');
@@ -269,4 +270,34 @@ test('74HC540 A and Y probes are 4 rows by 2 columns, with 0–3 in the left col
       ]);
     }
   }
+});
+
+test('74HC153 detail displays selector and data inputs in two separate columns', () => {
+  const {layout}=require('../assets/js/core/ic-circuit.js');
+  for(const [id,start] of [['U7',0],['U8',2]]){
+    const chip=chips.find(c=>c.id===id);
+    const model=layout(chip);
+    assert.match(model.leftLabel,/INPUT/);
+    assert.match(model.rightLabel,/OUTPUT/);
+    assert.equal(model.sections.length,2);
+    for(const [index,section] of model.sections.entries()){
+      const n=start+index;
+      assert.equal(section.leftColumnBreak,2);
+      assert.deepEqual(section.left.flat().map(pin=>pin.name),['S0','S1','A'+n,'B'+n,'IN'+n]);
+      assert.deepEqual(section.left.slice(0,2).flat().map(pin=>pin.net),['SEL_A','SEL_B']);
+      assert.deepEqual(section.right.flat().map(pin=>pin.name),['Y'+n]);
+      assert.ok(!section.left.flat().some(pin=>pin.net==='GND'),'fixed-LOW C3 hidden');
+    }
+  }
+});
+
+test('74HC283 output divides SUM0–3 and COUT into separate columns', () => {
+  const {layout,physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const chip=chips.find(c=>c.id==='U9');
+  const section=layout(chip).sections[0];
+  assert.equal(section.rightColumnBreak,4);
+  assert.deepEqual(section.right.slice(0,4).flat().map(pin=>pin.name),['SUM0','SUM1','SUM2','SUM3']);
+  assert.deepEqual(section.right.slice(4).flat().map(pin=>pin.name),['COUT']);
+  assert.ok(!section.left.flat().some(pin=>pin.name==='CIN'));
+  assert.equal(physicalPins(chip)[6].net,'GND','actual CIN is still tied LOW');
 });

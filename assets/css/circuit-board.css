@@ -388,6 +388,9 @@
 .ic-detail-panel .ic-function-title{margin-bottom:12px;padding-bottom:10px;font-size:14px}
 .ic-detail-panel .ic-function-headings{font-size:12px;margin-bottom:10px}
 .ic-detail-panel .ic-function-column{gap:7px}
+/* Separate selector/data or SUM/carry probes within a single signal side. */
+.ic-detail-panel .ic-function-subcolumns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.ic-detail-panel .ic-function-subcolumn{display:flex;flex-direction:column;min-width:0;gap:7px}
 .ic-detail-panel .ic-function-row{min-height:37px;gap:8px}
 .ic-detail-panel .ic-probe{min-height:37px;padding:7px 10px;font-size:12px}
 .ic-detail-panel .ic-probe-compact{font-size:11px}
