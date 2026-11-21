@@ -66,15 +66,14 @@ test('every channel defined by a selectable group is a boolean',()=>{
 });
 
 test('selectable analyzer groups contain at most 10 signals and retain all channels', () => {
-  assert.deepEqual(Object.keys(GROUPS), ['basic', 'io', 'registers', 'pc', 'rom', 'alu']);
+  assert.deepEqual(Object.keys(GROUPS), ['basic', 'io', 'registers', 'pc', 'rom']);
   for (const [name, channels] of Object.entries(GROUPS)) {
     assert.ok(channels.length >= 1 && channels.length <= 10, name + ': too many signals');
     assert.equal(new Set(channels).size, channels.length, name + ': duplicate signal');
   }
   assert.deepEqual(GROUPS.registers, ['CLK', 'C', 'A3', 'A2', 'A1', 'A0', 'B3', 'B2', 'B1', 'B0']);
-  assert.deepEqual(GROUPS.pc, ['CLK', 'C', 'PC3', 'PC2', 'PC1', 'PC0']);
+  assert.deepEqual(GROUPS.pc, ['CLK', 'C', 'PC3', 'PC2', 'PC1', 'PC0', 'ALU3', 'ALU2', 'ALU1', 'ALU0']);
   assert.deepEqual(GROUPS.rom, ['CLK', 'D7', 'D6', 'D5', 'D4', 'D3', 'D2', 'D1', 'D0']);
-  assert.deepEqual(GROUPS.alu, ['CLK', 'C', 'ALU3', 'ALU2', 'ALU1', 'ALU0']);
   const allSignals = new Set(Object.values(GROUPS).flat());
   for (const name of ['PC0','PC1','PC2','PC3','D0','D1','D2','D3','D4','D5','D6','D7','ALU0','ALU1','ALU2','ALU3']) {
     assert.ok(allSignals.has(name), name + ' should stay selectable');
@@ -163,4 +162,16 @@ test('fixed 20ms sampling displays 2Hz and 10Hz as distinct real-time CLK rates'
   assert.equal(fast.rises, 10, '10Hz makes ten rising edges per second');
   assert.equal(fast.rises / slow.rises, 5, '10Hz shows five times as many cycles as 2Hz');
   assert.equal(fast.samples.length, slow.samples.length, 'both share one timebase');
+});
+
+test('LOGIC ANALYZER dropdown contains one combined PC / ALU option', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const select = html.match(/<select id="signalGroup">([\s\S]*?)<\/select>/)?.[1];
+  assert.ok(select, 'signal group selector must exist');
+  const options = [...select.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)];
+  assert.deepEqual(options.map(([,value]) => value), ['basic','io','registers','pc','rom']);
+  assert.equal(options.find(([,value])=>value==='pc')?.[2], 'PC / ALU');
+  assert.doesNotMatch(select,/value="alu"/);
 });
