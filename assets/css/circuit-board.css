@@ -56,8 +56,6 @@
 .ic-wire-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 .ic-wire{fill:none;stroke-linejoin:round;stroke-linecap:round;stroke-width:3.5;vector-effect:non-scaling-stroke;opacity:.9}
 .ic-wire.hi{stroke:#a8ffb7;filter:drop-shadow(0 0 5px #98ffc7)}.ic-wire.lo{stroke:#718ea3;stroke-dasharray:7 5;opacity:.72}
-.overview-collapse{margin-top:16px;background:#eef4f3;border-radius:9px;padding:9px 12px;color:#47685e}
-.overview-collapse summary{cursor:pointer;font-size:12px;font-weight:750}.overview-collapse .pcb-scroll{margin-top:12px}
 @media(max-width:650px){.ic-toolbar{align-items:start;flex-direction:column}.schematic-board{margin:0}.ic-probe-control{width:100%;justify-content:space-between}}
 
 
