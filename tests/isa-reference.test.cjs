@@ -92,3 +92,26 @@ test('ISA is shown as a legible scrollable table with descriptions and clear H/L
   for(const selector of ['.isa-bit','.isa-high','.isa-low','.isa-conditional','.isa-explanation','.isa-table-scroll'])
     assert.ok(css.includes(selector),selector+' has a visual style');
 });
+
+
+test('ISA reference fits its containing panel and reflows narrow screens without horizontal scrolling',()=>{
+  assert.match(css,/\.isa-detail-table\{width:100%;min-width:0;/,
+    'instruction table has no fixed minimum width');
+  assert.doesNotMatch(css,/\.isa-detail-table\{[^}]*min-width:\s*945px/,
+    'old wide table constraint must not return');
+  assert.match(css,/\.isa-table-scroll\{[^}]*overflow-x:hidden/,
+    'the reference is never horizontally scrollable');
+  assert.match(css,/@media\(max-width:860px\)/,
+    'narrow screens use the compact card layout');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction\{\s*display:grid;\s*grid-template-columns:repeat\(24,minmax\(0,1fr\)\)/);
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-bit\{order:5;grid-column:span 3/,
+    '8 bit cells occupy one complete row');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-control\{order:7;grid-column:span 4/,
+    '6 control signals occupy one complete row');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-control:before\{\s*content:attr\(data-net\)/,
+    'wrapped control signal values retain readable labels');
+  assert.match(css,/\.isa-detail-table tbody tr\.isa-instruction>\.isa-bit:before\{\s*content:attr\(data-bit\)/,
+    'wrapped instruction bits retain their bit numbers');
+  assert.equal((html.match(/<tr class="isa-instruction" data-opcode=/g)||[]).length,12,
+    'all 12 rows are retained');
+});
