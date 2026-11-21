@@ -163,3 +163,15 @@ test('fixed 20ms sampling displays 2Hz and 10Hz as distinct real-time CLK rates'
   assert.equal(fast.rises / slow.rises, 5, '10Hz shows five times as many cycles as 2Hz');
   assert.equal(fast.samples.length, slow.samples.length, 'both share one timebase');
 });
+
+test('LOGIC ANALYZER dropdown contains one combined PC / ALU option', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const select = html.match(/<select id="signalGroup">([\s\S]*?)<\/select>/)?.[1];
+  assert.ok(select, 'signal group selector must exist');
+  const options = [...select.matchAll(/<option value="([^"]+)">([^<]+)<\/option>/g)];
+  assert.deepEqual(options.map(([,value]) => value), ['basic','io','registers','pc','rom']);
+  assert.equal(options.find(([,value])=>value==='pc')?.[2], 'PC / ALU');
+  assert.doesNotMatch(select,/value="alu"/);
+});
