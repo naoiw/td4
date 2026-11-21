@@ -64,3 +64,12 @@ test('PCB heading is minimal while interactive net tracking still works', () => 
   assert.match(boardTs, /classList\.toggle\('net-selected'/, 'selected signal highlighting remains');
   assert.match(boardTs, /function drawWires\(options: BoardRenderOptions\)/);
 });
+
+test('PROGRAM ROM and PROGRAM EDITOR keep headings without redundant top-right tags', () => {
+  assert.match(html, /<p class="eyebrow">PROGRAM ROM<\/p><h2 id="romTitle">16バイト ROM<\/h2>/);
+  assert.match(html, /<p class="eyebrow">PROGRAM EDITOR<\/p><h2 id="editorTitle">プログラムを書く<\/h2>/);
+  assert.doesNotMatch(html, /<span class="panel-tag">16 × 8-BIT<\/span>/);
+  assert.doesNotMatch(html, /<span class="panel-tag">ASSEMBLER<\/span>/);
+  assert.match(html, /id="romRows"/);
+  assert.match(html, /id="source"/);
+});
