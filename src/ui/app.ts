@@ -25,7 +25,9 @@
   // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
   // 'cpu' is still selectable internally for clock-only capture.
   let waveCaptureMode: WaveCaptureMode = 'oscilloscope';
-  const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 125;
+  // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
+  const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20;
+  const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40;
   let scopeCaptureIntervalId: number | null = null;
   let lastWaveDrawAt = 0;
   let boardResizeObserver: ResizeObserver | null = null;
@@ -303,8 +305,12 @@
       if (!shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer')) return;
       const levels = snapshot(cpu, clockHigh);
       appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
-      renderWaveforms(levels);
-      lastWaveDrawAt = performance.now();
+      // Collect at 50Hz, but redraw at up to 25fps to limit DOM/SVG work.
+      const now = performance.now();
+      if (now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
+        renderWaveforms(levels);
+        lastWaveDrawAt = now;
+      }
     }, OSCILLOSCOPE_SAMPLE_INTERVAL_MS);
   }
 
