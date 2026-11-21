@@ -214,3 +214,41 @@ test('74HC14 uses only oscillator gates B and C and drives the common CLK net', 
     assert.equal(values.OSC_INV,high?0:1,'B output is inverted from CLK');
   }
 });
+
+test('IC details omit fixed enable controls but retain dynamic and non-enable pins', () => {
+  const {layout,physicalPins}=require('../assets/js/core/ic-circuit.js');
+  const byId=Object.fromEntries(chips.map(chip=>[chip.id,chip]));
+  const detailPins=id=>layout(byId[id]).sections.flatMap(section=>[
+    ...section.left.flat(),...section.right.flat()
+  ]);
+  const names=id=>detailPins(id).map(pin=>pin.name);
+
+  assert.deepEqual(names('U13').filter(name=>/^G[12]#$/.test(name)),[]);
+  assert.deepEqual(names('U13').filter(name=>/^A[0-3]$/.test(name)),['A0','A1','A2','A3']);
+  assert.equal(names('U13').filter(name=>/^Y[0-9A-F]#$/.test(name)).length,16);
+
+  assert.deepEqual(names('U12').filter(name=>/^OE[12]#$/.test(name)),[]);
+  assert.deepEqual(names('U12').filter(name=>/^A[0-7]$/.test(name)),Array.from({length:8},(_,n)=>'A'+n));
+  assert.equal(names('U12').filter(name=>/^Y[0-7]$/.test(name)).length,8);
+
+  for(const id of ['U7','U8']){
+    assert.deepEqual(names(id).filter(name=>/^E[12]#$/.test(name)),[]);
+    for(const control of ['S0','S1']){
+      assert.equal(names(id).filter(name=>name===control).length,2,id+' '+control);
+    }
+  }
+  for(const id of ['U3','U4','U5','U6']){
+    assert.ok(names(id).includes('PE#'),id+' must retain dynamic parallel-load control');
+  }
+  assert.ok(names('U9').includes('CIN'),'fixed adder carry input is not an enable');
+
+  // Hidden probes must not erase real physical terminals or the canonical wiring.
+  assert.equal(physicalPins(byId.U12)[0].net,'GND');
+  assert.equal(physicalPins(byId.U12)[18].net,'GND');
+  assert.equal(physicalPins(byId.U13)[17].net,'GND');
+  assert.equal(physicalPins(byId.U13)[18].net,'GND');
+  for(const id of ['U7','U8']){
+    assert.equal(physicalPins(byId[id])[0].net,'GND');
+    assert.equal(physicalPins(byId[id])[14].net,'GND');
+  }
+});
