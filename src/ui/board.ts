@@ -133,10 +133,10 @@
       const mountedChips = [...chips.children];
       chips.replaceChildren();
       const roleAreas = [
-        {key:'fetch',title:'ROM / FETCH',subtitle:'アドレス選択・命令データ',types:['rom']},
-        {key:'alu',title:'MUX / ALU',subtitle:'信号選択・4bit演算',types:['select']},
-        {key:'registers',title:'REGISTERS',subtitle:'A・B・OUT・PCを保持',types:['register']},
-        {key:'control',title:'CLOCK / CONTROL',subtitle:'クロック・キャリー・命令制御',types:['clock','decode']}
+        {key:'fetch',title:'ROM / FETCH',types:['rom']},
+        {key:'alu',title:'MUX / ALU',types:['select']},
+        {key:'registers',title:'REGISTERS',types:['register']},
+        {key:'control',title:'CLOCK / CONTROL',types:['clock','decode']}
       ];
       for (const role of roleAreas) {
         const area=document.createElement('section');
@@ -144,8 +144,7 @@
         const head=document.createElement('div');
         head.className='ic-role-head';
         const label=document.createElement('strong');label.textContent=role.title;
-        const description=document.createElement('span');description.textContent=role.subtitle;
-        head.append(label,description);
+        head.append(label);
         const rack=document.createElement('div');
         rack.className='ic-role-rack';
         for (const card of mountedChips) {
