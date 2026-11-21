@@ -238,6 +238,10 @@ test('IC details omit fixed enable controls but retain dynamic and non-enable pi
     }
   }
   for(const id of ['U3','U4','U5','U6']){
+    const [section]=layout(byId[id]).sections;
+    assert.equal(section.leftColumnBreak,2,id+' must split INPUT after CLK and PE#');
+    assert.deepEqual(section.left.slice(0,2).flat().map(pin=>pin.name),['CLK','PE#'],id+' left input column');
+    assert.deepEqual(section.left.slice(2).flat().map(pin=>pin.name),['D0','D1','D2','D3'],id+' right input column');
     assert.ok(names(id).includes('PE#'),id+' must retain dynamic parallel-load control');
     assert.ok(!names(id).includes('CLR#'),id+' fixed-HIGH clear must be hidden');
     assert.ok(names(id).includes('CLK'),id+' clock must remain visible');

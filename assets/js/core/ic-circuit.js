@@ -247,6 +247,7 @@
                         ...component.pins.filter((x) => x.name === 'PE#').map((x) => row(x)),
                         ...lines('D', 'ALU', 4)
                     ],
+                    leftColumnBreak: 2,
                     right: component.pins.filter((x) => /^Q[0-3]$/.test(x.name)).map((x) => row(x))
                 }
             ]);
