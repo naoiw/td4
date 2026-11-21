@@ -396,6 +396,36 @@
 .ic-detail-panel .ic-probe{min-height:37px;padding:7px 10px;font-size:12px}
 .ic-detail-panel .ic-probe-compact{font-size:11px}
 .ic-detail-panel .ic-probe b{font-size:12px;padding:3px 7px}
+
+/* HC154 address outputs: four rows of four probes, left-to-right 0–F. */
+.ic-detail-panel[data-chip="U13"] .ic-function-headings,
+.ic-detail-panel[data-chip="U13"] .ic-function-columns{
+  grid-template-columns:minmax(0,1fr) minmax(0,2.4fr)
+}
+.ic-detail-panel[data-chip="U13"] .ic-probe-compact{
+  font-size:10px;
+  padding:5px 5px;
+  gap:3px
+}
+.ic-detail-panel[data-chip="U13"] .ic-probe-compact b{
+  font-size:10px;
+  padding:2px 4px
+}
+@media(max-width:650px){
+  .ic-detail-panel[data-chip="U13"] .ic-function-columns{
+    grid-template-columns:1fr
+  }
+  .ic-detail-panel[data-chip="U13"] .ic-function-headings{
+    display:none
+  }
+  .ic-detail-panel[data-chip="U13"] .ic-function-column::before{
+    font:700 11px/1.4 ui-monospace,monospace;
+    color:#8abdad
+  }
+  .ic-detail-panel[data-chip="U13"] .ic-function-column:first-child::before{content:"INPUT · A / G#"}
+  .ic-detail-panel[data-chip="U13"] .ic-function-column:last-child::before{content:"OUTPUT · Y"}
+}
+
 @media(max-width:650px){
   
   .ic-detail-panel{padding:15px}
