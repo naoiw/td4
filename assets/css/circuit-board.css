@@ -254,7 +254,6 @@
 .ic-role-control{border-top:2px solid #d5b1fa}
 .ic-role-head{display:flex;flex-direction:column;gap:2px;margin:0 2px 8px}
 .ic-role-head strong{font:800 11px/1.2 ui-monospace,monospace;color:#e6efe9;letter-spacing:.2px}
-.ic-role-head span{font:600 9px/1.3 ui-monospace,monospace;color:#91bca7}
 .ic-role-rack{
   align-content:flex-start;
 }
@@ -288,8 +287,8 @@
   border-radius:7px;
   padding:9px;
 }
-.ic-role-registers .ic-functional-layout,
-.ic-role-control .ic-functional-layout{top:auto;bottom:calc(100% - 1px)}
+.ic-role-alu .ic-functional-layout,
+.ic-role-registers .ic-functional-layout{top:auto;bottom:calc(100% - 1px)}
 .ic-role-rack .ic-functional-layout[hidden]{display:none!important}
 .rom-dip-grid{}
 .rom-slot{}
@@ -318,7 +317,6 @@
   gap:3px 10px
 }
 .ic-role-head{min-height:0;margin-bottom:4px}
-.ic-role-head span{font-size:8px}
 .ic-role-group:has(.is-expanded){z-index:auto}
 .ic-role-rack>.ic-chip.is-expanded{z-index:auto}
 .ic-role-rack .ic-functional-layout {
@@ -516,9 +514,9 @@
   row-gap:9px;
   align-items:start;
 }
-.ic-role-alu{grid-column:1;grid-row:1}
-.ic-role-registers{grid-column:1;grid-row:2}
-.ic-role-control{grid-column:1;grid-row:3}
+.ic-role-control{grid-column:1;grid-row:1}
+.ic-role-alu{grid-column:1;grid-row:2}
+.ic-role-registers{grid-column:1;grid-row:3}
 .ic-role-fetch{
   grid-column:2;
   grid-row:1 / span 3;
@@ -526,7 +524,6 @@
 }
 .ic-role-fetch .ic-role-head{margin-bottom:10px}
 .ic-role-fetch .ic-role-head strong{font-size:10px}
-.ic-role-fetch .ic-role-head span{font-size:8px}
 .ic-role-fetch .ic-role-rack{
   display:flex;
   flex-direction:column;

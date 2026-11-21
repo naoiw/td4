@@ -42,8 +42,12 @@ test('three logic areas stay left and only HC154/HC540 stack in the middle',()=>
   const board=css.match(/\/\* PCB placement:[\s\S]*$/)[0];
   assert.match(board,/\.schematic-board\s*\{[^}]*grid-template-columns:\s*490px\s+minmax\(0,\s*1fr\)/);
   assert.match(lastRule('ic-chip-grid'),/grid-template-columns:\s*minmax\(0,332px\)\s+126px/);
-  for(const role of ['alu','registers','control']){
-    assert.match(board,new RegExp('\\.ic-role-'+role+'\\{grid-column:1;'));
+  for(const [role,row] of [['control',1],['alu',2],['registers',3]]){
+    assert.match(board,new RegExp('\\.ic-role-'+role+'\\{grid-column:1;grid-row:'+row+'\\}'));
+  }
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    const leftRoles=[...source.matchAll(/key:\s*'(control|alu|registers)'\s*,\s*title:/g)].map(match=>match[1]);
+    assert.deepEqual(leftRoles,['control','alu','registers']);
   }
   assert.match(board,/\.ic-role-fetch\s*\{[^}]*grid-column:2/);
   assert.match(lastRule('ic-role-fetch .ic-role-rack'),/flex-direction:\s*column/);
@@ -205,7 +209,7 @@ test('PCB power and oscillator controls sit above the lowered ROM and IO',()=>{
   for(const id of ['boardPowerSwitch','boardClockSwitch','boardPowerLed']){
     assert.match(html,new RegExp('id="'+id+'"'));
   }
-  assert.match(html,/class="pcb-osc-diagram" viewBox="0 0 220 92"/);
+  assert.match(html,/class="pcb-osc-diagram" viewBox="0 -7 220 99"/);
   assert.match(html,/CR OSCILLATOR/);
   assert.match(lastRule('rom-zone'),/flex-direction:column/);
   assert.match(lastRule('board-control-bay'),/grid-template-rows:auto auto/);
@@ -520,4 +524,35 @@ test('oscilloscope sampling is fast enough for 10Hz while CPU clock remains 2Hz 
     assert.match(body,/renderWaveforms\(levels\)/);
     assert.match(body,/}, OSCILLOSCOPE_SAMPLE_INTERVAL_MS\)/);
   }
+});
+
+
+test('PCB functional-area silk contains only English headings and no Japanese descriptions',()=>{
+  const expected=['ROM / FETCH','MUX / ALU','REGISTERS','CLOCK / CONTROL'];
+  for(const source of [boardJs,fs.readFileSync(path.join(root,'src/ui/board.ts'),'utf8')]){
+    const begin=source.indexOf('const roleAreas = [');
+    const end=source.indexOf('];',begin);
+    assert.ok(begin>=0 && end>begin,'role area headings must be present');
+    const headings=source.slice(begin,end+2);
+    for(const title of expected)assert.match(headings,new RegExp("title:\\s*'"+title+"'"),title);
+    assert.doesNotMatch(headings,/[\u3040-\u30ff\u3400-\u9fff]/,'PCB headings must not include Japanese characters');
+    assert.doesNotMatch(headings,/subtitle:/);
+    assert.doesNotMatch(source,/role\.subtitle/);
+    assert.doesNotMatch(source,/head\.append\(label,\s*description\)/);
+    assert.match(source,/head\.append\(label\)/);
+  }
+  assert.doesNotMatch(css,/\.ic-role-head span\{/);
+  assert.doesNotMatch(css,/\.ic-role-fetch \.ic-role-head span\{/);
+});
+
+test('CR R/C silk avoids traces while remaining visible inside enlarged SVG viewBox',()=>{
+  const start=html.indexOf('<svg class="pcb-osc-diagram"');
+  const end=html.indexOf('</svg>',start);
+  assert.ok(start>0 && end>start);
+  const svg=html.slice(start,end);
+  assert.match(svg,/viewBox="0 -7 220 99"/);
+  assert.match(svg,/class="pcb-osc-silk-text"><text x="130" y="3">R<\/text><text x="196" y="65">C<\/text>/);
+  assert.doesNotMatch(svg,/<text x="130" y="8">R<\/text>|<text x="190" y="65">C<\/text>/);
+  // Zigzag resistor peaks at y=5, so R baseline 3 stays above the trace.
+  // Capacitor ends at mirrored x=192, while C starts at x=196.
 });
