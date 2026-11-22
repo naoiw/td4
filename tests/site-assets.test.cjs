@@ -94,3 +94,24 @@ test('Pages workflow publishes the Education page with the asset directory', () 
   assert.match(deploy, /cp -a production\/assets publish\/assets/);
   assert.match(deploy, /cp -a preview\/assets publish\/develop\/assets/);
 });
+
+test('Education shares Emulator content width and workbench panel styles', () => {
+  const education = fs.readFileSync(path.join(root, 'assets/education/index.html'), 'utf8');
+  const educationCss = fs.readFileSync(path.join(root, 'assets/css/education.css'), 'utf8');
+  const workbenchCss = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
+  assert.match(workbenchCss, /\.page\{max-width:1600px\}/);
+  assert.doesNotMatch(educationCss, /\.education-page\s*\{\s*max-width\s*:/);
+  assert.match(education, /class="page education-page"/);
+  assert.match(education, /class="quick-start education-hero"/);
+  assert.equal((education.match(/class="panel edu-section"/g) || []).length, 4);
+  assert.match(educationCss, /\.education-hero\{[^}]*background:var\(--surface\)/);
+  assert.doesNotMatch(educationCss, /linear-gradient\(/);
+});
+
+test('Emulator power status sits to the left of Emulator / Education navigation', () => {
+  const header = html.match(/<div class="header-right">([\s\S]*?)<\/div>/);
+  assert.ok(header, 'right-hand header controls exist');
+  const statusIndex = header[1].indexOf('id="runStatus"');
+  const navIndex = header[1].indexOf('class="primary-nav"');
+  assert.ok(statusIndex !== -1 && navIndex !== -1 && statusIndex < navIndex, 'status before navigation');
+});
