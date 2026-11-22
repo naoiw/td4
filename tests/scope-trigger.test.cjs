@@ -250,7 +250,8 @@ test('group changes disable trigger and responsive analyzer never clips taller c
     assert.ok(fall.includes('rearmScopeTrigger()'));
     assert.ok(!fall.includes('restartWaveCapture()'));
   }
-  assert.ok(css.includes('.scope-layout>.scope-panel{height:auto;min-height:550px;min-width:0}'));
+  assert.ok(css.includes('.scope-layout>.panel{height:auto;min-height:550px;min-width:0}'), 'both panels share responsive height');
+  assert.ok(css.includes('grid-auto-rows:minmax(550px,1fr)'), 'stacked panels keep equal heights');
   assert.ok(css.includes('.scope-panel .scope-view{min-width:0}'));
   assert.ok(!html.includes('id="triggerChannel"'));
   assert.ok(css.includes('.scope-row.is-trigger-channel .scope-channel-button{'));

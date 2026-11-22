@@ -33,8 +33,8 @@
 .rom-execution-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .rom-step-button{flex:none;background:#edf4fd;color:#285a94;border-color:#bcd2ea}
 .rom-step-button:not(:disabled):hover{background:#dcecff;border-color:#8eb5e2}
-.scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);gap:15px;align-items:stretch}
-.scope-layout>.panel{height:550px}
+.scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);grid-auto-rows:minmax(550px,1fr);gap:15px;align-items:stretch}
+.scope-layout>.panel{height:auto;min-height:550px;min-width:0}
 .scope-panel{display:flex;flex-direction:column;min-height:0}
 .scope-panel{padding:17px 20px}.scope-panel .panel-heading{flex-wrap:wrap;row-gap:12px}.scope-controls{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:12px}.scope-controls .text-button{white-space:nowrap}.scope-group-label{font-size:10px;color:#7c8792;display:flex;align-items:center;gap:8px}
 .scope-group-label select{background:#f8fafc;border:1px solid #dce5ed;border-radius:6px;color:#314c68;padding:7px 9px;font-size:11px}
@@ -47,7 +47,6 @@
 
 /* One-channel edge trigger: capture may be frozen independently of the CPU. */
 .scope-controls{gap:7px;min-width:0;max-width:100%}
-.scope-layout>.scope-panel{height:auto;min-height:550px;min-width:0}
 .scope-panel .panel-heading{min-width:0}
 .scope-panel .scope-view{min-width:0}
 .scope-row .scope-channel-button{appearance:none;width:100%;min-width:0;display:block;padding:5px 2px;border:1px solid transparent;border-radius:5px;background:transparent;color:#b9cad8;text-align:left;font:750 11px ui-monospace,monospace;cursor:pointer}
@@ -85,4 +84,4 @@
 @media(max-width:900px){.detail-grid,.scope-layout{grid-template-columns:minmax(0,1fr)}.sample-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-grid .editor-panel{grid-column:auto}}
 @media(max-width:650px){.sample-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sample-card{padding:9px 8px}.sample-icon{width:29px;height:29px}.quick-start{padding:13px}.quick-heading{align-items:start;flex-direction:column;gap:6px}.board-panel,.scope-panel{padding:13px}.board-bottom{align-items:start;flex-direction:column}.pcb-board{min-width:990px}}
 
-@media(max-width:650px){.scope-layout>.scope-panel{height:auto;min-height:550px}.scope-panel .scope-controls{justify-content:flex-start}.scope-panel .panel-heading{align-items:flex-start;flex-direction:column}.scope-panel .scope-view{min-height:412px}}
+@media(max-width:650px){.scope-panel .scope-controls{justify-content:flex-start}.scope-panel .panel-heading{align-items:flex-start;flex-direction:column}.scope-panel .scope-view{min-height:412px}}

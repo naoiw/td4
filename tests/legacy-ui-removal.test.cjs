@@ -148,7 +148,12 @@ test('logic analyzer and execution trace match heights with ten visible waveform
   assert.deepEqual(groups.slice(2).map(x => x[2]), ['レジスタ A/B', 'PC / ALU', 'ROM']);
   const workbench = fs.readFileSync(path.join(root,'assets/css/workbench.css'),'utf8');
   assert.match(workbench, /\.scope-layout\{[^}]*align-items:stretch/);
-  assert.match(workbench, /\.scope-layout>\.panel\{height:550px\}/);
+  assert.match(workbench, /\.scope-layout\{[^}]*grid-auto-rows:minmax\(550px,1fr\)[^}]*align-items:stretch/);
+  assert.match(workbench, /\.scope-layout>\.panel\{height:auto;min-height:550px;min-width:0\}/);
+  assert.doesNotMatch(workbench, /\.scope-layout>\.scope-panel\{height:/, 'no scope-only height override');
+  assert.doesNotMatch(workbench, /\.scope-layout>\.panel\{height:550px\}/, 'no fixed trace height');
+  assert.match(workbench, /@media\(max-width:900px\)\{[^}]*\.scope-layout\{grid-template-columns:minmax\(0,1fr\)\}/);
+  assert.doesNotMatch(workbench, /@media\(max-width:650px\)\{\.scope-layout>\.scope-panel\{height:/);
   assert.match(workbench, /\.scope-panel\{display:flex;flex-direction:column/);
   assert.match(workbench, /\.scope-view\{[^}]*min-height:412px[^}]*overflow:hidden/);
   assert.match(workbench, /\.scope-layout \.trace-panel ol\{[^}]*flex:1;min-height:0;max-height:none;overflow-y:auto/);
