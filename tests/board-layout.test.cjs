@@ -516,7 +516,8 @@ test('oscilloscope mode uses a separate timer across pause and cleans up at powe
     assert.match(scope,/if \(!powerOn \|\| waveCaptureMode !== 'oscilloscope'\)/);
     assert.match(scope,/scopeCaptureIntervalId = setInterval\(/);
     assert.match(scope,/shouldCaptureSample\(waveCaptureMode, powerOn, intervalId !== null, 'timer'\)/);
-    assert.match(scope,/appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
+    assert.match(scope,/captureScopeSample\(levels\)/);
+    assert.match(source,/function captureScopeSample\([\s\S]*?appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
     const powerBegin=source.indexOf('function setPower(');
     const powerEnd=source.indexOf('function setBoardFrequency(',powerBegin);
     const power=source.slice(powerBegin,powerEnd);
@@ -552,7 +553,7 @@ test('oscilloscope sampling is fast enough for 10Hz while CPU clock remains 2Hz 
     const start=source.indexOf('function startScopeCapture(');
     const end=source.indexOf('function setWaveCaptureMode(',start);
     const body=source.slice(start,end);
-    assert.match(body,/appendSample\(waveSamples, levels, MAX_WAVE_SAMPLES\)/);
+    assert.match(body,/captureScopeSample\(levels\)/);
     assert.match(body,/now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS/);
     assert.match(body,/renderWaveforms\(levels\)/);
     assert.match(body,/}, OSCILLOSCOPE_SAMPLE_INTERVAL_MS\)/);
