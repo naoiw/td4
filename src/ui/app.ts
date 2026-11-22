@@ -214,7 +214,11 @@
   /** Keep the normal fit for split windows; shrink by 20% only in near-fullscreen desktop windows. */
   function boardFitScale(availableWidth: number, boardWidth: number, windowWidth: number, screenWidth: number): number {
     const normalScale = Math.min(1.2, availableWidth / boardWidth);
-    const nearFullscreen = windowWidth >= 1100 && screenWidth > 0 && windowWidth >= screenWidth * 0.85;
+    // A strict 85% screen ratio misses some maximized browser windows.
+    const coversScreen = screenWidth > 0 && windowWidth >= screenWidth * 0.75;
+    const wideWorkspace = windowWidth >= 1450 && availableWidth >= 1250;
+    const notHalfScreen = screenWidth <= 0 || windowWidth >= screenWidth * 0.65;
+    const nearFullscreen = windowWidth >= 1100 && (coversScreen || (wideWorkspace && notHalfScreen));
     return normalScale * (nearFullscreen ? 0.8 : 1);
   }
 
@@ -227,7 +231,8 @@
       parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0) return;
     // A split-window layout retains the current scale; a fullscreen-sized one is about 80% of before.
-    const scale = boardFitScale(availableWidth, board.offsetWidth, window.innerWidth, window.screen.availWidth);
+    const scale = boardFitScale(availableWidth, board.offsetWidth,
+      Math.max(window.innerWidth, window.outerWidth), window.screen.width || window.screen.availWidth);
     board.style.setProperty('--board-fit-scale', String(scale));
     const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
       parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
