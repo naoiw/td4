@@ -13,7 +13,7 @@ const definition = js.match(/    function startClock\(immediate\) \{[\s\S]*?\n  
 assert.ok(definition, 'compiled startClock function can be isolated for execution');
 
 function harness(rom, breakpointAddresses) {
-  const cpu = new CPU(rom);
+  const cpu = new CPU([...rom, ...Array(16).fill(0)].slice(0, 16));
   const messages = [];
   const stops = [];
   let scheduledTick = null;
