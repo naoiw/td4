@@ -13,7 +13,7 @@
   <script src="assets/js/data/netlist.js" defer></script>
   <script src="assets/js/core/ic-circuit.js" defer></script>
   <script src="assets/js/ui/board.js" defer></script>
-  <script src="assets/js/ui/app.js?v=20261123-optional-trigger" defer></script>
+  <script src="assets/js/ui/app.js?v=20261123-inline-channel" defer></script>
 </head>
 <body>
   <div class="page">
@@ -126,7 +126,6 @@
           <div class="scope-controls">
             <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ A/B</option><option value="pc">PC / ALU</option><option value="rom">ROM</option></select></label>
             <label class="scope-trigger-enable" for="triggerEnable"><input type="checkbox" id="triggerEnable"> TRIGGER ENABLE</label>
-            <label class="scope-group-label" for="triggerChannel">CH <select id="triggerChannel" aria-label="トリガー対象チャンネル"><option value="CLK">CLK</option></select></label>
             <div class="scope-edge-control" role="group" aria-label="トリガーのエッジ方向">
               <span class="scope-edge-label">EDGE</span>
               <div class="scope-edge-options">

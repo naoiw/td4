@@ -41,7 +41,7 @@
   let lastWaveDrawAt = 0;
   const scopeRows: {
     row: HTMLDivElement;
-    name: HTMLSpanElement;
+    name: HTMLButtonElement;
     trace: SVGPathElement;
     status: HTMLElement;
   }[] = [];
@@ -283,8 +283,14 @@
     if (!scopeRows.length) {
       for (let index = 0; index < 10; index++) {
         const row = document.createElement('div');
-        const name = document.createElement('span');
-        name.className = 'scope-name';
+        const name = document.createElement('button');
+        name.type = 'button';
+        name.className = 'scope-name scope-channel-button';
+        name.addEventListener('click', () => {
+          const currentGroup = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
+          const signal = currentGroup[index];
+          if (signal) selectScopeTriggerChannel(signal);
+        });
         const graph = document.createElementNS(svgNS, 'svg');
         graph.setAttribute('viewBox', '0 0 640 36');
         graph.setAttribute('preserveAspectRatio', 'none');
@@ -309,9 +315,12 @@
       const signal = group[index];
       const {row, name, trace, status} = scopeRows[index];
       row.className = signal
-        ? 'scope-row' + (signal === scopeTriggerChannel && scopeTriggerEnabled ? ' is-trigger-channel' : '')
+        ? 'scope-row' + (signal === scopeTriggerChannel ? ' is-trigger-channel' : '')
         : 'scope-row is-unused';
       name.textContent = signal || '-';
+      name.disabled = !signal;
+      name.setAttribute('aria-pressed', String(!!signal && signal === scopeTriggerChannel));
+      name.title = signal ? `${signal}をトリガー対象に選択` : '';
       if (signal) {
         trace.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
         trace.style.display = '';
@@ -347,20 +356,28 @@
     fall.setAttribute('aria-pressed', String(scopeTriggerEdge === 'fall'));
   }
 
-  /** Exactly one channel from the current group; unused slots never become options. */
-  function populateScopeTriggerChannels(): void {
+  /** Keep the one selected channel valid when the visible group changes. */
+  function syncScopeTriggerChannel(): void {
     const group = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
-    const select = $<HTMLSelectElement>('triggerChannel');
-    const oldChannel = scopeTriggerChannel;
-    select.replaceChildren();
-    for (const channel of group) {
-      const option = document.createElement('option');
-      option.value = channel;
-      option.textContent = channel;
-      select.append(option);
-    }
-    scopeTriggerChannel = group.includes(oldChannel) ? oldChannel : group[0];
-    select.value = scopeTriggerChannel;
+    if (!group.includes(scopeTriggerChannel)) scopeTriggerChannel = group[0];
+  }
+
+  /** CH/EDGE changes re-arm against the live level without erasing the waveform. */
+  function rearmScopeTrigger(): void {
+    scopeTriggered = false;
+    frozenScopeLevels = null;
+    const levels = snapshot(cpu, clockHigh);
+    previousTriggerLevel = powerOn ? levels[scopeTriggerChannel] : null;
+    syncScopeTriggerStatus();
+    renderWaveforms(levels);
+    lastWaveDrawAt = performance.now();
+  }
+
+  function selectScopeTriggerChannel(signal: string): void {
+    const group = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
+    if (!group.includes(signal) || scopeTriggerChannel === signal) return;
+    scopeTriggerChannel = signal;
+    rearmScopeTrigger();
   }
 
   /** Only the oscilloscope capture freezes; no CPU interval or board state is changed. */
@@ -678,11 +695,9 @@
     $('clearWaveBtn').addEventListener('click', restartWaveCapture);
     $('scopeRunBtn').addEventListener('click', restartWaveCapture);
     $('signalGroup').addEventListener('change', () => {
-      populateScopeTriggerChannels();
-      restartWaveCapture();
-    });
-    $('triggerChannel').addEventListener('change', () => {
-      scopeTriggerChannel = $<HTMLSelectElement>('triggerChannel').value;
+      scopeTriggerEnabled = false;
+      $<HTMLInputElement>('triggerEnable').checked = false;
+      syncScopeTriggerChannel();
       restartWaveCapture();
     });
     $('triggerEnable').addEventListener('change', () => {
@@ -691,11 +706,11 @@
     });
     $('triggerRiseBtn').addEventListener('click', () => {
       scopeTriggerEdge = 'rise';
-      restartWaveCapture();
+      rearmScopeTrigger();
     });
     $('triggerFallBtn').addEventListener('click', () => {
       scopeTriggerEdge = 'fall';
-      restartWaveCapture();
+      rearmScopeTrigger();
     });
     $('assembleBtn').addEventListener('click', compileSource);
     $('fromRomBtn').addEventListener('click', () => {
@@ -739,7 +754,7 @@
   // Expose both capture modes internally; the visible default is 'oscilloscope'.
   window.TD4WaveCapture = {getMode: () => waveCaptureMode, setMode: setWaveCaptureMode};
 
-  populateScopeTriggerChannels();
+  syncScopeTriggerChannel();
   syncScopeTriggerStatus();
   buildRomRows();
   buildSamples();
