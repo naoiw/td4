@@ -800,3 +800,22 @@ test('PCB shrinks only near fullscreen and keeps the current half-window scale',
   }
   assert.match(html,/src="assets\/js\/ui\/app\.js\?v=20261122-pcb-fit2"/);
 });
+
+
+test('quick-start sample descriptions wrap within button cards at every grid breakpoint',()=>{
+  assert.match(css,/\.sample-cards\{display:grid;grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:1300px\)\{\.sample-cards\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:650px\)\{\.sample-cards\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(lastRule('sample-card'),/min-width:0;display:flex/);
+  assert.match(lastRule('sample-text'),/flex:1 1 0;min-width:0;max-width:100%/);
+  assert.match(lastRule('sample-card strong,.sample-card small'),/white-space:normal;overflow-wrap:anywhere/);
+  assert.doesNotMatch(lastRule('sample-card strong,.sample-card small'),/white-space:nowrap|text-overflow:ellipsis/,
+    'long text must wrap rather than be pushed outside or truncated');
+  const source=fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8');
+  for(const file of [source,js]){
+    assert.match(file,/words\.className = 'sample-text'/,
+      'sample description wrapper must have the flex shrink style');
+    assert.match(file,/description\.textContent = sample\.description/,
+      'the entire sample description stays available without truncating in JavaScript');
+  }
+});
