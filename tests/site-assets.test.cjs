@@ -66,3 +66,31 @@ test('clock frequency is controlled only by PCB 2Hz / 10Hz switch', () => {
   assert.match(source, /let boardClockHz: 2 \| 10 = 2/);
   assert.match(source, /const halfPeriod = 500 \/ boardClockHz/);
 });
+
+test('Emulator and Education are separate pages with reciprocal relative navigation', () => {
+  const educationFile = path.join(root, 'assets/education/index.html');
+  assert.ok(fs.existsSync(educationFile), 'Education page must be part of published assets');
+  const education = fs.readFileSync(educationFile, 'utf8');
+  assert.match(html, /href="assets\/education\/"/);
+  assert.match(education, /href="\.\.\/\.\.\/"[^>]*>Emulator<\/a>/);
+  assert.match(html, /aria-current="page" href="\.\/"[^>]*>Emulator<\/a>/);
+  assert.match(education, /aria-current="page" href="\.\/"[^>]*>Education<\/a>/);
+  assert.doesNotMatch(html, /class="reference-card"/, 'the instruction set is no longer on the Emulator page');
+  assert.match(education, /id="instruction-set"/);
+  assert.match(education, /id="decode"/);
+  assert.match(education, /id="hardware"/);
+  assert.equal([...education.matchAll(/class="isa-instruction"/g)].length, 12, 'all 12 standard instructions retained');
+  assert.match(education, /JNC/);
+  const assets = [...education.matchAll(/<(?:link|script)\b[^>]*?(?:href|src)="([^"]+)"/g)]
+    .map(match => match[1]);
+  for (const asset of assets) {
+    assert.ok(fs.existsSync(path.resolve(path.dirname(educationFile), asset)),
+      'Education asset exists: ' + asset);
+  }
+});
+
+test('Pages workflow publishes the Education page with the asset directory', () => {
+  const deploy = fs.readFileSync(path.join(root, '.github/workflows/deploy-pages.yml'), 'utf8');
+  assert.match(deploy, /cp -a production\/assets publish\/assets/);
+  assert.match(deploy, /cp -a preview\/assets publish\/develop\/assets/);
+});
