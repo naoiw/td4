@@ -4,6 +4,12 @@
 
 **[エミュレータを開く（本番）](https://naoiw.github.io/td4/)** ／ [開発プレビュー](https://naoiw.github.io/td4/develop/)
 
+## デモ
+
+<p align="center">
+  <img src="docs/images/td4-demo.gif" alt="TD4基板の動作デモ" width="800">
+</p>
+
 ## 主な機能
 
 - **CPU実行・デバッグ**：電源のON/OFF、実行・停止、2Hz/10Hz切替、ブレークポイント、実行履歴。
