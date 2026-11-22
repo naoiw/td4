@@ -75,6 +75,7 @@
 .scope-trigger-status.is-live{background:#e5eef9;color:#2e6092;border-color:#c2d9ed}
 .scope-trigger-status.is-armed{background:#e7f4ec;color:#207b51;border-color:#b6dfc5}
 .scope-trigger-status.is-triggered{background:#fff0d7;color:#a06519;border-color:#e6c58c}
+.scope-trigger-status.is-stopped{background:#e8e9ef;color:#50576e;border-color:#c7ccdb}
 .scope-controls .scope-run-btn{padding:7px 12px;font-size:11px}
 .scope-row.is-trigger-channel .scope-name{color:#ffd38b}
 .scope-layout .trace-panel{display:flex;flex-direction:column;min-height:0;margin:0;padding:17px 18px}.scope-layout .trace-panel ol{flex:1;min-height:0;max-height:none;overflow-y:auto;margin-top:5px}.scope-layout .trace-panel li{font-size:10px}

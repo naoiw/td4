@@ -32,6 +32,7 @@
   let scopeTriggerChannel = 'CLK';
   let scopeTriggerEdge: ScopeTriggerEdge = 'rise';
   let scopeTriggered = false;
+  let scopeCaptureStopped = false;
   let frozenScopeLevels: SignalLevels | null = null;
   let previousTriggerLevel: number | null = null;
   // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
@@ -276,7 +277,7 @@
   /** Create the ten waveform channels once; only signal paths and levels change afterward. */
   function renderWaveforms(levels: SignalLevels): void {
     // Once triggered, even the H/L badges must show the captured instant, not live CPU levels.
-    const visibleLevels = scopeTriggered && frozenScopeLevels ? frozenScopeLevels : levels;
+    const visibleLevels = (scopeTriggered || scopeCaptureStopped) && frozenScopeLevels ? frozenScopeLevels : levels;
     const area = $('scopeView');
     const group = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -344,10 +345,15 @@
 
   function syncScopeTriggerStatus(): void {
     const status = $('scopeTriggerStatus');
-    const state = !powerOn ? 'off' : !scopeTriggerEnabled ? 'live' : scopeTriggered ? 'triggered' : 'armed';
+    const frozen = scopeTriggered || scopeCaptureStopped;
+    const state = !powerOn ? 'off' : scopeTriggered ? 'triggered' : scopeCaptureStopped ? 'stopped'
+      : scopeTriggerEnabled ? 'armed' : 'live';
     status.className = 'scope-trigger-status is-' + state;
     status.textContent = state.toUpperCase();
-    $<HTMLButtonElement>('scopeRunBtn').disabled = !powerOn;
+    const captureButton = $<HTMLButtonElement>('scopeRunBtn');
+    captureButton.disabled = !powerOn;
+    captureButton.textContent = frozen || !powerOn ? 'RUN' : 'STOP';
+    captureButton.title = frozen ? '波形を消去して測定を再開' : '波形を保持して測定を停止';
     const rise = $<HTMLButtonElement>('triggerRiseBtn');
     const fall = $<HTMLButtonElement>('triggerFallBtn');
     rise.classList.toggle('is-selected', scopeTriggerEdge === 'rise');
@@ -362,11 +368,15 @@
     if (!group.includes(scopeTriggerChannel)) scopeTriggerChannel = group[0];
   }
 
-  /** ENABLE/CH/EDGE changes re-arm against the live level without erasing the waveform. */
+  /** Setting changes never release an already-frozen capture; only RUN/Clear can do so. */
   function rearmScopeTrigger(): void {
-    scopeTriggered = false;
-    frozenScopeLevels = null;
     const levels = snapshot(cpu, clockHigh);
+    if (scopeTriggered || scopeCaptureStopped) {
+      syncScopeTriggerStatus();
+      renderWaveforms(levels);
+      return;
+    }
+    frozenScopeLevels = null;
     previousTriggerLevel = powerOn ? levels[scopeTriggerChannel] : null;
     syncScopeTriggerStatus();
     renderWaveforms(levels);
@@ -382,7 +392,7 @@
 
   /** Only the oscilloscope capture freezes; no CPU interval or board state is changed. */
   function captureScopeSample(levels: SignalLevels): void {
-    if (scopeTriggered) return;
+    if (scopeTriggered || scopeCaptureStopped) return;
     const current = levels[scopeTriggerChannel];
     const triggered = scopeTriggerEnabled && matchesScopeEdge(previousTriggerLevel, current, scopeTriggerEdge);
     previousTriggerLevel = current;
@@ -394,10 +404,27 @@
     }
   }
 
+  /** STOP freezes only the scope; RUN clears the held waveform and starts again. */
+  function toggleScopeCapture(): void {
+    if (!powerOn) return;
+    if (scopeTriggered || scopeCaptureStopped) {
+      restartWaveCapture();
+      return;
+    }
+    const levels = snapshot(cpu, clockHigh);
+    appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    scopeCaptureStopped = true;
+    frozenScopeLevels = levels;
+    syncScopeTriggerStatus();
+    renderWaveforms(levels);
+    lastWaveDrawAt = performance.now();
+  }
+
   /** Explicit RUN, Clear, and display-group changes reset the waveform history. */
   function restartWaveCapture(): void {
     waveSamples.splice(0);
     scopeTriggered = false;
+    scopeCaptureStopped = false;
     frozenScopeLevels = null;
     previousTriggerLevel = null;
     const levels = snapshot(cpu, clockHigh);
@@ -421,7 +448,7 @@
     stopScopeCapture();
     if (!powerOn || waveCaptureMode !== 'oscilloscope') return;
     scopeCaptureIntervalId = setInterval(() => {
-      if (scopeTriggered || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer')) return;
+      if (scopeTriggered || scopeCaptureStopped || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer')) return;
       const levels = snapshot(cpu, clockHigh);
       captureScopeSample(levels);
       // Draw the trigger sample immediately, even when the frame limit has not elapsed.
@@ -443,14 +470,14 @@
 
   function recordSignals(trigger: WaveSampleTrigger = 'clock'): void {
     const levels = snapshot(cpu, clockHigh);
-    const wasTriggered = scopeTriggered;
-    if (!scopeTriggered && ((stepInProgress && powerOn) ||
+    const wasFrozen = scopeTriggered || scopeCaptureStopped;
+    if (!wasFrozen && ((stepInProgress && powerOn) ||
         shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger))) {
       captureScopeSample(levels);
     }
     updateCircuitBoard();
     const now = performance.now();
-    if (!wasTriggered && (scopeTriggered || intervalId === null || now - lastWaveDrawAt > 35)) {
+    if (!wasFrozen && (scopeTriggered || intervalId === null || now - lastWaveDrawAt > 35)) {
       renderWaveforms(levels);
       lastWaveDrawAt = now;
     }
@@ -536,6 +563,7 @@
       stopScopeCapture();
       powerOn = false;
       scopeTriggered = false;
+      scopeCaptureStopped = false;
       frozenScopeLevels = null;
       previousTriggerLevel = null;
       cpu.reset();
@@ -693,7 +721,7 @@
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
     $('clearWaveBtn').addEventListener('click', restartWaveCapture);
-    $('scopeRunBtn').addEventListener('click', restartWaveCapture);
+    $('scopeRunBtn').addEventListener('click', toggleScopeCapture);
     $('signalGroup').addEventListener('change', () => {
       scopeTriggerEnabled = false;
       $<HTMLInputElement>('triggerEnable').checked = false;
