@@ -10,7 +10,7 @@ test('all script and stylesheet references resolve inside repository', () => {
   assert.equal(links.length, 8, 'seven scripts and one stylesheet expected');
   for (const link of links) {
     assert.ok(!link.startsWith('/'), 'relative GitHub Pages asset URL: ' + link);
-    assert.ok(fs.existsSync(path.join(root, link)), 'missing asset: ' + link);
+    assert.ok(fs.existsSync(path.join(root, link.split('?')[0])), 'missing asset: ' + link);
   }
 });
 
@@ -23,7 +23,7 @@ test('runtime JS stays in assets and loads in dependency order', () => {
     'assets/js/data/netlist.js',
     'assets/js/core/ic-circuit.js',
     'assets/js/ui/board.js',
-    'assets/js/ui/app.js'
+    'assets/js/ui/app.js?v=20261122-pcb-fit2'
   ]);
   for (const file of ['app.js', 'td4-core.js', 'samples.js', 'signals.js']) {
     assert.ok(!fs.existsSync(path.join(root, file)), 'root runtime file must be removed: ' + file);
