@@ -452,9 +452,12 @@ test('power ON, power OFF and one dynamic CPU stop/run button represent three st
     assert.match(source,/\('powerOnBtn'\)\.disabled = powerOn/);
     assert.match(source,/\('powerOffBtn'\)\.disabled = !powerOn/);
     assert.match(source,/toggle\.disabled = !powerOn/);
+    assert.match(source,/\['runPauseBtn', 'runPauseIcon', 'runPauseLabel'\]/);
+    assert.match(source,/\['romRunPauseBtn', 'romRunPauseIcon', 'romRunPauseLabel'\]/);
     assert.match(source,/if \(intervalId === null\)\s*run\(\)/);
     assert.match(source,/else\s*stop\(\)/);
-    assert.match(source,/\('runPauseLabel'\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/\(labelId\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/\(iconId\)\.textContent = running \? 'Ⅱ' : '▶'/);
     assert.match(source,/running \? 'CPUを停止する' : 'CPUを実行する'/);
     assert.match(source,/!powerOn \? '電源OFF' : running \? '電源ON · 実行中' : '電源ON · CPU停止中'/);
   }
@@ -798,7 +801,7 @@ test('PCB shrinks only near fullscreen and keeps the current half-window scale',
     assert.match(sourceCode,/window\.screen\.width \|\| window\.screen\.availWidth/);
     assert.match(sourceCode,/wideWorkspace = windowWidth >= 1450 && availableWidth >= 1250/);
   }
-  assert.match(html,/src="assets\/js\/ui\/app\.js\?v=20261122-pcb-fit2"/);
+  assert.match(html,/src="assets\/js\/ui\/app\.js\?v=20261122-rom-run"/);
 });
 
 
@@ -819,5 +822,30 @@ test('quick-start sample descriptions wrap within button cards at every grid bre
       'sample description wrapper must have the flex shrink style');
     assert.match(file,/description\.textContent = sample\.description/,
       'the entire sample description stays available without truncating in JavaScript');
+  }
+});
+
+
+test('PROGRAM ROM has an equally styled run/pause control synchronized with the board button',()=>{
+  const romSection=html.slice(html.indexOf('<section class="panel rom-panel"'),html.indexOf('<section class="panel editor-panel"'));
+  const header=romSection.slice(0,romSection.indexOf('<div class="rom-footer">'));
+  assert.match(header,/id="romTitle">16バイト ROM<\/h2>/);
+  assert.match(header,/class="btn btn-primary rom-run-button" id="romRunPauseBtn" disabled aria-label="CPUを実行する"/);
+  assert.match(header,/id="romRunPauseIcon" aria-hidden="true">▶<\/span> <span id="romRunPauseLabel">実行<\/span>/);
+  assert.ok(header.indexOf('id="romTitle"')<header.indexOf('id="romRunPauseBtn"'),
+    'ROM run/pause button is to the right of ROM title');
+  const style=lastRule('rom-panel .panel-heading');
+  assert.match(style,/flex-wrap:wrap;row-gap:10px/);
+  assert.match(lastRule('rom-panel .rom-run-button'),/flex:none/);
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
+    assert.match(source,/\('romRunPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
+    assert.match(source,/for \(const \[buttonId, iconId, labelId\] of controls\)/);
+    assert.match(source,/toggle\.disabled = !powerOn/);
+    assert.match(source,/toggle\.classList\.toggle\('btn-primary', !running\)/);
+    assert.match(source,/toggle\.setAttribute\('aria-label', running \? 'CPUを停止する' : 'CPUを実行する'\)/);
+    assert.match(source,/\(labelId\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/,
+      'breakpoint still stops execution and updates both controls');
   }
 });
