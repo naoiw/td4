@@ -31,8 +31,8 @@
 .rom-panel .panel-heading{flex-wrap:wrap;row-gap:10px}
 .rom-panel .rom-run-button{flex:none}
 .rom-execution-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.rom-panel .rom-step-button{flex:none;background:#edf4fd;color:#285a94;border-color:#bcd2ea}
-.rom-panel .rom-step-button:not(:disabled):hover{background:#dcecff;border-color:#8eb5e2}
+.rom-step-button{flex:none;background:#edf4fd;color:#285a94;border-color:#bcd2ea}
+.rom-step-button:not(:disabled):hover{background:#dcecff;border-color:#8eb5e2}
 .scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);gap:15px;align-items:stretch}
 .scope-layout>.panel{height:550px}
 .scope-panel{display:flex;flex-direction:column;min-height:0}
