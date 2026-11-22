@@ -194,7 +194,7 @@ test('logic analyzer shows vertical gridlines even in unused rows without a midd
 
 test('analyzer group change starts a new capture instead of replaying previous samples', () => {
   for (const source of [ts, js]) {
-    assert.match(source, /\$\('signalGroup'\)\.addEventListener\('change', \(\) => \{[\s\S]*?populateScopeTriggerChannels\(\);[\s\S]*?restartWaveCapture\(\);/);
+    assert.match(source, /\$\('signalGroup'\)\.addEventListener\('change', \(\) => \{[\s\S]*?syncScopeTriggerChannel\(\);[\s\S]*?restartWaveCapture\(\);/);
     assert.match(source, /\$\('clearWaveBtn'\)\.addEventListener\('click', restartWaveCapture\)/);
     const start = source.indexOf('function restartWaveCapture(');
     const end = source.indexOf('function recordSignals(', start);
