@@ -10,6 +10,8 @@
 | 開発プレビュー | `develop` | https://naoiw.github.io/td4/develop/ | 公開中 |
 
 > 本番と開発プレビューは、別サイトではなく1つのGitHub Pagesサイトのルートとサブディレクトリに公開します。
+>
+> **Education（技術資料）**： [本番](https://naoiw.github.io/td4/assets/education/) ／ [開発プレビュー](https://naoiw.github.io/td4/develop/assets/education/)。両ページのヘッダーから切り替えられます。
 
 ## デモ
 
@@ -25,7 +27,7 @@
 - **信号波形の観察**：クロック・レジスタ・ALU・ROMなどの論理波形を切り替えて表示。
 - **プログラム編集**：アセンブラ、サンプルプログラム、ROMとソースコードの相互操作。
 
-操作方法・各画面の詳細は [操作ガイド](docs/usage.md) を参照してください。
+操作方法・各画面の詳細は [操作ガイド](docs/usage.md)、TD4の基本構造・命令デコード・12命令の一覧は [Education](https://naoiw.github.io/td4/assets/education/) を参照してください。
 
 > 実行するのはTD4の命令と理想的な論理H/Lです。実ICの電圧・伝搬遅延や完全な基板配線を再現するものではありません。
 

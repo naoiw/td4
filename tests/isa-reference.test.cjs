@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const html = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+const html = fs.readFileSync(path.resolve(__dirname, '../assets/education/index.html'), 'utf8');
 const css = fs.readFileSync(path.resolve(__dirname, '../assets/css/foundation.css'), 'utf8');
 const {CPU, isStandard} = require('../assets/js/core/td4-core.js');
 require('../assets/js/data/netlist.js');
