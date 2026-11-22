@@ -13,7 +13,7 @@
   <script src="assets/js/data/netlist.js" defer></script>
   <script src="assets/js/core/ic-circuit.js" defer></script>
   <script src="assets/js/ui/board.js" defer></script>
-  <script src="assets/js/ui/app.js?v=20261123-scope-trigger" defer></script>
+  <script src="assets/js/ui/app.js?v=20261123-optional-trigger" defer></script>
 </head>
 <body>
   <div class="page">
@@ -125,8 +125,19 @@
           <div><p class="eyebrow">LOGIC ANALYZER</p><h2 id="scopeTitle">信号波形</h2></div>
           <div class="scope-controls">
             <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ A/B</option><option value="pc">PC / ALU</option><option value="rom">ROM</option></select></label>
-            <label class="scope-group-label" for="triggerChannel">TRIGGER CH <select id="triggerChannel" aria-label="トリガー対象チャンネル"><option value="CLK">CLK</option></select></label>
-            <label class="scope-group-label" for="triggerEdge">EDGE <select id="triggerEdge" aria-label="トリガーのエッジ方向"><option value="rise">＿↑￣ L→H</option><option value="fall">￣↓＿ H→L</option></select></label>
+            <label class="scope-trigger-enable" for="triggerEnable"><input type="checkbox" id="triggerEnable"> TRIGGER ENABLE</label>
+            <label class="scope-group-label" for="triggerChannel">CH <select id="triggerChannel" aria-label="トリガー対象チャンネル"><option value="CLK">CLK</option></select></label>
+            <div class="scope-edge-control" role="group" aria-label="トリガーのエッジ方向">
+              <span class="scope-edge-label">EDGE</span>
+              <div class="scope-edge-options">
+                <button type="button" class="scope-edge-option is-selected" id="triggerRiseBtn" aria-label="立ち上がり LからH" aria-pressed="true" title="立ち上がり (L→H)">
+                  <svg viewBox="0 0 40 28" aria-hidden="true" focusable="false"><path class="scope-edge-wave" d="M3 22 H17 V6 H37"/><path class="scope-edge-arrow" d="M26 22 V10 M22 14 L26 10 L30 14"/></svg><span>L→H</span>
+                </button>
+                <button type="button" class="scope-edge-option" id="triggerFallBtn" aria-label="立ち下がり HからL" aria-pressed="false" title="立ち下がり (H→L)">
+                  <svg viewBox="0 0 40 28" aria-hidden="true" focusable="false"><path class="scope-edge-wave" d="M3 6 H17 V22 H37"/><path class="scope-edge-arrow" d="M26 6 V18 M22 14 L26 18 L30 14"/></svg><span>H→L</span>
+                </button>
+              </div>
+            </div>
             <span id="scopeTriggerStatus" class="scope-trigger-status is-off" role="status" aria-live="polite">OFF</span>
             <button type="button" class="btn btn-primary scope-run-btn" id="scopeRunBtn" disabled title="波形取得をクリアして再待機">RUN</button>
             <button type="button" class="text-button" id="clearWaveBtn">波形を消去</button>
