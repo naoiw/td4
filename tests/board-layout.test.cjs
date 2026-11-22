@@ -801,7 +801,7 @@ test('PCB shrinks only near fullscreen and keeps the current half-window scale',
     assert.match(sourceCode,/window\.screen\.width \|\| window\.screen\.availWidth/);
     assert.match(sourceCode,/wideWorkspace = windowWidth >= 1450 && availableWidth >= 1250/);
   }
-  assert.match(html,/src="assets\/js\/ui\/app\.js\?v=20261123-dual-step"/);
+  assert.match(html,/src="assets\/js\/ui\/app\.js\?v=20261123-scope-trigger"/);
 });
 
 
