@@ -238,25 +238,74 @@ test('disabled trigger stays LIVE and samples continuously through both edge dir
   assert.equal(h.context.intervalId,1,'CPU timer remains active');
 });
 
-test('ENABLE and DISABLE restore the right mode without stopping the board',()=>{
+test('TRIGGER ENABLE preserves prior live waveform and catches only the first future edge',()=>{
   const h=harness({enabled:false,baseline:{CLK:0,IN0:0}});
   h.api.restartWaveCapture();
+  // A rising edge occurred before the user enabled the trigger.
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,false);
-  h.context.scopeTriggerEnabled=true;
-  h.setLive({CLK:0,IN0:0});
-  h.api.restartWaveCapture();
-  assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
-  h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
-  h.context.scopeTriggerEnabled=false;
-  h.api.restartWaveCapture();
-  assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
-  assert.equal(h.context.scopeTriggered,false);
   h.api.captureScopeSample({CLK:0,IN0:0});
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,false,'never freeze while disabled');
-  assert.equal(h.context.intervalId,1,'no CPU pause on mode switch');
+  assert.equal(h.context.scopeTriggered,false);
+  const history=h.context.waveSamples.slice();
+  // Switch ON while the signal is HIGH. This HIGH is the new baseline, not a trigger.
+  h.setLive({CLK:1,IN0:0});
+  h.context.scopeTriggerEnabled=true;
+  h.api.rearmScopeTrigger();
+  assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
+  assert.equal(h.context.previousTriggerLevel,1);
+  assert.equal(h.context.scopeTriggered,false);
+  assert.deepEqual(h.context.waveSamples,history,'ENABLE must not clear prior waveform');
+  assert.equal(h.context.intervalId,1,'CPU keeps running during arming');
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,false,'high level alone must not trigger');
+  h.api.captureScopeSample({CLK:0,IN0:0});
+  assert.equal(h.context.scopeTriggered,false,'wrong-direction edge must not trigger');
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,true,'first subsequent rising edge triggers');
+  assert.equal(h.control.scopeTriggerStatus.textContent,'TRIGGERED');
+  assert.deepEqual(h.context.waveSamples.slice(0,history.length),history,
+    'pre-enable waveform remains visible alongside triggering edge');
+  const frozen=h.context.waveSamples.length;
+  h.api.captureScopeSample({CLK:0,IN0:0});
+  assert.equal(h.context.waveSamples.length,frozen,'frozen history is stable');
+});
+
+test('turning TRIGGER ENABLE off resumes LIVE capture without clearing frozen waveform',()=>{
+  const h=harness({enabled:true,baseline:{CLK:0,IN0:0}});
+  h.api.restartWaveCapture();
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,true);
+  const preserved=h.context.waveSamples.slice();
+  h.setLive({CLK:1,IN0:0});
+  h.context.scopeTriggerEnabled=false;
+  h.api.rearmScopeTrigger();
+  assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
+  assert.equal(h.context.scopeTriggered,false);
+  assert.equal(h.context.frozenScopeLevels,null);
+  assert.deepEqual(h.context.waveSamples,preserved,'OFF must not erase waveform');
+  h.api.captureScopeSample({CLK:0,IN0:0});
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,false,'do not freeze again while disabled');
+  assert.equal(h.context.waveSamples.length,preserved.length+2);
+  assert.equal(h.context.intervalId,1,'CPU keeps running');
+});
+
+test('ENABLE click uses no-reset re-arm; RUN and Clear still explicitly clear',()=>{
+  for(const app of [source,compiled]){
+    const enableStart=app.indexOf("('triggerEnable').addEventListener('change'");
+    const riseStart=app.indexOf("('triggerRiseBtn').addEventListener('click'",enableStart);
+    assert.ok(enableStart>0&&riseStart>enableStart);
+    const enable=app.slice(enableStart,riseStart);
+    assert.ok(enable.includes('rearmScopeTrigger()'), 'ENABLE toggles re-arm');
+    assert.ok(!enable.includes('restartWaveCapture()'), 'ENABLE must not clear waveform');
+    assert.ok(app.includes("('scopeRunBtn').addEventListener('click', restartWaveCapture)"));
+    assert.ok(app.includes("('clearWaveBtn').addEventListener('click', restartWaveCapture)"));
+    const rearm=app.slice(app.indexOf('function rearmScopeTrigger('),
+      app.indexOf('function selectScopeTriggerChannel('));
+    assert.ok(!rearm.includes('waveSamples.splice'), 're-arm leaves samples untouched');
+    assert.ok(rearm.includes('previousTriggerLevel = powerOn ? levels[scopeTriggerChannel] : null'),
+      'sample current level on enable, not historical last edge');
+  }
 });
 
 test('power-off and on transitions update trigger state while preserving independent clock operations',()=>{

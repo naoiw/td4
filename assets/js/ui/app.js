@@ -356,7 +356,7 @@
         if (!group.includes(scopeTriggerChannel))
             scopeTriggerChannel = group[0];
     }
-    /** CH/EDGE changes re-arm against the live level without erasing the waveform. */
+    /** ENABLE/CH/EDGE changes re-arm against the live level without erasing the waveform. */
     function rearmScopeTrigger() {
         scopeTriggered = false;
         frozenScopeLevels = null;
@@ -387,7 +387,7 @@
             syncScopeTriggerStatus();
         }
     }
-    /** RUN, Clear, and trigger changes reset the trace and arm a new edge capture. */
+    /** Explicit RUN, Clear, and display-group changes reset the waveform history. */
     function restartWaveCapture() {
         waveSamples.splice(0);
         scopeTriggered = false;
@@ -707,7 +707,8 @@
         });
         $('triggerEnable').addEventListener('change', () => {
             scopeTriggerEnabled = $('triggerEnable').checked;
-            restartWaveCapture();
+            // Preserve the existing trace; only future edges may trigger after enabling.
+            rearmScopeTrigger();
         });
         $('triggerRiseBtn').addEventListener('click', () => {
             scopeTriggerEdge = 'rise';
