@@ -415,12 +415,18 @@
         const running = powerOn && intervalId !== null;
         $('powerOnBtn').disabled = powerOn;
         $('powerOffBtn').disabled = !powerOn;
-        const toggle = $('runPauseBtn');
-        toggle.disabled = !powerOn;
-        toggle.classList.toggle('btn-primary', !running);
-        toggle.setAttribute('aria-label', running ? 'CPUを停止する' : 'CPUを実行する');
-        $('runPauseIcon').textContent = running ? 'Ⅱ' : '▶';
-        $('runPauseLabel').textContent = running ? '停止' : '実行';
+        const controls = [
+            ['runPauseBtn', 'runPauseIcon', 'runPauseLabel'],
+            ['romRunPauseBtn', 'romRunPauseIcon', 'romRunPauseLabel']
+        ];
+        for (const [buttonId, iconId, labelId] of controls) {
+            const toggle = $(buttonId);
+            toggle.disabled = !powerOn;
+            toggle.classList.toggle('btn-primary', !running);
+            toggle.setAttribute('aria-label', running ? 'CPUを停止する' : 'CPUを実行する');
+            $(iconId).textContent = running ? 'Ⅱ' : '▶';
+            $(labelId).textContent = running ? '停止' : '実行';
+        }
         const status = $('runStatus');
         status.classList.toggle('running', running);
         status.classList.toggle('is-powered-on', powerOn);
@@ -579,6 +585,7 @@
         $('powerOnBtn').addEventListener('click', () => setPower(true));
         $('powerOffBtn').addEventListener('click', () => setPower(false));
         $('runPauseBtn').addEventListener('click', toggleRunPause);
+        $('romRunPauseBtn').addEventListener('click', toggleRunPause);
         $('clearLogBtn').addEventListener('click', () => { history.splice(0); renderHistory(); });
         $('clearBpBtn').addEventListener('click', () => { breakpoints.clear(); renderROM(); });
         $('clearWaveBtn').addEventListener('click', restartWaveCapture);
