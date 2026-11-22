@@ -1,17 +1,16 @@
 /* Standalone technical reference; no CPU runtime dependencies. */
-.education-page{max-width:1240px}
-.education-main{display:flex;flex-direction:column;gap:20px}
-.education-hero{padding:34px 36px;border-radius:15px;background:linear-gradient(130deg,#21374c,#294f70);color:white}
-.education-hero .eyebrow{color:#a6c2e0}
-.education-hero h1{font-size:clamp(24px,3vw,36px);line-height:1.35;letter-spacing:-.7px;margin:7px 0 12px}
-.education-hero p:not(.eyebrow){font-size:13px;line-height:1.95;color:#e3edf8;max-width:790px;margin:0}
-.education-hero a{color:#fff}
-.education-toc{display:flex;gap:8px;flex-wrap:wrap;margin-top:23px}
-.education-toc a{text-decoration:none;color:#e7effa;border:1px solid #819ab56b;border-radius:7px;padding:8px 11px;font-weight:650;font-size:11px}
-.education-toc a:hover{background:#ffffff22}
-.edu-section{border:1px solid var(--line);background:#fff;border-radius:12px;padding:27px 30px;scroll-margin-top:16px}
+.education-main{display:flex;flex-direction:column;gap:18px}
+.education-hero{padding:20px;background:var(--surface);color:var(--ink)}
+.education-hero .eyebrow{color:#527093}
+.education-hero h1{font-size:clamp(19px,2vw,24px);line-height:1.4;letter-spacing:-.4px;margin:7px 0 12px}
+.education-hero p:not(.eyebrow){font-size:12px;line-height:1.85;color:#637486;margin:0}
+.education-hero a{color:var(--blue)}
+.education-toc{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.education-toc a{text-decoration:none;color:#466281;background:#f9fbfe;border:1px solid #d9e0e7;border-radius:8px;padding:9px 12px;font-weight:700;font-size:11px}
+.education-toc a:hover{background:#eff7ff;border-color:#95b3d1}
+.edu-section{scroll-margin-top:16px}
 .edu-section-heading{margin-bottom:15px}
-.edu-section-heading h2{margin:0;font-size:22px;letter-spacing:-.4px}
+.edu-section-heading h2{margin:0;font-size:19px;letter-spacing:-.4px;font-weight:780}
 .edu-section p{line-height:1.9;color:#536477;font-size:13px}
 .edu-section strong{color:#293c50}
 .edu-section code{font-family:ui-monospace,Consolas,monospace}
@@ -65,4 +64,4 @@
 .education-bottom{text-align:center;padding:8px 0 22px}
 .education-bottom .btn{display:inline-block;text-decoration:none}
 @media(max-width:900px){.edu-flow,.edu-chip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow-step:after{display:none}}
-@media(max-width:600px){.education-hero{padding:24px 19px}.edu-section{padding:20px 16px}.edu-spec-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow,.edu-two-cols,.edu-chip-grid{grid-template-columns:1fr}.edu-byte-diagram>div{padding:13px}.education-page .reference-card summary{padding:15px}.education-page .reference-card .reference-content{padding:3px 12px 17px}.edu-flow-step:after{display:none}}
+@media(max-width:600px){.education-hero{padding:15px 13px}.edu-section{padding:14px}.edu-spec-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow,.edu-two-cols,.edu-chip-grid{grid-template-columns:1fr}.edu-byte-diagram>div{padding:13px}.education-page .reference-card summary{padding:15px}.education-page .reference-card .reference-content{padding:3px 12px 17px}.edu-flow-step:after{display:none}}
