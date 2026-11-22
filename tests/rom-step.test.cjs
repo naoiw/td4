@@ -136,25 +136,28 @@ test('ROM edits are used on the very next STEP, including after a breakpoint', (
   assert.ok(h.marked.has(0), 'STEP never clears breakpoints');
 });
 
-test('HARDWARE WORKBENCH STEP uses the same handler and disabled state as PROGRAM ROM', () => {
+test('HARDWARE WORKBENCH STEP mirrors PROGRAM ROM controls', () => {
   const board = html.slice(html.indexOf('<section class="panel board-panel"'), html.indexOf('<div class="schematic-scroll"'));
   const rom = html.slice(html.indexOf('<section class="panel rom-panel"'), html.indexOf('<section class="panel editor-panel"'));
-  assert.match(board, /id="boardStepBtn" disabled/);
-  assert.match(rom, /id="romStepBtn" disabled/);
+  assert.ok(board.includes('id="boardStepBtn" disabled'));
+  assert.ok(rom.includes('id="romStepBtn" disabled'));
   assert.ok(board.indexOf('id="runPauseBtn"') < board.indexOf('id="boardStepBtn"'),
-    'STEP appears directly to the right of WORKBENCH run/pause');
+    'STEP appears to the right of WORKBENCH run/pause');
   for (const id of ['boardStepBtn', 'romStepBtn']) {
-    const button = html.match(new RegExp('<button[^>]*id="' + id + '"[^>]*>[\\s\\S]*?<\\/button>'))?.[0];
-    assert.ok(button, id + ' exists');
-    assert.match(button, /class="btn rom-step-button"/);
-    assert.match(button, /aria-label="現在のROM命令を1つ実行する"/);
-    assert.match(button, /STEP <span aria-hidden="true">⏭<\\/span>/);
+    const buttonStart = html.indexOf('id="' + id + '"');
+    const button = html.slice(html.lastIndexOf('<button', buttonStart), html.indexOf('</button>', buttonStart) + 9);
+    assert.ok(buttonStart !== -1, id + ' exists');
+    assert.ok(button.includes('class="btn rom-step-button"'));
+    assert.ok(button.includes('aria-label="現在のROM命令を1つ実行する"'));
+    assert.ok(button.includes('STEP <span aria-hidden="true">⏭</span>'));
   }
-  assert.match(css, /\\.rom-step-button\\{flex:none;background:#edf4fd/);
+  assert.ok(css.includes('.rom-step-button{flex:none;background:#edf4fd'));
   for (const app of [source, compiled]) {
     for (const id of ['boardStepBtn', 'romStepBtn']) {
-      assert.match(app, new RegExp("\\('" + id + "'\\)\\.addEventListener\\('click', stepInstruction\\)"));
-      assert.match(app, new RegExp("\\('" + id + "'\\)\\.disabled = !powerOn \\|\\| running"));
+      assert.ok(app.includes("('" + id + "').addEventListener('click', stepInstruction)"),
+        id + ' uses common handler');
+      assert.ok(app.includes("('" + id + "').disabled = !powerOn || running"),
+        id + ' tracks CPU run and power state');
     }
   }
 });
