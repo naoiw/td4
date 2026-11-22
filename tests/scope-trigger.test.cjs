@@ -10,7 +10,7 @@ const compiled = fs.readFileSync(path.join(root, 'assets/js/ui/app.js'), 'utf8')
 const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
 const {GROUPS, appendSample, shouldCaptureSample} = require('../assets/js/core/signals.js');
 
-function harness({powerOn = true, group = 'basic', channel = 'CLK', edge = 'rise', baseline = {CLK:0, IN0:0}} = {}) {
+function harness({powerOn = true, enabled = true, group = 'basic', channel = 'CLK', edge = 'rise', baseline = {CLK:0, IN0:0}} = {}) {
   const control = {
     signalGroup: {value:group},
     triggerChannel: {
@@ -20,7 +20,15 @@ function harness({powerOn = true, group = 'basic', channel = 'CLK', edge = 'rise
       append(option) { this.options.push(option); }
     },
     scopeTriggerStatus: {className:'', textContent:''},
-    scopeRunBtn: {disabled:true}
+    scopeRunBtn: {disabled:true},
+    triggerRiseBtn: {
+      classList: {toggle() {}},
+      setAttribute() {}
+    },
+    triggerFallBtn: {
+      classList: {toggle() {}},
+      setAttribute() {}
+    }
   };
   const rendered = [];
   let live = baseline;
@@ -34,6 +42,7 @@ function harness({powerOn = true, group = 'basic', channel = 'CLK', edge = 'rise
       return {value:'',textContent:''};
     }},
     GROUPS, appendSample, shouldCaptureSample,
+    scopeTriggerEnabled:enabled,
     scopeTriggerChannel:channel,
     scopeTriggerEdge:edge,
     scopeTriggered:false,
@@ -60,21 +69,29 @@ function harness({powerOn = true, group = 'basic', channel = 'CLK', edge = 'rise
   return {context, control, api, rendered, setLive: next => {live=next;}};
 }
 
-test('one trigger channel and one L/H edge direction are visible, plus a dedicated RUN button',()=>{
+test('trigger enable is opt-in, with illustrated SVG edge buttons and RUN',()=>{
   const scope=html.slice(html.indexOf('<section class="panel scope-panel"'),html.indexOf('<section class="panel trace-panel"'));
-  for(const id of ['signalGroup','triggerChannel','triggerEdge','scopeTriggerStatus','scopeRunBtn','clearWaveBtn'])
+  for(const id of ['signalGroup','triggerEnable','triggerChannel','triggerRiseBtn','triggerFallBtn','scopeTriggerStatus','scopeRunBtn','clearWaveBtn'])
     assert.ok(scope.includes('id="'+id+'"'),id+' control is visible');
+  assert.match(scope, /<input type="checkbox" id="triggerEnable">/, 'trigger defaults OFF');
   assert.match(scope, /<select id="triggerChannel"[^>]*><option value="CLK">CLK<\/option><\/select>/);
-  assert.match(scope, /<option value="rise">＿↑￣ L→H<\/option>/);
-  assert.match(scope, /<option value="fall">￣↓＿ H→L<\/option>/);
+  assert.doesNotMatch(scope, /id="triggerEdge"|"＿↑￣"|"￣↓＿"/);
+  assert.match(scope, /id="triggerRiseBtn"[^>]*aria-pressed="true"/);
+  assert.match(scope, /id="triggerFallBtn"[^>]*aria-pressed="false"/);
+  assert.match(scope, /<svg viewBox="0 0 40 28"[^>]*>/);
+  assert.equal((scope.match(/class="scope-edge-wave"/g)||[]).length,2);
+  assert.equal((scope.match(/class="scope-edge-arrow"/g)||[]).length,2);
   assert.match(scope, /id="scopeRunBtn" disabled[^>]*>RUN<\/button>/);
-  assert.ok(css.includes('.scope-trigger-status.is-triggered'));
-  assert.ok(css.includes('.scope-run-btn'));
+  assert.ok(css.includes('.scope-trigger-status.is-live'));
+  assert.ok(css.includes('.scope-edge-option.is-selected'));
   for(const app of [source,compiled]){
     assert.ok(app.includes("('scopeRunBtn').addEventListener('click', restartWaveCapture)"));
     assert.ok(app.includes("('clearWaveBtn').addEventListener('click', restartWaveCapture)"));
     assert.ok(app.includes("('triggerChannel').addEventListener('change'"));
-    assert.ok(app.includes("('triggerEdge').addEventListener('change'"));
+    assert.ok(app.includes("('triggerEnable').addEventListener('change'"));
+    assert.ok(app.includes("('triggerRiseBtn').addEventListener('click'"));
+    assert.ok(app.includes("('triggerFallBtn').addEventListener('click'"));
+    assert.ok(!app.includes("('triggerEdge').addEventListener('change'"));
   }
 });
 
@@ -164,6 +181,40 @@ test('group changes keep a valid single channel or select the first live channel
   assert.deepEqual(Array.from(h.control.triggerChannel.options.map(x=>x.value)),
     Array.from(GROUPS.rom));
   assert.ok(!h.control.triggerChannel.options.some(x=>x.value==='-'));
+});
+
+test('disabled trigger stays LIVE and samples continuously through both edge directions',()=>{
+  const h=harness({enabled:false,baseline:{CLK:0,IN0:0}});
+  h.api.populateScopeTriggerChannels();
+  h.api.restartWaveCapture();
+  assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
+  for (let i=0;i<100;i++)h.api.captureScopeSample({CLK:i%2,IN0:0});
+  assert.equal(h.context.scopeTriggered,false);
+  assert.equal(h.context.frozenScopeLevels,null);
+  assert.equal(h.context.waveSamples.length,80,'rolling window works with trigger disabled');
+  assert.equal(h.context.cpu.cycles,12,'CPU unaffected');
+  assert.equal(h.context.intervalId,1,'CPU timer remains active');
+});
+
+test('ENABLE and DISABLE restore the right mode without stopping the board',()=>{
+  const h=harness({enabled:false,baseline:{CLK:0,IN0:0}});
+  h.api.restartWaveCapture();
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,false);
+  h.context.scopeTriggerEnabled=true;
+  h.setLive({CLK:0,IN0:0});
+  h.api.restartWaveCapture();
+  assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,true);
+  h.context.scopeTriggerEnabled=false;
+  h.api.restartWaveCapture();
+  assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
+  assert.equal(h.context.scopeTriggered,false);
+  h.api.captureScopeSample({CLK:0,IN0:0});
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeTriggered,false,'never freeze while disabled');
+  assert.equal(h.context.intervalId,1,'no CPU pause on mode switch');
 });
 
 test('power-off and on transitions update trigger state while preserving independent clock operations',()=>{
