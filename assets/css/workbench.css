@@ -13,8 +13,10 @@
 .sample-card.is-selected{background:#e9f3ff;border-color:#79a5da;box-shadow:inset 0 0 0 1px #b8dafb}
 .sample-icon{width:35px;height:35px;flex:none;display:grid;place-items:center;border-radius:8px;background:#e8eff8;color:#4171a8;font:800 19px ui-monospace,Consolas,monospace}
 .sample-card.is-selected .sample-icon{background:#31649c;color:white}
-.sample-card strong,.sample-card small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sample-card strong{font-size:11px}.sample-card small{font-size:9px;color:#7a8998;margin-top:4px}
+.sample-text{flex:1 1 0;min-width:0;max-width:100%}
+.sample-card strong,.sample-card small{display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+.sample-card strong{font-size:11px}
+.sample-card small{font-size:9px;color:#7a8998;margin-top:4px}
 .board-panel{padding:18px 20px 15px}
 .board-heading{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:10px}
 .board-panel .runbar{margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:flex-end;flex-direction:row;flex-wrap:wrap;gap:10px 16px}
