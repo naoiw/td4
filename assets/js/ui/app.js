@@ -707,7 +707,8 @@
         });
         $('triggerEnable').addEventListener('change', () => {
             scopeTriggerEnabled = $('triggerEnable').checked;
-            restartWaveCapture();
+            // Preserve the existing trace; only future edges may trigger after enabling.
+            rearmScopeTrigger();
         });
         $('triggerRiseBtn').addEventListener('click', () => {
             scopeTriggerEdge = 'rise';
