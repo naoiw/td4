@@ -210,8 +210,8 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
   assert.match(board[1],/transform-origin:top center/);
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
     assert.match(source,/new ResizeObserver\(fitCircuitBoard\)/);
-    assert.match(source,/Math\\.min\\(1\\.2, availableWidth \\/ boardWidth\\)/);
-    assert.match(source,/boardFitScale\\(availableWidth, board\\.offsetWidth, window\\.innerWidth, window\\.screen\\.availWidth\\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ boardWidth\)/);
+    assert.match(source,/boardFitScale\(availableWidth, board\.offsetWidth, window\.innerWidth, window\.screen\.availWidth\)/);
     assert.match(source,/viewport\.clientWidth/);
     assert.match(source,/board\.offsetHeight \* scale/);
     assert.match(source,/window\.addEventListener\('resize', fitCircuitBoard\)/);
@@ -220,8 +220,8 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
 });
 test('board auto-fit no longer draws selection-dependent wires',()=>{
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
-    assert.match(source,/Math\\.min\\(1\\.2, availableWidth \\/ boardWidth\\)/);
-    assert.match(source,/boardFitScale\\(availableWidth, board\\.offsetWidth, window\\.innerWidth, window\\.screen\\.availWidth\\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ boardWidth\)/);
+    assert.match(source,/boardFitScale\(availableWidth, board\.offsetWidth, window\.innerWidth, window\.screen\.availWidth\)/);
     assert.doesNotMatch(source,/drawSelectedWires|TD4BoardView\.drawWires/);
   }
 });
@@ -764,7 +764,7 @@ test('PCB shrinks only near fullscreen and keeps the current half-window scale',
   assert.ok(definition,'the production scale calculator is separately testable');
   const scale=vm.runInNewContext('('+definition.trim()+')');
   const boardWidth=1135;
-  const regular=(available,limit)=>Math.min(1.2,available/boardWidth);
+  const regular=(available)=>Math.min(1.2,available/boardWidth);
   const scenarios=[
     {screen:1920,window:1920,available:1480,smaller:true},
     {screen:1920,window:960,available:855,smaller:false},
