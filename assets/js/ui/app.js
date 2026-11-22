@@ -430,6 +430,7 @@
             $(labelId).textContent = running ? '停止' : '実行';
         }
         $('romStepBtn').disabled = !powerOn || running;
+        $('boardStepBtn').disabled = !powerOn || running;
         const status = $('runStatus');
         status.classList.toggle('running', running);
         status.classList.toggle('is-powered-on', powerOn);
@@ -606,6 +607,7 @@
         $('runPauseBtn').addEventListener('click', toggleRunPause);
         $('romRunPauseBtn').addEventListener('click', toggleRunPause);
         $('romStepBtn').addEventListener('click', stepInstruction);
+        $('boardStepBtn').addEventListener('click', stepInstruction);
         $('clearLogBtn').addEventListener('click', () => { history.splice(0); renderHistory(); });
         $('clearBpBtn').addEventListener('click', () => { breakpoints.clear(); renderROM(); });
         $('clearWaveBtn').addEventListener('click', restartWaveCapture);
