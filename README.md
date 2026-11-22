@@ -2,7 +2,14 @@
 
 『CPUの創りかた』に登場する4bit CPU「TD4」を、ブラウザで動かしながらロジックIC・ROM・信号の状態を観察できるエミュレータです。
 
-**[エミュレータを開く（本番）](https://naoiw.github.io/td4/)** ／ [開発プレビュー](https://naoiw.github.io/td4/develop/)
+## 公開URL
+
+| 環境 | ブランチ | URL | 状態 |
+| --- | --- | --- | --- |
+| 本番 | `main` | https://naoiw.github.io/td4/ | 公開中 |
+| 開発プレビュー | `develop` | https://naoiw.github.io/td4/develop/ | 公開中 |
+
+> 本番と開発プレビューは、別サイトではなく1つのGitHub Pagesサイトのルートとサブディレクトリに公開します。
 
 ## デモ
 
@@ -40,6 +47,16 @@ pnpm test
 ```
 
 TypeScriptの編集元は `src/`、生成JavaScriptは `assets/js/` です。生成物を直接編集せず、ビルド後に一緒にコミットします。まとめて検証する場合は `pnpm run verify` を使用します。
+
+## 公開と開発フロー
+
+- `main` を本番ブランチとし、変更はPRで `main` に統合します。
+- `develop` は本番へ反映する前の動作確認用ブランチです。変更は `/td4/develop/` にプレビュー公開します。
+- `main` へのpush（PRのマージを含む）でGitHub Actionsの `Deploy GitHub Pages` が本番とプレビューをまとめてデプロイします。
+- `develop` へのpushでは `Validate develop` の検証成功後にPagesを再デプロイします。PRの作成・更新だけでは公開しません。
+- GitHub Pagesの公開元は **Settings → Pages → Build and deployment → GitHub Actions** を使用します。
+
+詳細は [開発・デプロイ](docs/deployment.md) と [共通セットアップガイド](https://github.com/naoiw/.github/blob/main/standards/NEW_WEB_APP_SETUP.md) を参照してください。
 
 ## ドキュメント
 
