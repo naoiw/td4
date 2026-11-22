@@ -28,6 +28,7 @@
   // 'cpu' is still selectable internally for clock-only capture.
   let waveCaptureMode: WaveCaptureMode = 'oscilloscope';
   type ScopeTriggerEdge = 'rise' | 'fall';
+  let scopeTriggerEnabled = false;
   let scopeTriggerChannel = 'CLK';
   let scopeTriggerEdge: ScopeTriggerEdge = 'rise';
   let scopeTriggered = false;
@@ -308,7 +309,7 @@
       const signal = group[index];
       const {row, name, trace, status} = scopeRows[index];
       row.className = signal
-        ? 'scope-row' + (signal === scopeTriggerChannel ? ' is-trigger-channel' : '')
+        ? 'scope-row' + (signal === scopeTriggerChannel && scopeTriggerEnabled ? ' is-trigger-channel' : '')
         : 'scope-row is-unused';
       name.textContent = signal || '-';
       if (signal) {
@@ -334,10 +335,16 @@
 
   function syncScopeTriggerStatus(): void {
     const status = $('scopeTriggerStatus');
-    const state = !powerOn ? 'off' : scopeTriggered ? 'triggered' : 'armed';
+    const state = !powerOn ? 'off' : !scopeTriggerEnabled ? 'live' : scopeTriggered ? 'triggered' : 'armed';
     status.className = 'scope-trigger-status is-' + state;
     status.textContent = state.toUpperCase();
     $<HTMLButtonElement>('scopeRunBtn').disabled = !powerOn;
+    const rise = $<HTMLButtonElement>('triggerRiseBtn');
+    const fall = $<HTMLButtonElement>('triggerFallBtn');
+    rise.classList.toggle('is-selected', scopeTriggerEdge === 'rise');
+    fall.classList.toggle('is-selected', scopeTriggerEdge === 'fall');
+    rise.setAttribute('aria-pressed', String(scopeTriggerEdge === 'rise'));
+    fall.setAttribute('aria-pressed', String(scopeTriggerEdge === 'fall'));
   }
 
   /** Exactly one channel from the current group; unused slots never become options. */
@@ -360,7 +367,7 @@
   function captureScopeSample(levels: SignalLevels): void {
     if (scopeTriggered) return;
     const current = levels[scopeTriggerChannel];
-    const triggered = matchesScopeEdge(previousTriggerLevel, current, scopeTriggerEdge);
+    const triggered = scopeTriggerEnabled && matchesScopeEdge(previousTriggerLevel, current, scopeTriggerEdge);
     previousTriggerLevel = current;
     appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
     if (triggered) {
@@ -678,8 +685,16 @@
       scopeTriggerChannel = $<HTMLSelectElement>('triggerChannel').value;
       restartWaveCapture();
     });
-    $('triggerEdge').addEventListener('change', () => {
-      scopeTriggerEdge = $<HTMLSelectElement>('triggerEdge').value as ScopeTriggerEdge;
+    $('triggerEnable').addEventListener('change', () => {
+      scopeTriggerEnabled = $<HTMLInputElement>('triggerEnable').checked;
+      restartWaveCapture();
+    });
+    $('triggerRiseBtn').addEventListener('click', () => {
+      scopeTriggerEdge = 'rise';
+      restartWaveCapture();
+    });
+    $('triggerFallBtn').addEventListener('click', () => {
+      scopeTriggerEdge = 'fall';
       restartWaveCapture();
     });
     $('assembleBtn').addEventListener('click', compileSource);
