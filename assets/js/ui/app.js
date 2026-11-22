@@ -391,6 +391,7 @@
             icon.className = 'sample-icon';
             icon.textContent = sample.icon;
             const words = document.createElement('span');
+            words.className = 'sample-text';
             const title = document.createElement('strong');
             title.textContent = sample.title;
             const description = document.createElement('small');
