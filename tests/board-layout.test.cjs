@@ -210,7 +210,8 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
   assert.match(board[1],/transform-origin:top center/);
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
     assert.match(source,/new ResizeObserver\(fitCircuitBoard\)/);
-    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ boardWidth\)/);
+    assert.match(source,/boardFitScale\(availableWidth, board\.offsetWidth, window\.innerWidth, window\.screen\.availWidth\)/);
     assert.match(source,/viewport\.clientWidth/);
     assert.match(source,/board\.offsetHeight \* scale/);
     assert.match(source,/window\.addEventListener\('resize', fitCircuitBoard\)/);
@@ -219,7 +220,8 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
 });
 test('board auto-fit no longer draws selection-dependent wires',()=>{
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
-    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ boardWidth\)/);
+    assert.match(source,/boardFitScale\(availableWidth, board\.offsetWidth, window\.innerWidth, window\.screen\.availWidth\)/);
     assert.doesNotMatch(source,/drawSelectedWires|TD4BoardView\.drawWires/);
   }
 });
@@ -753,4 +755,36 @@ test('Space toggles CPU run/pause without editing or button-keyboard conflicts',
     assert.match(source,/function toggleRunPause\(\)\s*(?:: void)?\s*\{[\s\S]*?if \(intervalId === null\)\s*run\(\);\s*else\s*stop\(\);/,
       'shortcut reuses existing run/pause lifecycle');
   }
+});
+
+
+test('PCB shrinks only near fullscreen and keeps the current half-window scale',()=>{
+  const vm = require('node:vm');
+  const definition=js.match(/    function boardFitScale\([^)]*\) \{[\s\S]*?\n    \}/)?.[0];
+  assert.ok(definition,'the production scale calculator is separately testable');
+  const scale=vm.runInNewContext('('+definition.trim()+')');
+  const boardWidth=1135;
+  const regular=(available)=>Math.min(1.2,available/boardWidth);
+  const scenarios=[
+    {screen:1920,window:1920,available:1480,smaller:true},
+    {screen:1920,window:960,available:855,smaller:false},
+    {screen:2560,window:2560,available:1480,smaller:true},
+    {screen:2560,window:1280,available:1150,smaller:false},
+    {screen:3840,window:1920,available:1480,smaller:false},
+    {screen:1366,window:1366,available:1230,smaller:true},
+    {screen:1920,window:1050,available:920,smaller:false},
+    {screen:390,window:390,available:340,smaller:false}
+  ];
+  for(const v of scenarios){
+    const old=regular(v.available);
+    const target=old*(v.smaller?0.8:1);
+    assert.ok(Math.abs(scale(v.available,boardWidth,v.window,v.screen)-target)<1e-10,
+      'scale '+JSON.stringify(v)+' expected '+target);
+  }
+  // Wider full-screen windows scale down at most; board width/height are unchanged.
+  assert.equal(scale(1600,boardWidth,1600,1920),1.2);
+  assert.equal(scale(1600,boardWidth,1800,1920),0.96);
+  const source=fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8');
+  assert.match(source,/windowWidth >= 1100 && screenWidth > 0 && windowWidth >= screenWidth \* 0\.85/);
+  assert.match(source,/normalScale \* \(nearFullscreen \? 0\.8 : 1\)/);
 });

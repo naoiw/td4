@@ -209,6 +209,12 @@
     function updateCircuitBoard() {
         window.TD4BoardView.render(boardRenderOptions());
     }
+    /** Keep the normal fit for split windows; shrink by 20% only in near-fullscreen desktop windows. */
+    function boardFitScale(availableWidth, boardWidth, windowWidth, screenWidth) {
+        const normalScale = Math.min(1.2, availableWidth / boardWidth);
+        const nearFullscreen = windowWidth >= 1100 && screenWidth > 0 && windowWidth >= screenWidth * 0.85;
+        return normalScale * (nearFullscreen ? 0.8 : 1);
+    }
     /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
     function fitCircuitBoard() {
         const viewport = $('schematicViewport');
@@ -218,8 +224,8 @@
             parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
         if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0)
             return;
-        // Shrink as much as necessary; gently enlarge on wide screens.
-        const scale = Math.min(1.2, availableWidth / board.offsetWidth);
+        // A split-window layout retains the current scale; a fullscreen-sized one is about 80% of before.
+        const scale = boardFitScale(availableWidth, board.offsetWidth, window.innerWidth, window.screen.availWidth);
         board.style.setProperty('--board-fit-scale', String(scale));
         const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
             parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
