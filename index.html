@@ -26,6 +26,10 @@
         </div>
       </div>
       <div class="header-right">
+        <nav class="primary-nav" aria-label="ページ切り替え">
+          <a class="active" aria-current="page" href="./">Emulator</a>
+          <a href="assets/education/">Education</a>
+        </nav>
         <span class="connection" id="runStatus" aria-live="polite"><span class="status-dot"></span>電源OFF</span>
       </div>
     </header>
@@ -165,125 +169,6 @@
       </div>
     </main>
 
-    <details class="reference-card">
-      <summary><span><strong>TD4 命令セット</strong><small>オリジナル12命令 · 8bit構成とIC制御信号</small></span><span class="chevron">⌄</span></summary>
-      <div class="reference-content">
-        <p class="isa-reference-intro">機械語の上位4bitで命令を分類し、下位4bitに即値 Im（0〜15）または固定値0を指定します。命令ごとのレジスタ動作と回路のH/L信号を並べて確認できます。</p>
-        <div class="isa-legend">
-          <span><i class="isa-legend-sample isa-fixed"></i> 命令ビット（固定）</span>
-          <span><i class="isa-legend-sample isa-immediate"></i> 即値ビット（i3〜i0）</span>
-          <span><i class="isa-legend-sample isa-high"></i> H = HIGH</span>
-          <span><i class="isa-legend-sample isa-low"></i> L = LOW</span>
-        </div>
-        <div class="isa-table-scroll" role="region" aria-label="TD4 12命令の詳細一覧" tabindex="0">
-          <table class="isa-detail-table">
-            <thead>
-              <tr class="isa-groups">
-                <th rowspan="2" scope="col">命令</th><th rowspan="2" scope="col">Hex</th>
-                <th colspan="8" scope="colgroup">8bit 機械語</th>
-                <th rowspan="2" scope="col">C<span class="isa-th-note">実行後</span></th>
-                <th colspan="6" scope="colgroup">制御信号（H / L）</th>
-              </tr>
-              <tr class="isa-subheads">
-                <th scope="col">bit7</th><th scope="col">bit6</th><th scope="col">bit5</th><th scope="col">bit4</th><th scope="col">bit3</th><th scope="col">bit2</th><th scope="col">bit1</th><th scope="col">bit0</th>
-                <th scope="col">SelB</th><th scope="col">SelA</th><th scope="col">Ld0</th><th scope="col">Ld1</th><th scope="col">Ld2</th><th scope="col">Ld3</th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr class="isa-instruction" data-opcode="3">
-              <th scope="row" class="isa-command"><code>MOV A, Im</code></th><td class="isa-code"><code>0x3n</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">0</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld0" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>即値 Im を A レジスタへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="7">
-              <th scope="row" class="isa-command"><code>MOV B, Im</code></th><td class="isa-code"><code>0x7n</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">1</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld1" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>即値 Im を B レジスタへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="1">
-              <th scope="row" class="isa-command"><code>MOV A, B</code></th><td class="isa-code"><code>0x10</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">0</td><td class="isa-bit isa-fixed" data-bit="5">0</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-fixed" data-bit="3">0</td><td class="isa-bit isa-fixed" data-bit="2">0</td><td class="isa-bit isa-fixed" data-bit="1">0</td><td class="isa-bit isa-fixed" data-bit="0">0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-low" data-net="SelB" data-level="L">L</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld0" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>B レジスタの値を A レジスタへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="4">
-              <th scope="row" class="isa-command"><code>MOV B, A</code></th><td class="isa-code"><code>0x40</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">1</td><td class="isa-bit isa-fixed" data-bit="5">0</td><td class="isa-bit isa-fixed" data-bit="4">0</td><td class="isa-bit isa-fixed" data-bit="3">0</td><td class="isa-bit isa-fixed" data-bit="2">0</td><td class="isa-bit isa-fixed" data-bit="1">0</td><td class="isa-bit isa-fixed" data-bit="0">0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-low" data-net="SelB" data-level="L">L</td><td class="isa-control isa-low" data-net="SelA" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld1" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>A レジスタの値を B レジスタへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="0">
-              <th scope="row" class="isa-command"><code>ADD A, Im</code></th><td class="isa-code"><code>0x0n</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">0</td><td class="isa-bit isa-fixed" data-bit="5">0</td><td class="isa-bit isa-fixed" data-bit="4">0</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry isa-carry-variable">0/1</td>
-              <td class="isa-control isa-low" data-net="SelB" data-level="L">L</td><td class="isa-control isa-low" data-net="SelA" data-level="L">L</td><td class="isa-control isa-low" data-net="Ld0" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>A レジスタに即値 Im を加算し、下位4bitを A に書き込む。</span><small>実行前の C は参照せず、桁あふれ時に実行後 C=1。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="5">
-              <th scope="row" class="isa-command"><code>ADD B, Im</code></th><td class="isa-code"><code>0x5n</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">1</td><td class="isa-bit isa-fixed" data-bit="5">0</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry isa-carry-variable">0/1</td>
-              <td class="isa-control isa-low" data-net="SelB" data-level="L">L</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld1" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>B レジスタに即値 Im を加算し、下位4bitを B に書き込む。</span><small>実行前の C は参照せず、桁あふれ時に実行後 C=1。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="2">
-              <th scope="row" class="isa-command"><code>IN A</code></th><td class="isa-code"><code>0x20</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">0</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">0</td><td class="isa-bit isa-fixed" data-bit="3">0</td><td class="isa-bit isa-fixed" data-bit="2">0</td><td class="isa-bit isa-fixed" data-bit="1">0</td><td class="isa-bit isa-fixed" data-bit="0">0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-low" data-net="SelA" data-level="L">L</td><td class="isa-control isa-low" data-net="Ld0" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>入力ポートの4bitを A レジスタへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="6">
-              <th scope="row" class="isa-command"><code>IN B</code></th><td class="isa-code"><code>0x60</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">0</td><td class="isa-bit isa-fixed" data-bit="6">1</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">0</td><td class="isa-bit isa-fixed" data-bit="3">0</td><td class="isa-bit isa-fixed" data-bit="2">0</td><td class="isa-bit isa-fixed" data-bit="1">0</td><td class="isa-bit isa-fixed" data-bit="0">0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-low" data-net="SelA" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld1" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>入力ポートの4bitを B レジスタへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="B">
-              <th scope="row" class="isa-command"><code>OUT Im</code></th><td class="isa-code"><code>0xBn</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">1</td><td class="isa-bit isa-fixed" data-bit="6">0</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld2" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>即値 Im を出力ポートへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="9">
-              <th scope="row" class="isa-command"><code>OUT B</code></th><td class="isa-code"><code>0x90</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">1</td><td class="isa-bit isa-fixed" data-bit="6">0</td><td class="isa-bit isa-fixed" data-bit="5">0</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-fixed" data-bit="3">0</td><td class="isa-bit isa-fixed" data-bit="2">0</td><td class="isa-bit isa-fixed" data-bit="1">0</td><td class="isa-bit isa-fixed" data-bit="0">0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-low" data-net="SelB" data-level="L">L</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld2" data-level="L">L</td><td class="isa-control isa-high" data-net="Ld3" data-level="H">H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>B レジスタの値を出力ポートへ転送する。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="F">
-              <th scope="row" class="isa-command"><code>JMP Im</code></th><td class="isa-code"><code>0xFn</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">1</td><td class="isa-bit isa-fixed" data-bit="6">1</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">1</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-low" data-net="Ld3" data-level="L">L</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>即値 Im が示すROM番地へ無条件にジャンプする。</span><small>実行前の C は参照せず、実行後 C=0。</small></td></tr>
-            <tr class="isa-instruction" data-opcode="E">
-              <th scope="row" class="isa-command"><code>JNC Im</code></th><td class="isa-code"><code>0xEn</code></td>
-              <td class="isa-bit isa-fixed" data-bit="7">1</td><td class="isa-bit isa-fixed" data-bit="6">1</td><td class="isa-bit isa-fixed" data-bit="5">1</td><td class="isa-bit isa-fixed" data-bit="4">0</td><td class="isa-bit isa-immediate" data-bit="3" title="Imのbit3">i3</td><td class="isa-bit isa-immediate" data-bit="2" title="Imのbit2">i2</td><td class="isa-bit isa-immediate" data-bit="1" title="Imのbit1">i1</td><td class="isa-bit isa-immediate" data-bit="0" title="Imのbit0">i0</td>
-              <td class="isa-carry ">0</td>
-              <td class="isa-control isa-high" data-net="SelB" data-level="H">H</td><td class="isa-control isa-high" data-net="SelA" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld0" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld1" data-level="H">H</td><td class="isa-control isa-high" data-net="Ld2" data-level="H">H</td><td class="isa-control isa-conditional" data-net="Ld3" data-level="L/H" title="旧C=0のときL、旧C=1のときH">L/H</td>
-            </tr>
-            <tr class="isa-explanation"><td colspan="17"><span>実行前 C=0 なら Im の番地へジャンプし、C=1 なら次の番地へ進む。</span><small>Ld3 は旧C=0で L、旧C=1で H。実行後 C=0。</small></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="isa-notes">
-          <p><strong>C</strong>は命令実行後のキャリーフラグ。ADDのみ演算結果で<strong>0 / 1</strong>に変わります。JNCの分岐判定には<strong>実行前のC</strong>を使用します。</p>
-          <p><strong>Ld0〜Ld3</strong>はアクティブLOW（Lで書き込み有効）、順にA・B・OUT・PCの制御信号です。JNCのLd3は旧C=0ならL、旧C=1ならHです。</p>
-          <p>ここにない機械語もハードウェアのデコードに従って実行できますが、オリジナルの標準12命令には含めていません。ICの伝搬遅延や接点チャタリングは模擬しません。</p>
-        </div>
-      </div>
-    </details>
     <footer class="site-footer">
       <span>© 2026 naoiw</span>
       <a href="https://github.com/naoiw/td4" target="_blank" rel="noopener noreferrer" aria-label="GitHubでソースコードを開く">GitHub <span aria-hidden="true">↗</span></a>
