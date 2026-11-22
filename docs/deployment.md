@@ -33,6 +33,8 @@ publish/
     └── assets/         # develop
 ```
 
+Educationは `assets/education/index.html` に配置し、既存の `assets/` コピー処理によって本番の `/td4/assets/education/` とプレビューの `/td4/develop/assets/education/` に同時公開します。各ページのヘッダーの相対リンクで行き来できます。デプロイ用workflowの変更は不要です。
+
 どちらのHTMLも相対URL（`assets/...`）を使用しているため、`/td4/` と `/td4/develop/` の両方でそのまま読み込めます。生成物にはソースやテストを含めず、エミュレータのWebファイルだけを置きます。
 
 ## 開発時の手順
