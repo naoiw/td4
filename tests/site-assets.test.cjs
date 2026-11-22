@@ -23,7 +23,7 @@ test('runtime JS stays in assets and loads in dependency order', () => {
     'assets/js/data/netlist.js',
     'assets/js/core/ic-circuit.js',
     'assets/js/ui/board.js',
-    'assets/js/ui/app.js?v=20261122-rom-run'
+    'assets/js/ui/app.js?v=20261122-bp-resume'
   ]);
   for (const file of ['app.js', 'td4-core.js', 'samples.js', 'signals.js']) {
     assert.ok(!fs.existsSync(path.join(root, file)), 'root runtime file must be removed: ' + file);
