@@ -13,7 +13,7 @@
   <script src="assets/js/data/netlist.js" defer></script>
   <script src="assets/js/core/ic-circuit.js" defer></script>
   <script src="assets/js/ui/board.js" defer></script>
-  <script src="assets/js/ui/app.js?v=20261122-bp-resume" defer></script>
+  <script src="assets/js/ui/app.js?v=20261123-dual-step" defer></script>
 </head>
 <body>
   <div class="page">
@@ -47,6 +47,7 @@
             <button type="button" class="btn btn-power-on" id="powerOnBtn">電源ON</button>
             <button type="button" class="btn btn-power-off" id="powerOffBtn" disabled>電源OFF</button>
             <button type="button" class="btn btn-primary" id="runPauseBtn" disabled aria-label="CPUを実行する"><span id="runPauseIcon" aria-hidden="true">▶</span> <span id="runPauseLabel">実行</span></button>
+            <button type="button" class="btn rom-step-button" id="boardStepBtn" disabled aria-label="現在のROM命令を1つ実行する" title="CPU停止中に1命令だけ実行">STEP <span aria-hidden="true">⏭</span></button>
           </div>
           <div class="run-settings">
             <span class="cycle-counter">CYCLES <strong id="cycles">000000</strong></span>
@@ -138,7 +139,10 @@
       <section class="panel rom-panel" aria-labelledby="romTitle">
         <div class="panel-heading">
           <div><p class="eyebrow">PROGRAM ROM</p><h2 id="romTitle">16バイト ROM</h2></div>
-          <button type="button" class="btn btn-primary rom-run-button" id="romRunPauseBtn" disabled aria-label="CPUを実行する"><span id="romRunPauseIcon" aria-hidden="true">▶</span> <span id="romRunPauseLabel">実行</span></button>
+          <div class="rom-execution-controls">
+            <button type="button" class="btn btn-primary rom-run-button" id="romRunPauseBtn" disabled aria-label="CPUを実行する"><span id="romRunPauseIcon" aria-hidden="true">▶</span> <span id="romRunPauseLabel">実行</span></button>
+            <button type="button" class="btn rom-step-button" id="romStepBtn" disabled aria-label="現在のROM命令を1つ実行する" title="CPU停止中に1命令だけ実行">STEP <span aria-hidden="true">⏭</span></button>
+          </div>
         </div>
         <div class="rom-footer"><span><i class="legend-marker"></i> PC（次の命令）</span><span><i class="legend-marker breakpoint"></i> ブレークポイント</span><button id="clearBpBtn" type="button" class="text-button">BPを解除</button></div>
         <div class="rom-table-wrap">
