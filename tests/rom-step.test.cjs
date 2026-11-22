@@ -135,3 +135,29 @@ test('ROM edits are used on the very next STEP, including after a breakpoint', (
   assert.equal(h.cpu.pc, 1);
   assert.ok(h.marked.has(0), 'STEP never clears breakpoints');
 });
+
+test('HARDWARE WORKBENCH STEP mirrors PROGRAM ROM controls', () => {
+  const board = html.slice(html.indexOf('<section class="panel board-panel"'), html.indexOf('<div class="schematic-scroll"'));
+  const rom = html.slice(html.indexOf('<section class="panel rom-panel"'), html.indexOf('<section class="panel editor-panel"'));
+  assert.ok(board.includes('id="boardStepBtn" disabled'));
+  assert.ok(rom.includes('id="romStepBtn" disabled'));
+  assert.ok(board.indexOf('id="runPauseBtn"') < board.indexOf('id="boardStepBtn"'),
+    'STEP appears to the right of WORKBENCH run/pause');
+  for (const id of ['boardStepBtn', 'romStepBtn']) {
+    const buttonStart = html.indexOf('id="' + id + '"');
+    const button = html.slice(html.lastIndexOf('<button', buttonStart), html.indexOf('</button>', buttonStart) + 9);
+    assert.ok(buttonStart !== -1, id + ' exists');
+    assert.ok(button.includes('class="btn rom-step-button"'));
+    assert.ok(button.includes('aria-label="現在のROM命令を1つ実行する"'));
+    assert.ok(button.includes('STEP <span aria-hidden="true">⏭</span>'));
+  }
+  assert.ok(css.includes('.rom-step-button{flex:none;background:#edf4fd'));
+  for (const app of [source, compiled]) {
+    for (const id of ['boardStepBtn', 'romStepBtn']) {
+      assert.ok(app.includes("('" + id + "').addEventListener('click', stepInstruction)"),
+        id + ' uses common handler');
+      assert.ok(app.includes("('" + id + "').disabled = !powerOn || running"),
+        id + ' tracks CPU run and power state');
+    }
+  }
+});
