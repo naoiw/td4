@@ -163,9 +163,9 @@ test('logic analyzer and execution trace match heights with ten visible waveform
 test('analyzer renders ten rows; unused slots have no trace and a neutral state', () => {
   for (const source of [ts, js]) {
     assert.match(source, /const signal = group\[index\]/);
-    assert.match(source, /signal \? 'scope-row' : 'scope-row is-unused'/);
+    assert.match(source, /row\.className = signal[\s\S]*?'scope-row is-unused'/);
     assert.match(source, /name\.textContent = signal \|\| '-'/);
-    assert.match(source, /status\.textContent = signal \? \(levels\[signal\] \? 'H' : 'L'\) : '×'/);
+    assert.match(source, /status\.textContent = signal \? \(visibleLevels\[signal\] \? 'H' : 'L'\) : '×'/);
     assert.match(source, /if \(signal\) \{/);
     assert.match(source, /waveformPath\(waveSamples, signal/);
   }
@@ -194,14 +194,14 @@ test('logic analyzer shows vertical gridlines even in unused rows without a midd
 
 test('analyzer group change starts a new capture instead of replaying previous samples', () => {
   for (const source of [ts, js]) {
-    assert.match(source, /\$\('signalGroup'\)\.addEventListener\('change', restartWaveCapture\)/);
+    assert.match(source, /\$\('signalGroup'\)\.addEventListener\('change', \(\) => \{[\s\S]*?populateScopeTriggerChannels\(\);[\s\S]*?restartWaveCapture\(\);/);
     assert.match(source, /\$\('clearWaveBtn'\)\.addEventListener\('click', restartWaveCapture\)/);
     const start = source.indexOf('function restartWaveCapture(');
     const end = source.indexOf('function recordSignals(', start);
     assert.ok(start >= 0 && end > start, 'capture reset helper must be present');
     const reset = source.slice(start, end);
     const clear = reset.indexOf('waveSamples.splice(0)');
-    const sample = reset.indexOf('appendSample(waveSamples, levels, MAX_WAVE_SAMPLES)');
+    const sample = reset.indexOf('captureScopeSample(levels)');
     const redraw = reset.indexOf('renderWaveforms(levels)');
     assert.ok(clear >= 0 && sample > clear && redraw > sample, 'old samples must be discarded before drawing the new group');
     assert.match(reset, /lastWaveDrawAt = performance\.now\(\)/);

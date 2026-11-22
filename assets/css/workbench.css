@@ -44,6 +44,17 @@
 .scope-gridline{fill:none;stroke:#315263;stroke-width:.6;opacity:.65}.wave-trace{fill:none;stroke:#7df4bb;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .scope-level{border-radius:4px;text-align:center;padding:5px 0;font:850 11px ui-monospace,monospace}.scope-level.hi{background:#2a6854;color:#c7f9da}.scope-level.lo{background:#253943;color:#8ba5b1}
 .scope-row.is-unused .scope-name{color:#617987}.scope-row.is-unused .scope-graph{background-image:none}.scope-level.unused{background:#253943;color:#8498a4}
+
+/* One-channel edge trigger: capture may be frozen independently of the CPU. */
+.scope-controls{gap:7px}
+.scope-controls .scope-group-label{gap:5px}
+.scope-controls .scope-group-label select{max-width:148px;padding:7px 8px}
+.scope-trigger-status{display:inline-flex;align-items:center;justify-content:center;min-width:78px;border:1px solid #dce5ed;border-radius:6px;padding:7px 8px;font:800 10px ui-monospace,Consolas,monospace;letter-spacing:.5px}
+.scope-trigger-status.is-off{background:#f0f3f7;color:#8b98a7}
+.scope-trigger-status.is-armed{background:#e7f4ec;color:#207b51;border-color:#b6dfc5}
+.scope-trigger-status.is-triggered{background:#fff0d7;color:#a06519;border-color:#e6c58c}
+.scope-controls .scope-run-btn{padding:7px 12px;font-size:11px}
+.scope-row.is-trigger-channel .scope-name{color:#ffd38b}
 .scope-layout .trace-panel{display:flex;flex-direction:column;min-height:0;margin:0;padding:17px 18px}.scope-layout .trace-panel ol{flex:1;min-height:0;max-height:none;overflow-y:auto;margin-top:5px}.scope-layout .trace-panel li{font-size:10px}
 .detail-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,1fr);gap:15px;align-items:stretch}
 .detail-grid .editor-panel,.detail-grid .rom-panel{grid-column:auto}.detail-grid .board-card{min-height:0}
@@ -51,3 +62,5 @@
 @media(max-width:1300px){.sample-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-grid{grid-template-columns:minmax(0,1.1fr) minmax(320px,1fr)}.scope-layout{grid-template-columns:minmax(0,1.5fr) minmax(245px,.65fr)}}
 @media(max-width:900px){.detail-grid,.scope-layout{grid-template-columns:minmax(0,1fr)}.sample-cards{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-grid .editor-panel{grid-column:auto}}
 @media(max-width:650px){.sample-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sample-card{padding:9px 8px}.sample-icon{width:29px;height:29px}.quick-start{padding:13px}.quick-heading{align-items:start;flex-direction:column;gap:6px}.board-panel,.scope-panel{padding:13px}.board-bottom{align-items:start;flex-direction:column}.pcb-board{min-width:990px}}
+
+@media(max-width:650px){.scope-layout>.scope-panel{height:auto;min-height:550px}.scope-panel .scope-controls{justify-content:flex-start}.scope-panel .panel-heading{align-items:flex-start;flex-direction:column}.scope-panel .scope-view{min-height:412px}}
