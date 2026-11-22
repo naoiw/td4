@@ -806,7 +806,9 @@ test('quick-start sample descriptions wrap within button cards at every grid bre
   assert.match(css,/\.sample-cards\{display:grid;grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
   assert.match(css,/@media\(max-width:1300px\)\{\.sample-cards\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css,/@media\(max-width:650px\)\{\.sample-cards\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(lastRule('sample-card'),/min-width:0;display:flex/);
+  const cardBaseRule=css.match(/\\.sample-card\\{([^}]*)\\}/)?.[1];
+  assert.ok(cardBaseRule,'quick-start button layout must exist');
+  assert.match(cardBaseRule,/min-width:0;display:flex/);
   assert.match(lastRule('sample-text'),/flex:1 1 0;min-width:0;max-width:100%/);
   assert.match(lastRule('sample-card strong,.sample-card small'),/white-space:normal;overflow-wrap:anywhere/);
   assert.doesNotMatch(lastRule('sample-card strong,.sample-card small'),/white-space:nowrap|text-overflow:ellipsis/,
