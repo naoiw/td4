@@ -19,6 +19,8 @@
     const breakpoints = new Set();
     let intervalId = null;
     let clockHigh = false;
+    // Manual STEP injects one rising and one falling edge into the waveform while paused.
+    let stepInProgress = false;
     let powerOn = false;
     let boardClockHz = 2;
     const waveSamples = [];
@@ -355,7 +357,7 @@
     }
     function recordSignals(trigger = 'clock') {
         const levels = snapshot(cpu, clockHigh);
-        if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
+        if ((stepInProgress && powerOn) || shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
             appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         }
         updateCircuitBoard();
@@ -427,6 +429,7 @@
             $(iconId).textContent = running ? 'Ⅱ' : '▶';
             $(labelId).textContent = running ? '停止' : '実行';
         }
+        $('romStepBtn').disabled = !powerOn || running;
         const status = $('runStatus');
         status.classList.toggle('running', running);
         status.classList.toggle('is-powered-on', powerOn);
@@ -511,6 +514,20 @@
         else
             stop();
     }
+    /** Execute exactly one instruction on a paused, powered CPU; keep breakpoints armed. */
+    function stepInstruction() {
+        if (!powerOn || intervalId !== null)
+            return;
+        setClockLow();
+        stepInProgress = true;
+        try {
+            risingEdge();
+            setClockLow();
+        }
+        finally {
+            stepInProgress = false;
+        }
+    }
     function startClock(immediate) {
         if (intervalId !== null || !powerOn)
             return;
@@ -588,6 +605,7 @@
         $('powerOffBtn').addEventListener('click', () => setPower(false));
         $('runPauseBtn').addEventListener('click', toggleRunPause);
         $('romRunPauseBtn').addEventListener('click', toggleRunPause);
+        $('romStepBtn').addEventListener('click', stepInstruction);
         $('clearLogBtn').addEventListener('click', () => { history.splice(0); renderHistory(); });
         $('clearBpBtn').addEventListener('click', () => { breakpoints.clear(); renderROM(); });
         $('clearWaveBtn').addEventListener('click', restartWaveCapture);
