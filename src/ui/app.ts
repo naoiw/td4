@@ -362,7 +362,7 @@
     if (!group.includes(scopeTriggerChannel)) scopeTriggerChannel = group[0];
   }
 
-  /** CH/EDGE changes re-arm against the live level without erasing the waveform. */
+  /** ENABLE/CH/EDGE changes re-arm against the live level without erasing the waveform. */
   function rearmScopeTrigger(): void {
     scopeTriggered = false;
     frozenScopeLevels = null;
@@ -394,7 +394,7 @@
     }
   }
 
-  /** RUN, Clear, and trigger changes reset the trace and arm a new edge capture. */
+  /** Explicit RUN, Clear, and display-group changes reset the waveform history. */
   function restartWaveCapture(): void {
     waveSamples.splice(0);
     scopeTriggered = false;
