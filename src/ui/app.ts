@@ -211,6 +211,17 @@
   function updateCircuitBoard(): void {
     window.TD4BoardView.render(boardRenderOptions());
   }
+  /** Keep the normal fit for split windows; shrink by 20% only in near-fullscreen desktop windows. */
+  function boardFitScale(availableWidth: number, boardWidth: number, windowWidth: number, screenWidth: number): number {
+    const normalScale = Math.min(1.2, availableWidth / boardWidth);
+    // A strict 85% screen ratio misses some maximized browser windows.
+    const coversScreen = screenWidth > 0 && windowWidth >= screenWidth * 0.75;
+    const wideWorkspace = windowWidth >= 1450 && availableWidth >= 1250;
+    const notHalfScreen = screenWidth <= 0 || windowWidth >= screenWidth * 0.65;
+    const nearFullscreen = windowWidth >= 1100 && (coversScreen || (wideWorkspace && notHalfScreen));
+    return normalScale * (nearFullscreen ? 0.8 : 1);
+  }
+
   /** Fit the entire logical 1135px PCB without changing its IC/ROM geometry. */
   function fitCircuitBoard():void {
     const viewport = $<HTMLElement>('schematicViewport');
@@ -219,8 +230,9 @@
     const availableWidth = viewport.clientWidth -
       parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     if (availableWidth <= 0 || board.offsetWidth <= 0 || board.offsetHeight <= 0) return;
-    // Shrink as much as necessary; gently enlarge on wide screens.
-    const scale = Math.min(1.2, availableWidth / board.offsetWidth);
+    // A split-window layout retains the current scale; a fullscreen-sized one is about 80% of before.
+    const scale = boardFitScale(availableWidth, board.offsetWidth,
+      Math.max(window.innerWidth, window.outerWidth), window.screen.width || window.screen.availWidth);
     board.style.setProperty('--board-fit-scale', String(scale));
     const verticalSpace = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) +
       parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
@@ -384,6 +396,7 @@
       icon.className = 'sample-icon';
       icon.textContent = sample.icon;
       const words = document.createElement('span');
+      words.className = 'sample-text';
       const title = document.createElement('strong');
       title.textContent = sample.title;
       const description = document.createElement('small');
@@ -409,12 +422,18 @@
     const running = powerOn && intervalId !== null;
     $<HTMLButtonElement>('powerOnBtn').disabled = powerOn;
     $<HTMLButtonElement>('powerOffBtn').disabled = !powerOn;
-    const toggle = $<HTMLButtonElement>('runPauseBtn');
-    toggle.disabled = !powerOn;
-    toggle.classList.toggle('btn-primary', !running);
-    toggle.setAttribute('aria-label', running ? 'CPUを停止する' : 'CPUを実行する');
-    $('runPauseIcon').textContent = running ? 'Ⅱ' : '▶';
-    $('runPauseLabel').textContent = running ? '停止' : '実行';
+    const controls = [
+      ['runPauseBtn', 'runPauseIcon', 'runPauseLabel'],
+      ['romRunPauseBtn', 'romRunPauseIcon', 'romRunPauseLabel']
+    ] as const;
+    for (const [buttonId, iconId, labelId] of controls) {
+      const toggle = $<HTMLButtonElement>(buttonId);
+      toggle.disabled = !powerOn;
+      toggle.classList.toggle('btn-primary', !running);
+      toggle.setAttribute('aria-label', running ? 'CPUを停止する' : 'CPUを実行する');
+      $(iconId).textContent = running ? 'Ⅱ' : '▶';
+      $(labelId).textContent = running ? '停止' : '実行';
+    }
     const status = $('runStatus');
     status.classList.toggle('running', running);
     status.classList.toggle('is-powered-on', powerOn);
@@ -493,8 +512,10 @@
 
   function startClock(immediate: boolean): void {
     if (intervalId !== null || !powerOn) return;
-    if (breakpoints.has(cpu.pc)) {
-      showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。BPを解除してから実行してください。`);
+    // A user-initiated resume immediately executes the paused instruction once.
+    // Preserve its breakpoint so the next visit to this address stops normally.
+    if (!immediate && breakpoints.has(cpu.pc)) {
+      showMessage(`PC=${HEX(cpu.pc)} のブレークポイントで停止しました。実行でこの命令を1回進められます。`);
       syncRunControls();
       return;
     }
@@ -560,6 +581,7 @@
     $('powerOnBtn').addEventListener('click', () => setPower(true));
     $('powerOffBtn').addEventListener('click', () => setPower(false));
     $('runPauseBtn').addEventListener('click', toggleRunPause);
+    $('romRunPauseBtn').addEventListener('click', toggleRunPause);
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
     $('clearWaveBtn').addEventListener('click', restartWaveCapture);

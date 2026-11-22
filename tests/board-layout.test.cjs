@@ -210,7 +210,8 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
   assert.match(board[1],/transform-origin:top center/);
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
     assert.match(source,/new ResizeObserver\(fitCircuitBoard\)/);
-    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ boardWidth\)/);
+    assert.match(source,/boardFitScale\(availableWidth, board\.offsetWidth,/);
     assert.match(source,/viewport\.clientWidth/);
     assert.match(source,/board\.offsetHeight \* scale/);
     assert.match(source,/window\.addEventListener\('resize', fitCircuitBoard\)/);
@@ -219,7 +220,8 @@ test('whole PCB auto-fits viewport while preserving original geometry',()=>{
 });
 test('board auto-fit no longer draws selection-dependent wires',()=>{
   for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
-    assert.match(source,/Math\.min\(1\.2, availableWidth \/ board\.offsetWidth\)/);
+    assert.match(source,/Math\.min\(1\.2, availableWidth \/ boardWidth\)/);
+    assert.match(source,/boardFitScale\(availableWidth, board\.offsetWidth,/);
     assert.doesNotMatch(source,/drawSelectedWires|TD4BoardView\.drawWires/);
   }
 });
@@ -450,9 +452,12 @@ test('power ON, power OFF and one dynamic CPU stop/run button represent three st
     assert.match(source,/\('powerOnBtn'\)\.disabled = powerOn/);
     assert.match(source,/\('powerOffBtn'\)\.disabled = !powerOn/);
     assert.match(source,/toggle\.disabled = !powerOn/);
+    assert.match(source,/\['runPauseBtn', 'runPauseIcon', 'runPauseLabel'\]/);
+    assert.match(source,/\['romRunPauseBtn', 'romRunPauseIcon', 'romRunPauseLabel'\]/);
     assert.match(source,/if \(intervalId === null\)\s*run\(\)/);
     assert.match(source,/else\s*stop\(\)/);
-    assert.match(source,/\('runPauseLabel'\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/\(labelId\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/\(iconId\)\.textContent = running \? 'Ⅱ' : '▶'/);
     assert.match(source,/running \? 'CPUを停止する' : 'CPUを実行する'/);
     assert.match(source,/!powerOn \? '電源OFF' : running \? '電源ON · 実行中' : '電源ON · CPU停止中'/);
   }
@@ -752,5 +757,95 @@ test('Space toggles CPU run/pause without editing or button-keyboard conflicts',
       'Space should toggle only with power on, ignoring held-key repeats');
     assert.match(source,/function toggleRunPause\(\)\s*(?:: void)?\s*\{[\s\S]*?if \(intervalId === null\)\s*run\(\);\s*else\s*stop\(\);/,
       'shortcut reuses existing run/pause lifecycle');
+  }
+});
+
+
+test('PCB shrinks only near fullscreen and keeps the current half-window scale',()=>{
+  const vm = require('node:vm');
+  const definition=js.match(/    function boardFitScale\([^)]*\) \{[\s\S]*?\n    \}/)?.[0];
+  assert.ok(definition,'the production scale calculator is separately testable');
+  const scale=vm.runInNewContext('('+definition.trim()+')');
+  const boardWidth=1135;
+  const regular=(available)=>Math.min(1.2,available/boardWidth);
+  const scenarios=[
+    {screen:1920,window:1920,available:1480,smaller:true},
+    {screen:1920,window:1500,available:1370,smaller:true},
+    {screen:1920,window:1280,available:1130,smaller:false},
+    {screen:1920,window:960,available:855,smaller:false},
+    {screen:2560,window:2560,available:1480,smaller:true},
+    {screen:2560,window:1700,available:1480,smaller:true},
+    {screen:2560,window:1280,available:1150,smaller:false},
+    {screen:3840,window:3840,available:1480,smaller:true},
+    {screen:3840,window:1920,available:1480,smaller:false},
+    {screen:1366,window:1366,available:1230,smaller:true},
+    {screen:1920,window:1050,available:920,smaller:false},
+    {screen:0,window:1920,available:1480,smaller:true},
+    {screen:0,window:960,available:855,smaller:false},
+    {screen:390,window:390,available:340,smaller:false}
+  ];
+  for(const v of scenarios){
+    const old=regular(v.available);
+    const target=old*(v.smaller?0.8:1);
+    assert.ok(Math.abs(scale(v.available,boardWidth,v.window,v.screen)-target)<1e-10,
+      'scale '+JSON.stringify(v)+' expected '+target);
+  }
+  // Wider full-screen windows scale down at most; board width/height are unchanged.
+  assert.equal(scale(1600,boardWidth,1280,1920),1.2);
+  assert.equal(scale(1600,boardWidth,1800,1920),0.96);
+  const source=fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8');
+  assert.match(source,/windowWidth >= 1100 && \(coversScreen \|\| \(wideWorkspace && notHalfScreen\)\)/);
+  assert.match(source,/normalScale \* \(nearFullscreen \? 0\.8 : 1\)/);
+  for(const sourceCode of [js,source]){
+    assert.match(sourceCode,/Math\.max\(window\.innerWidth, window\.outerWidth\)/);
+    assert.match(sourceCode,/window\.screen\.width \|\| window\.screen\.availWidth/);
+    assert.match(sourceCode,/wideWorkspace = windowWidth >= 1450 && availableWidth >= 1250/);
+  }
+  assert.match(html,/src="assets\/js\/ui\/app\.js\?v=20261122-bp-resume"/);
+});
+
+
+test('quick-start sample descriptions wrap within button cards at every grid breakpoint',()=>{
+  assert.match(css,/\.sample-cards\{display:grid;grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:1300px\)\{\.sample-cards\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:650px\)\{\.sample-cards\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  const cardBaseRule=css.match(/\.sample-card\{([^}]*)\}/)?.[1];
+  assert.ok(cardBaseRule,'quick-start button layout must exist');
+  assert.match(cardBaseRule,/min-width:0;display:flex/);
+  assert.match(lastRule('sample-text'),/flex:1 1 0;min-width:0;max-width:100%/);
+  assert.match(lastRule('sample-card strong,.sample-card small'),/white-space:normal;overflow-wrap:anywhere/);
+  assert.doesNotMatch(lastRule('sample-card strong,.sample-card small'),/white-space:nowrap|text-overflow:ellipsis/,
+    'long text must wrap rather than be pushed outside or truncated');
+  const source=fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8');
+  for(const file of [source,js]){
+    assert.match(file,/words\.className = 'sample-text'/,
+      'sample description wrapper must have the flex shrink style');
+    assert.match(file,/description\.textContent = sample\.description/,
+      'the entire sample description stays available without truncating in JavaScript');
+  }
+});
+
+
+test('PROGRAM ROM has an equally styled run/pause control synchronized with the board button',()=>{
+  const romSection=html.slice(html.indexOf('<section class="panel rom-panel"'),html.indexOf('<section class="panel editor-panel"'));
+  const header=romSection.slice(0,romSection.indexOf('<div class="rom-footer">'));
+  assert.match(header,/id="romTitle">16バイト ROM<\/h2>/);
+  assert.match(header,/class="btn btn-primary rom-run-button" id="romRunPauseBtn" disabled aria-label="CPUを実行する"/);
+  assert.match(header,/id="romRunPauseIcon" aria-hidden="true">▶<\/span> <span id="romRunPauseLabel">実行<\/span>/);
+  assert.ok(header.indexOf('id="romTitle"')<header.indexOf('id="romRunPauseBtn"'),
+    'ROM run/pause button is to the right of ROM title');
+  const style=lastRule('rom-panel .panel-heading');
+  assert.match(style,/flex-wrap:wrap;row-gap:10px/);
+  assert.match(lastRule('rom-panel .rom-run-button'),/flex:none/);
+  for(const source of [js,fs.readFileSync(path.join(root,'src/ui/app.ts'),'utf8')]){
+    assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
+    assert.match(source,/\('romRunPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
+    assert.match(source,/for \(const \[buttonId, iconId, labelId\] of controls\)/);
+    assert.match(source,/toggle\.disabled = !powerOn/);
+    assert.match(source,/toggle\.classList\.toggle\('btn-primary', !running\)/);
+    assert.match(source,/toggle\.setAttribute\('aria-label', running \? 'CPUを停止する' : 'CPUを実行する'\)/);
+    assert.match(source,/\(labelId\)\.textContent = running \? '停止' : '実行'/);
+    assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/,
+      'breakpoint still stops execution and updates both controls');
   }
 });
