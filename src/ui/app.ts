@@ -27,6 +27,12 @@
   // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
   // 'cpu' is still selectable internally for clock-only capture.
   let waveCaptureMode: WaveCaptureMode = 'oscilloscope';
+  type ScopeTriggerEdge = 'rise' | 'fall';
+  let scopeTriggerChannel = 'CLK';
+  let scopeTriggerEdge: ScopeTriggerEdge = 'rise';
+  let scopeTriggered = false;
+  let frozenScopeLevels: SignalLevels | null = null;
+  let previousTriggerLevel: number | null = null;
   // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
   const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20;
   const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40;
@@ -268,6 +274,8 @@
 
   /** Create the ten waveform channels once; only signal paths and levels change afterward. */
   function renderWaveforms(levels: SignalLevels): void {
+    // Once triggered, even the H/L badges must show the captured instant, not live CPU levels.
+    const visibleLevels = scopeTriggered && frozenScopeLevels ? frozenScopeLevels : levels;
     const area = $('scopeView');
     const group = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -299,7 +307,9 @@
     for (let index = 0; index < 10; index++) {
       const signal = group[index];
       const {row, name, trace, status} = scopeRows[index];
-      row.className = signal ? 'scope-row' : 'scope-row is-unused';
+      row.className = signal
+        ? 'scope-row' + (signal === scopeTriggerChannel ? ' is-trigger-channel' : '')
+        : 'scope-row is-unused';
       name.textContent = signal || '-';
       if (signal) {
         trace.setAttribute('d', waveformPath(waveSamples, signal, 640, 36, MAX_WAVE_SAMPLES));
@@ -307,8 +317,8 @@
       } else {
         trace.style.display = 'none';
       }
-      status.className = signal ? 'scope-level ' + (levels[signal] ? 'hi' : 'lo') : 'scope-level unused';
-      status.textContent = signal ? (levels[signal] ? 'H' : 'L') : '×';
+      status.className = signal ? 'scope-level ' + (visibleLevels[signal] ? 'hi' : 'lo') : 'scope-level unused';
+      status.textContent = signal ? (visibleLevels[signal] ? 'H' : 'L') : '×';
       if (!powerOn && signal) {
         status.className = 'scope-level unused';
         status.textContent = '—';
@@ -316,14 +326,62 @@
     }
   }
 
-  /** Start a fresh capture at the currently selected probe group. */
+  /** Use sampled digital levels; the first observation establishes a baseline. */
+  function matchesScopeEdge(previous: number | null, current: number, edge: ScopeTriggerEdge): boolean {
+    if (previous === null) return false;
+    return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
+  }
+
+  function syncScopeTriggerStatus(): void {
+    const status = $('scopeTriggerStatus');
+    const state = !powerOn ? 'off' : scopeTriggered ? 'triggered' : 'armed';
+    status.className = 'scope-trigger-status is-' + state;
+    status.textContent = state.toUpperCase();
+    $<HTMLButtonElement>('scopeRunBtn').disabled = !powerOn;
+  }
+
+  /** Exactly one channel from the current group; unused slots never become options. */
+  function populateScopeTriggerChannels(): void {
+    const group = GROUPS[$<HTMLSelectElement>('signalGroup').value as SignalGroup] || GROUPS.basic;
+    const select = $<HTMLSelectElement>('triggerChannel');
+    const oldChannel = scopeTriggerChannel;
+    select.replaceChildren();
+    for (const channel of group) {
+      const option = document.createElement('option');
+      option.value = channel;
+      option.textContent = channel;
+      select.append(option);
+    }
+    scopeTriggerChannel = group.includes(oldChannel) ? oldChannel : group[0];
+    select.value = scopeTriggerChannel;
+  }
+
+  /** Only the oscilloscope capture freezes; no CPU interval or board state is changed. */
+  function captureScopeSample(levels: SignalLevels): void {
+    if (scopeTriggered) return;
+    const current = levels[scopeTriggerChannel];
+    const triggered = matchesScopeEdge(previousTriggerLevel, current, scopeTriggerEdge);
+    previousTriggerLevel = current;
+    appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    if (triggered) {
+      scopeTriggered = true;
+      frozenScopeLevels = levels;
+      syncScopeTriggerStatus();
+    }
+  }
+
+  /** RUN, Clear, and trigger changes reset the trace and arm a new edge capture. */
   function restartWaveCapture(): void {
     waveSamples.splice(0);
+    scopeTriggered = false;
+    frozenScopeLevels = null;
+    previousTriggerLevel = null;
     const levels = snapshot(cpu, clockHigh);
     const trigger: WaveSampleTrigger = waveCaptureMode === 'cpu' ? 'clock' : 'timer';
     if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
-      appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+      captureScopeSample(levels);
     }
+    syncScopeTriggerStatus();
     renderWaveforms(levels);
     lastWaveDrawAt = performance.now();
   }
@@ -339,12 +397,12 @@
     stopScopeCapture();
     if (!powerOn || waveCaptureMode !== 'oscilloscope') return;
     scopeCaptureIntervalId = setInterval(() => {
-      if (!shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer')) return;
+      if (scopeTriggered || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer')) return;
       const levels = snapshot(cpu, clockHigh);
-      appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
-      // Collect at 50Hz, but redraw at up to 25fps to limit DOM/SVG work.
+      captureScopeSample(levels);
+      // Draw the trigger sample immediately, even when the frame limit has not elapsed.
       const now = performance.now();
-      if (now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
+      if (scopeTriggered || now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
         renderWaveforms(levels);
         lastWaveDrawAt = now;
       }
@@ -361,12 +419,14 @@
 
   function recordSignals(trigger: WaveSampleTrigger = 'clock'): void {
     const levels = snapshot(cpu, clockHigh);
-    if ((stepInProgress && powerOn) || shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
-      appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
+    const wasTriggered = scopeTriggered;
+    if (!scopeTriggered && ((stepInProgress && powerOn) ||
+        shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger))) {
+      captureScopeSample(levels);
     }
     updateCircuitBoard();
     const now = performance.now();
-    if (intervalId === null || now - lastWaveDrawAt > 35) {
+    if (!wasTriggered && (scopeTriggered || intervalId === null || now - lastWaveDrawAt > 35)) {
       renderWaveforms(levels);
       lastWaveDrawAt = now;
     }
@@ -451,12 +511,16 @@
       stop();
       stopScopeCapture();
       powerOn = false;
+      scopeTriggered = false;
+      frozenScopeLevels = null;
+      previousTriggerLevel = null;
       cpu.reset();
       history.splice(0);
       waveSamples.splice(0);
       renderCPU(); renderHistory();
       renderWaveforms(snapshot(cpu, clockHigh));
       syncRunControls();
+      syncScopeTriggerStatus();
       showMessage('電源OFF：CPUを初期化しました（ROM・入力スイッチは保持）');
       return;
     }
@@ -467,6 +531,7 @@
     renderCPU(); renderHistory();
     syncRunControls();
     // Keep ROM address 0x00 visible on power-up until the first clock edge.
+    restartWaveCapture();
     startScopeCapture();
     startClock(false);
   }
@@ -604,7 +669,19 @@
     $('clearLogBtn').addEventListener('click', () => {history.splice(0); renderHistory();});
     $('clearBpBtn').addEventListener('click', () => {breakpoints.clear();renderROM();});
     $('clearWaveBtn').addEventListener('click', restartWaveCapture);
-    $('signalGroup').addEventListener('change', restartWaveCapture);
+    $('scopeRunBtn').addEventListener('click', restartWaveCapture);
+    $('signalGroup').addEventListener('change', () => {
+      populateScopeTriggerChannels();
+      restartWaveCapture();
+    });
+    $('triggerChannel').addEventListener('change', () => {
+      scopeTriggerChannel = $<HTMLSelectElement>('triggerChannel').value;
+      restartWaveCapture();
+    });
+    $('triggerEdge').addEventListener('change', () => {
+      scopeTriggerEdge = $<HTMLSelectElement>('triggerEdge').value as ScopeTriggerEdge;
+      restartWaveCapture();
+    });
     $('assembleBtn').addEventListener('click', compileSource);
     $('fromRomBtn').addEventListener('click', () => {
       $<HTMLTextAreaElement>('source').value = romToSource(cpu.rom);
@@ -647,6 +724,8 @@
   // Expose both capture modes internally; the visible default is 'oscilloscope'.
   window.TD4WaveCapture = {getMode: () => waveCaptureMode, setMode: setWaveCaptureMode};
 
+  populateScopeTriggerChannels();
+  syncScopeTriggerStatus();
   buildRomRows();
   buildSamples();
   buildCircuitBoard();
