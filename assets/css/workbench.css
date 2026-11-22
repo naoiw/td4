@@ -46,7 +46,16 @@
 .scope-row.is-unused .scope-name{color:#617987}.scope-row.is-unused .scope-graph{background-image:none}.scope-level.unused{background:#253943;color:#8498a4}
 
 /* One-channel edge trigger: capture may be frozen independently of the CPU. */
-.scope-controls{gap:7px}
+.scope-controls{gap:7px;min-width:0;max-width:100%}
+.scope-layout>.scope-panel{height:auto;min-height:550px;min-width:0}
+.scope-panel .panel-heading{min-width:0}
+.scope-panel .scope-view{min-width:0}
+.scope-row .scope-channel-button{appearance:none;width:100%;min-width:0;display:block;padding:5px 2px;border:1px solid transparent;border-radius:5px;background:transparent;color:#b9cad8;text-align:left;font:750 11px ui-monospace,monospace;cursor:pointer}
+.scope-row .scope-channel-button:not(:disabled):hover{border-color:#8ba5b1;background:#1f3d4d;color:#e9f6ff}
+.scope-row .scope-channel-button:focus-visible{outline:2px solid #8bc8f3;outline-offset:1px}
+.scope-row .scope-channel-button:disabled{opacity:.5;cursor:default}
+.scope-row.is-trigger-channel .scope-channel-button{background:#415365;border-color:#f0bb60;color:#ffe2ac}
+.scope-row.is-trigger-channel .scope-channel-button:before{content:'◆ ';font-size:8px;color:#f0bb60}
 .scope-controls .scope-group-label{gap:5px}
 .scope-controls .scope-group-label select{max-width:148px;padding:7px 8px}
 .scope-trigger-enable{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:10px;font-weight:750;color:#405972;cursor:pointer}
