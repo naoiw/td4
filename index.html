@@ -125,9 +125,8 @@
           <div><p class="eyebrow">LOGIC ANALYZER</p><h2 id="scopeTitle">信号波形</h2></div>
           <div class="scope-controls">
             <label class="scope-group-label" for="signalGroup">表示信号 <select id="signalGroup"><option value="basic">基本信号</option><option value="io">入出力 (4bit)</option><option value="registers">レジスタ A/B</option><option value="pc">PC / ALU</option><option value="rom">ROM</option></select></label>
-            <label class="scope-trigger-enable" for="triggerEnable"><input type="checkbox" id="triggerEnable"> TRIGGER ENABLE</label>
+            <label class="scope-trigger-enable" for="triggerEnable"><input type="checkbox" id="triggerEnable"> TRIGGER</label>
             <div class="scope-edge-control" role="group" aria-label="トリガーのエッジ方向">
-              <span class="scope-edge-label">EDGE</span>
               <div class="scope-edge-options">
                 <button type="button" class="scope-edge-option is-selected" id="triggerRiseBtn" aria-label="立ち上がり LからH" aria-pressed="true" title="立ち上がり (L→H)">
                   <svg viewBox="0 0 40 28" aria-hidden="true" focusable="false"><path class="scope-edge-wave" d="M3 22 H17 V6 H37"/><path class="scope-edge-arrow" d="M26 22 V10 M22 14 L26 10 L30 14"/></svg><span>L→H</span>
