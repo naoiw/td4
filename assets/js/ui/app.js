@@ -514,8 +514,10 @@
     function startClock(immediate) {
         if (intervalId !== null || !powerOn)
             return;
-        if (breakpoints.has(cpu.pc)) {
-            showMessage(`PC=${HEX(cpu.pc)} にブレークポイントがあります。BPを解除してから実行してください。`);
+        // A user-initiated resume immediately executes the paused instruction once.
+        // Preserve its breakpoint so the next visit to this address stops normally.
+        if (!immediate && breakpoints.has(cpu.pc)) {
+            showMessage(`PC=${HEX(cpu.pc)} のブレークポイントで停止しました。実行でこの命令を1回進められます。`);
             syncRunControls();
             return;
         }
