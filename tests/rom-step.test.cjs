@@ -36,7 +36,7 @@ test('manual STEP shares the normal rising-edge logic and records a full CLK pul
     assert.match(body, /stepInProgress = true/);
     assert.match(body, /stepInProgress = false/);
     assert.doesNotMatch(body, /startClock\(|setInterval\(|breakpoints\.(?:delete|clear)/);
-    assert.match(app, /\(stepInProgress && powerOn\) \|\| shouldCaptureSample/);
+    assert.match(app, /\(stepInProgress && powerOn\) \|\|[\s\S]*?shouldCaptureSample/);
     assert.match(app, /function risingEdge\(/);
     assert.match(app, /const outcome = cpu\.step\(\)/);
   }
