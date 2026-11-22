@@ -68,7 +68,8 @@ test('trigger enable is opt-in, with illustrated SVG edge buttons and RUN',()=>{
   const scope=html.slice(html.indexOf('<section class="panel scope-panel"'),html.indexOf('<section class="panel trace-panel"'));
   for(const id of ['signalGroup','triggerEnable','triggerRiseBtn','triggerFallBtn','scopeTriggerStatus','scopeRunBtn','clearWaveBtn'])
     assert.ok(scope.includes('id="'+id+'"'),id+' control is visible');
-  assert.match(scope, /<input type="checkbox" id="triggerEnable">/, 'trigger defaults OFF');
+  assert.match(scope, /<input type="checkbox" id="triggerEnable"> TRIGGER<\/label>/, 'trigger defaults OFF with the concise label');
+  assert.doesNotMatch(scope, /scope-edge-label|TRIGGER ENABLE/, 'no redundant EDGE label or old trigger caption');
   assert.doesNotMatch(scope, /id="triggerChannel"/, 'channel dropdown was removed');
   assert.doesNotMatch(scope, /id="triggerEdge"|"＿↑￣"|"￣↓＿"/);
   assert.match(scope, /id="triggerRiseBtn"[^>]*aria-pressed="true"/);
