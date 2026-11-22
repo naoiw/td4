@@ -28,7 +28,7 @@
   </header>
 
   <main class="education-main">
-    <section class="education-hero">
+    <section class="quick-start education-hero">
       <p class="eyebrow">EDUCATION / 4-BIT CPU</p>
       <h1>小さなCPUの中で、何が起きているのか。</h1>
       <p>TD4が命令を読み、計算し、出力するまでを順番に理解するための技術資料です。実機風の基板を直接操作する場合は<a href="../../">Emulator</a>に戻って試せます。</p>
@@ -41,7 +41,7 @@
       </nav>
     </section>
 
-    <section class="edu-section" id="overview">
+    <section class="panel edu-section" id="overview">
       <div class="edu-section-heading"><p class="eyebrow">01 / ARCHITECTURE</p><h2>TD4の基本構造</h2></div>
       <p>TD4は<strong>4bitの値</strong>を扱う小さなCPUです。プログラムは16番地×8bitのROMに保存され、各命令は1バイトで構成されます。PC（プログラムカウンタ）が次に読むROM番地を指します。</p>
       <div class="edu-spec-grid">
@@ -55,7 +55,7 @@
       <p class="edu-muted">A/B・PC・OUTなどは74HC161、キャリーは74HC74の論理モデルで表現しています。電圧や伝搬遅延まで再現する回路シミュレータではありません。</p>
     </section>
 
-    <section class="edu-section" id="cycle">
+    <section class="panel edu-section" id="cycle">
       <div class="edu-section-heading"><p class="eyebrow">02 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
       <div class="edu-flow">
         <div class="edu-flow-step"><span>01 · FETCH</span><strong>ROMから取得</strong><small>PCが示す番地の8bitを読む</small></div>
@@ -66,7 +66,7 @@
       <p>通常は命令実行後にPCが1進みます（Fの次は0）。JMPは指定先へ移動し、JNCは<strong>命令実行前のC</strong>が0なら指定先へ分岐します。</p>
     </section>
 
-    <section class="edu-section" id="decode">
+    <section class="panel edu-section" id="decode">
       <div class="edu-section-heading"><p class="eyebrow">03 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
       <div class="edu-byte-diagram" aria-label="8bit命令は上位4bitのopcodeと下位4bitのimmediateで構成">
         <div class="edu-opcode"><span>bit7 … bit4</span><strong>opcode</strong><small>命令の種類・操作先</small></div>
@@ -231,7 +231,7 @@
       </div>
     </details>
 
-    <section class="edu-section" id="hardware">
+    <section class="panel edu-section" id="hardware">
       <div class="edu-section-heading"><p class="eyebrow">05 / HARDWARE</p><h2>論理ICの役割</h2></div>
       <div class="edu-chip-grid">
         <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
