@@ -24,6 +24,10 @@
   const waveSamples: SignalLevels[] = [];
   const MAX_WAVE_SAMPLES = 80;
   const MAX_TRACE_ENTRIES = 25;
+  const CPU_STATE_FIELDS = ['A', 'B', 'PC', 'OUT', 'C', 'IN'] as const;
+  type CpuStateField = typeof CPU_STATE_FIELDS[number];
+  type CpuStateValues = Record<CpuStateField, number>;
+  let changedCpuFields = new Set<CpuStateField>();
   // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
   // 'cpu' is still selectable internally for clock-only capture.
   let waveCaptureMode: WaveCaptureMode = 'oscilloscope';
@@ -115,8 +119,42 @@
     });
   }
 
+  /** Read-only snapshot for the board-adjacent CPU STATE widget. */
+  function readCpuState(): CpuStateValues {
+    return {A: cpu.a, B: cpu.b, PC: cpu.pc, OUT: cpu.out, C: cpu.carry, IN: cpu.input};
+  }
+
+  /** Highlight only values changed by the most recent instruction or INPUT operation. */
+  function markCpuStateChanges(before: CpuStateValues): void {
+    const after = readCpuState();
+    changedCpuFields = new Set(CPU_STATE_FIELDS.filter(field => before[field] !== after[field]));
+  }
+
+  function renderCpuState(): void {
+    const values = readCpuState();
+    $('cpuStatePanel').classList.toggle('is-off', !powerOn);
+    const power = $('cpuStatePower');
+    power.textContent = powerOn ? 'ON' : 'OFF';
+    power.classList.toggle('is-on', powerOn);
+    for (const field of CPU_STATE_FIELDS) {
+      const value = values[field];
+      const changed = powerOn && changedCpuFields.has(field);
+      const cell = $('cpuState' + field + 'Card');
+      cell.classList.toggle('is-changed', changed);
+      const hexadecimal = powerOn ? (field === 'C' ? String(value) : '0x' + HEX(value)) : '—';
+      const binary = field === 'C' ? 'FLAG' : (powerOn ? value.toString(2).padStart(4, '0') : '----');
+      $('cpuState' + field + 'Hex').textContent = hexadecimal;
+      $('cpuState' + field + 'Binary').textContent = binary;
+      cell.setAttribute('aria-label', powerOn
+        ? field + ' ' + hexadecimal + (field === 'C' ? '' : ' (' + binary + ')') +
+          (changed ? ' 前回の操作で変化' : '')
+        : field + ' 電源OFF');
+    }
+  }
+
   function renderCPU(): void {
     $('cycles').textContent = String(cpu.cycles).padStart(6, '0');
+    renderCpuState();
     renderROM();
     updateCircuitBoard();
   }
@@ -142,7 +180,9 @@
         refreshRomAfterEdit('ROM ' + HEX(addr) + '番地 D' + bit + 'を変更しました。ソースとROMの内容が異なります。');
       },
       onInputBitToggle(bit) {
+        const before = readCpuState();
         cpu.setInput(cpu.input ^ (1 << bit));
+        markCpuStateChanges(before);
         renderCPU(); recordSignals('input');
       },
       onPowerToggle() { if (powerOn) setPower(false); else run(); },
@@ -567,6 +607,7 @@
       frozenScopeLevels = null;
       previousTriggerLevel = null;
       cpu.reset();
+      changedCpuFields.clear();
       history.splice(0);
       waveSamples.splice(0);
       renderCPU(); renderHistory();
@@ -578,6 +619,7 @@
     }
     powerOn = true;
     cpu.reset();
+    changedCpuFields.clear();
     history.splice(0);
     waveSamples.splice(0);
     renderCPU(); renderHistory();
@@ -612,7 +654,9 @@
   // A high-going clock edge commits exactly one CPU instruction.
   function risingEdge(): void {
     clockHigh = true;
+    const before = readCpuState();
     const outcome = cpu.step();
+    markCpuStateChanges(before);
     history.unshift(outcome);
     history.splice(MAX_TRACE_ENTRIES);
     renderCPU();
@@ -673,6 +717,7 @@
     stop();
     cpu.loadROM(bytes);
     cpu.reset();
+    changedCpuFields.clear();
     history.splice(0);
     waveSamples.splice(0);
     breakpoints.clear();
