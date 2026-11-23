@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8')
 const source = fs.readFileSync(path.join(root, 'src/ui/app.ts'), 'utf8');
 const compiled = fs.readFileSync(path.join(root, 'assets/js/ui/app.js'), 'utf8');
 const {CPU, HEX} = require('../assets/js/core/td4-core.js');
-const FIELDS = ['A', 'B', 'PC', 'OUT', 'C', 'IN'];
+const FIELDS = ['PC', 'C', 'A', 'B', 'IN', 'OUT'];
 
 function harness(powerOn = true) {
   const cpu = new CPU();
@@ -59,6 +59,7 @@ test('CPU STATE is a compact, read-only, six-value widget directly beneath the P
     assert.match(widget, new RegExp('id="cpuState' + field + 'Binary"'));
   }
   assert.equal((widget.match(/class="cpu-state-cell"/g) || []).length, 6);
+  assert.deepEqual([...widget.matchAll(/id="cpuState(PC|C|A|B|IN|OUT)Card"/g)].map(match => match[1]), FIELDS, 'visual order matches requested sequence');
   assert.doesNotMatch(widget, /<button|<input|<select|<textarea/, 'read-only values');
   assert.match(css, /\.cpu-state-grid\{[^}]*grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
   assert.match(css, /@media\(max-width:650px\)\{\.cpu-state-panel\{[^}]*\}\.cpu-state-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
