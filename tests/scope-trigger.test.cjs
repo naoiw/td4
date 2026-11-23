@@ -10,14 +10,6 @@ const compiled = fs.readFileSync(path.join(root, 'assets/js/ui/app.js'), 'utf8')
 const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
 const {GROUPS, appendSample, shouldCaptureSample} = require('../assets/js/core/signals.js');
 
-// Diagnostic only: print exact generated JS differences from the TypeScript emitter.
-if (process.env.GITHUB_ACTIONS === 'true') {
-  const {execFileSync} = require('node:child_process');
-  execFileSync('pnpm', ['exec', 'tsc', '-p', 'tsconfig.json'], {cwd:root});
-  const diff=execFileSync('git', ['diff', '--', 'assets/js/ui/app.js'], {cwd:root, encoding:'utf8'});
-  if(diff) console.log('GENERATED JS DIFF START\n'+diff+'\nGENERATED JS DIFF END');
-}
-
 function harness({powerOn = true, enabled = true, group = 'basic', channel = 'CLK', edge = 'rise', baseline = {CLK:0, IN0:0}} = {}) {
   const control = {
     signalGroup: {value:group},
