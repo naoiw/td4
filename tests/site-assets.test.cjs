@@ -6,8 +6,10 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 test('all script and stylesheet references resolve inside repository', () => {
-  const links = [...html.matchAll(/<(?:script|link)\b[^>]*?(?:src|href)="([^"]+)"/g)].map(match => match[1]);
-  assert.equal(links.length, 8, 'seven scripts and one stylesheet expected');
+  const links = [...html.matchAll(/<(?:script|link)\b[^>]*?(?:src|href)="([^"]+)"/g)]
+    .map(match => match[1])
+    .filter(url => !/^https?:\/\//.test(url));
+  assert.equal(links.length, 8, 'seven runtime scripts and one local stylesheet expected');
   for (const link of links) {
     assert.ok(!link.startsWith('/'), 'relative GitHub Pages asset URL: ' + link);
     assert.ok(fs.existsSync(path.join(root, link.split('?')[0])), 'missing asset: ' + link);
@@ -83,7 +85,8 @@ test('Emulator and Education are separate pages with reciprocal relative navigat
   assert.equal([...education.matchAll(/class="isa-instruction"/g)].length, 12, 'all 12 standard instructions retained');
   assert.match(education, /JNC/);
   const assets = [...education.matchAll(/<(?:link|script)\b[^>]*?(?:href|src)="([^"]+)"/g)]
-    .map(match => match[1]);
+    .map(match => match[1])
+    .filter(url => !/^https?:\/\//.test(url));
   for (const asset of assets) {
     assert.ok(fs.existsSync(path.resolve(path.dirname(educationFile), asset)),
       'Education asset exists: ' + asset);
