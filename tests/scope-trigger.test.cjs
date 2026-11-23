@@ -246,8 +246,11 @@ test('group changes disable trigger and responsive analyzer never clips taller c
     assert.ok(fall.includes('rearmScopeTrigger()'));
     assert.ok(!fall.includes('restartWaveCapture()'));
   }
-  assert.ok(css.includes('.scope-layout>.panel{height:auto;min-height:550px;min-width:0}'), 'both panels share responsive height');
-  assert.ok(css.includes('grid-auto-rows:minmax(550px,1fr)'), 'stacked panels keep equal heights');
+  assert.ok(css.includes('.scope-layout>.panel{height:100%;min-height:0;min-width:0}'), 'both panels fit their fixed grid track');
+  assert.ok(css.includes('grid-auto-rows:600px'), 'desktop panels have a fixed height irrespective of trace length');
+  assert.ok(css.includes('@media(max-width:650px){.scope-layout{grid-auto-rows:680px}'), 'narrow screens use a fixed, taller row for wrapped controls');
+  assert.ok(css.includes('.scope-layout .trace-panel ol{flex:1;min-height:0;max-height:none;overflow-x:hidden;overflow-y:auto;'), 'only the execution trace contents scroll');
+  assert.ok(!css.includes('grid-auto-rows:minmax(550px,1fr)'), 'trace content must never increase the grid track height');
   assert.ok(css.includes('.scope-panel .scope-view{min-width:0}'));
   assert.ok(!html.includes('id="triggerChannel"'));
   assert.ok(css.includes('.scope-row.is-trigger-channel .scope-channel-button{'));
