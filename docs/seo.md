@@ -34,6 +34,10 @@ TD4は `naoiw.github.io` 配下の**プロジェクトページ**です。`robot
 - **GPTBot**：AIモデル学習用の別のクローラー。検索掲載と学習利用は別の目的で、許可設定も独立です。
 - GoogleのAI検索機能のために`llms.txt`など特別なファイルを追加する必要はありません。まずインデックス可能な独自コンテンツと通常のSEOを優先します。
 
+## Google Search Consoleの所有権確認
+
+本番エミュレータの`index.html`の`<head>`に、Google Search Consoleから発行された`google-site-verification`メタタグを配置しています。GitHub Pagesで本番公開した後、**Search Console側で「確認」を押して所有権確認を完了する必要があります**。メタタグを公開しただけでは確認完了になりません。所有権の再確認に使う場合があるため、このタグは残してください。
+
 ## 公開後に管理者が確認すること
 
 1. GitHub Actionsの`Deploy GitHub Pages`が完了した後、エミュレータ・Education・`sitemap.xml`がそれぞれ200で開けることを確認する。
