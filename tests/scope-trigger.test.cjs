@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
+const {loadAppFunctions} = require('./helpers/compiled-app.cjs');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const source = fs.readFileSync(path.join(root, 'src/ui/app.ts'), 'utf8');
@@ -52,12 +52,11 @@ function harness({powerOn = true, enabled = true, group = 'basic', channel = 'CL
     performance:{now:()=>1250},
     lastWaveDrawAt:0
   };
-  const start=compiled.indexOf('    /** Use sampled digital levels;');
-  const end=compiled.indexOf('    /** An independent sample clock',start);
-  assert.ok(start>0 && end>start, 'trigger and rearm function region exists');
-  const api=vm.runInNewContext(compiled.slice(start,end)+
-    '\n({matchesScopeEdge,syncScopeTriggerStatus,syncScopeTriggerChannel,selectScopeTriggerChannel,rearmScopeTrigger,captureScopeSample,toggleScopeCapture,restartWaveCapture})',
-    context);
+  const api = loadAppFunctions([
+    'matchesScopeEdge', 'isScopeFrozen', 'resetScopeCaptureState',
+    'syncScopeTriggerStatus', 'syncScopeTriggerChannel', 'selectScopeTriggerChannel',
+    'rearmScopeTrigger', 'captureScopeSample', 'toggleScopeCapture', 'restartWaveCapture'
+  ], context);
   return {context, control, api, rendered, setLive: next => {live=next;}};
 }
 
