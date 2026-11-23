@@ -26,6 +26,8 @@ test('production pages have distinct crawlable metadata and canonical URLs', () 
     assert.ok(source.includes('<meta property="og:url" content="' + url + '">'));
     assert.doesNotMatch(source, /<meta name="robots" content="noindex/);
   }
+  assert.match(main, /<meta name="google-site-verification" content="[A-Za-z0-9_-]+">/, 'Google Search Console verification tag is present on the production page');
+  assert.equal((main.match(/name="google-site-verification"/g) || []).length, 1, 'verification tag is not duplicated');
   assert.match(main, /<title>TD4 4bit CPU エミュレータ/);
   assert.match(education, /<title>TD4 4bit CPUの仕組みと命令セット/);
   assert.match(main, /<h2 id="aboutTd4Title">TD4 4bit CPUエミュレータとは<\/h2>/);
