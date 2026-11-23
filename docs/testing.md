@@ -6,8 +6,8 @@ TD4のテストは **命令の振る舞い**、**UIロジックの振る舞い**
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm test            # 型チェック + Node.js test runner
-pnpm run verify      # ビルド + 型チェック + 全テスト
+pnpm test            # ネットリスト生成 + 型チェック + Node.js test runner
+pnpm run verify      # ネットリスト生成 + JSビルド + 型チェック + 全テスト
 pnpm run lint        # スタイルとフォーマットの検証
 ```
 
@@ -17,7 +17,7 @@ pnpm run lint        # スタイルとフォーマットの検証
 
 | 対象 | 主なテスト | 検証するもの |
 | --- | --- | --- |
-| CPU・アセンブラ・命令 | `td4-core`・`samples` 系テスト | ROMの境界、演算、キャリー、ジャンプ、サンプルの全入力組合せ |
+| CPU・アセンブラ・命令 | CPUコア・サンプルプログラム系テスト | ROMの境界、演算、キャリー、ジャンプ、サンプルの全入力組合せ |
 | CPU/ROM/実行履歴の画面更新 | `cpu-state.test.cjs`、`app-render.test.cjs` | 数値、変化ハイライト、ROM差分更新、TRACE最大25件、クロック1回につき命令1回 |
 | オシロスコープ・トリガー | `scope-trigger.test.cjs`、`signals.test.cjs` | LIVE/ARMED/TRIGGERED/STOPPED、入力エッジ、波形80点、フリーズと再開、CPUとの独立性 |
 | PCB・レスポンシブ・旧UIの除去 | `board-layout.test.cjs`、`legacy-ui-removal.test.cjs` | DOM/スタイルと基板配置の**静的契約**。実ブラウザでのピクセル一致は保証しない |
@@ -40,4 +40,4 @@ pnpm run lint        # スタイルとフォーマットの検証
 4. CSSやレスポンシブの見た目はNode.js上の文字列比較だけでは検証できない。プレビューのPC幅・狭幅、POWER、STEP、ROM DIP、波形を実ブラウザで確認する。
 5. DOMの全面的なE2Eテスト（Playwright等）は未導入。必要になった時点で、CIのブラウザセットアップと実行時間を含めて別途検討する。
 
-テストのリファクタリングでは**既存の振る舞いを変えない**ことを優先し、既存の静的レイアウト契約を一括削除しません。
+テストのリファクタリングでは**既存の振る舞いを変えない**ことを優先し、既存の静的レイアウト契約を一括削除しません。実装コードの描画最適化・状態管理見直しに対応する新しい動作テストと、既存レイアウトの回帰テストは併存させます。
