@@ -26,7 +26,7 @@
     const waveSamples = [];
     const MAX_WAVE_SAMPLES = 80;
     const MAX_TRACE_ENTRIES = 25;
-    const CPU_STATE_FIELDS = ['A', 'B', 'PC', 'OUT', 'C', 'IN'];
+    const CPU_STATE_FIELDS = ['PC', 'C', 'A', 'B', 'IN', 'OUT'];
     let changedCpuFields = new Set();
     // 'oscilloscope' is the visible default: keep sampling while the CPU is paused.
     // 'cpu' is still selectable internally for clock-only capture.
