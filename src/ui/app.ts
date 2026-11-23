@@ -484,7 +484,7 @@
     const current = levels[scopeTriggerChannel];
     const triggered = scopeCaptureState.status === 'armed' &&
       matchesScopeEdge(scopeCaptureState.previousLevel, current, scopeTriggerEdge);
-    scopeCaptureState = {...scopeCaptureState, previousLevel: current};
+    scopeCaptureState = {status: scopeCaptureState.status === 'armed' ? 'armed' : 'live', previousLevel: current};
     appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
     if (triggered) {
       scopeCaptureState = {status: 'triggered', levels};
