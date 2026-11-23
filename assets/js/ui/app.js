@@ -391,7 +391,13 @@
             }
         }
     }
-    /** Frozen states always own the captured H/L snapshot. */
+    /** Use sampled digital levels; the first observation establishes a baseline. */
+    function matchesScopeEdge(previous, current, edge) {
+        if (previous === null)
+            return false;
+        return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
+    }
+  /** Frozen states always own the captured H/L snapshot. */
     function isScopeFrozen() {
         return scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped';
     }
@@ -399,13 +405,7 @@
     function resetScopeCaptureState() {
         scopeCaptureState = { status: scopeTriggerEnabled ? 'armed' : 'live', previousLevel: null };
     }
-    /** Use sampled digital levels; the first observation establishes a baseline. */
-    function matchesScopeEdge(previous, current, edge) {
-        if (previous === null)
-            return false;
-        return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
-    }
-    function syncScopeTriggerStatus() {
+      function syncScopeTriggerStatus() {
         const status = $('scopeTriggerStatus');
         const frozen = isScopeFrozen();
         const state = powerOn ? scopeCaptureState.status : 'off';
