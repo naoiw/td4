@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#f5f6f8">
   <meta name="description" content="TD4 4-bit CPU emulator — 実機の命令デコードを再現するオフライン対応Webエミュレータ。">
   <title>TD4 (4-bit CPU) Emulator</title>
-  <link rel="stylesheet" href="assets/css/style.css?v=20261122-rom-run">
+  <link rel="stylesheet" href="assets/css/style.css?v=20261123-cpu-state">
   <script src="assets/js/core/td4-core.js" defer></script>
   <script src="assets/js/data/samples.js" defer></script>
   <script src="assets/js/core/signals.js" defer></script>
   <script src="assets/js/data/netlist.js" defer></script>
   <script src="assets/js/core/ic-circuit.js" defer></script>
   <script src="assets/js/ui/board.js" defer></script>
-  <script src="assets/js/ui/app.js?v=20261123-scope-run-stop" defer></script>
+  <script src="assets/js/ui/app.js?v=20261123-cpu-state" defer></script>
 </head>
 <body>
   <div class="page">
@@ -117,6 +117,45 @@
         </div>
       </div>
       <section id="icDetailPanel" class="ic-detail-panel" data-chip="" aria-label="IC入出力の詳細" hidden></section>
+    </section>
+
+    <section class="panel cpu-state-panel is-off" id="cpuStatePanel" aria-labelledby="cpuStateTitle">
+      <div class="cpu-state-heading">
+        <div><p class="eyebrow">CPU STATE</p><h2 id="cpuStateTitle">CPU状態</h2></div>
+        <span class="cpu-state-power" id="cpuStatePower">OFF</span>
+      </div>
+      <div class="cpu-state-grid" id="cpuStateGrid" aria-live="off">
+        <div class="cpu-state-cell" id="cpuStatePCCard" aria-label="PC 電源OFF">
+          <span class="cpu-state-name">PC</span>
+          <strong class="cpu-state-value" id="cpuStatePCHex">—</strong>
+          <span class="cpu-state-binary" id="cpuStatePCBinary">----</span>
+        </div>
+        <div class="cpu-state-cell" id="cpuStateCCard" aria-label="C 電源OFF">
+          <span class="cpu-state-name">C</span>
+          <strong class="cpu-state-value" id="cpuStateCHex">—</strong>
+          <span class="cpu-state-binary" id="cpuStateCBinary">FLAG</span>
+        </div>
+        <div class="cpu-state-cell" id="cpuStateACard" aria-label="A 電源OFF">
+          <span class="cpu-state-name">A</span>
+          <strong class="cpu-state-value" id="cpuStateAHex">—</strong>
+          <span class="cpu-state-binary" id="cpuStateABinary">----</span>
+        </div>
+        <div class="cpu-state-cell" id="cpuStateBCard" aria-label="B 電源OFF">
+          <span class="cpu-state-name">B</span>
+          <strong class="cpu-state-value" id="cpuStateBHex">—</strong>
+          <span class="cpu-state-binary" id="cpuStateBBinary">----</span>
+        </div>
+        <div class="cpu-state-cell" id="cpuStateINCard" aria-label="IN 電源OFF">
+          <span class="cpu-state-name">IN</span>
+          <strong class="cpu-state-value" id="cpuStateINHex">—</strong>
+          <span class="cpu-state-binary" id="cpuStateINBinary">----</span>
+        </div>
+        <div class="cpu-state-cell" id="cpuStateOUTCard" aria-label="OUT 電源OFF">
+          <span class="cpu-state-name">OUT</span>
+          <strong class="cpu-state-value" id="cpuStateOUTHex">—</strong>
+          <span class="cpu-state-binary" id="cpuStateOUTBinary">----</span>
+        </div>
+      </div>
     </section>
 
     <div class="scope-layout">

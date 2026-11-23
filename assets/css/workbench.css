@@ -33,6 +33,25 @@
 .rom-execution-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .rom-step-button{flex:none;background:#edf4fd;color:#285a94;border-color:#bcd2ea}
 .rom-step-button:not(:disabled):hover{background:#dcecff;border-color:#8eb5e2}
+/* Compact, read-only CPU snapshot placed directly below the workbench. */
+.cpu-state-panel{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:14px;padding:12px 17px}
+.cpu-state-heading{display:flex;align-items:center;gap:13px;min-width:0}
+.cpu-state-heading .eyebrow{margin:0 0 3px}
+.cpu-state-heading h2{margin:0;font-size:14px;line-height:1.15;white-space:nowrap}
+.cpu-state-power{display:inline-flex;align-items:center;justify-content:center;min-width:39px;padding:4px 6px;border:1px solid #dce4ec;border-radius:5px;background:#eef2f6;color:#718294;font:800 10px ui-monospace,monospace;letter-spacing:.5px}
+.cpu-state-power.is-on{background:#e7f5ea;border-color:#b9dfc3;color:#27774a}
+.cpu-state-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;min-width:0}
+.cpu-state-cell{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:baseline;column-gap:4px;row-gap:4px;min-width:0;padding:8px 9px;border:1px solid #e1e8ee;border-radius:8px;background:#f8fafc;font-family:ui-monospace,Consolas,monospace}
+.cpu-state-name{grid-column:1;grid-row:1;font-size:11px;font-weight:850;color:#6a7e91}
+.cpu-state-value{grid-column:2;grid-row:1/3;align-self:center;justify-self:end;font-size:18px;font-weight:850;line-height:1;color:#263c53;white-space:nowrap}
+.cpu-state-binary{grid-column:1;grid-row:2;font-size:11px;font-weight:650;letter-spacing:.5px;color:#8798aa;white-space:nowrap}
+.cpu-state-panel.is-off .cpu-state-cell{opacity:.55}
+.cpu-state-cell.is-changed{background:#fff7e9;border-color:#e9c88b}
+.cpu-state-cell.is-changed .cpu-state-name,.cpu-state-cell.is-changed .cpu-state-value{color:#93601f}
+.cpu-state-cell.is-changed .cpu-state-binary{color:#a77838}
+@media(max-width:1050px){.cpu-state-panel{grid-template-columns:minmax(0,1fr)}.cpu-state-heading{justify-content:space-between}}
+@media(max-width:650px){.cpu-state-panel{padding:12px 13px}.cpu-state-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:380px){.cpu-state-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .scope-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,.75fr);grid-auto-rows:minmax(550px,1fr);gap:15px;align-items:stretch}
 .scope-layout>.panel{height:auto;min-height:550px;min-width:0}
 .scope-panel{display:flex;flex-direction:column;min-height:0}
