@@ -40,8 +40,6 @@
     let scopeTriggerEnabled = false;
     let scopeTriggerChannel = 'CLK';
     let scopeTriggerEdge = 'rise';
-    // A discriminated union makes frozen captures carry their required snapshot.
-    // The trigger-enabled checkbox is a setting, independent of a frozen capture.
     let scopeCaptureState = { status: 'live', previousLevel: null };
     // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
     const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20;
