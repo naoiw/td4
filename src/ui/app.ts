@@ -480,7 +480,7 @@
 
   /** Only the oscilloscope capture freezes; no CPU interval or board state is changed. */
   function captureScopeSample(levels: SignalLevels): void {
-    if (isScopeFrozen()) return;
+    if (scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped') return;
     const current = levels[scopeTriggerChannel];
     const triggered = scopeCaptureState.status === 'armed' &&
       matchesScopeEdge(scopeCaptureState.previousLevel, current, scopeTriggerEdge);
