@@ -389,7 +389,7 @@ test('power-off and on transitions update trigger state while preserving indepen
   for(const app of [source,compiled]) {
     assert.ok(app.includes('if (isScopeFrozen() || !shouldCaptureSample('),
       'timer stops writing but is not cleared');
-    assert.ok(app.includes('if (!wasFrozen && (scopeCaptureState.status === 'triggered' || intervalId === null'),
+    assert.ok(app.includes("if (!wasFrozen && (scopeCaptureState.status === 'triggered' || intervalId === null"),
       'live board signals cannot overwrite the frozen scope');
     assert.ok(app.includes('updateCircuitBoard();'), 'CPU/board display path remains alive');
     assert.ok(app.includes('restartWaveCapture();'), 'power-on resets trigger');
