@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
+const {loadAppFunctions} = require('./helpers/compiled-app.cjs');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'assets/css/workbench.css'), 'utf8');
@@ -37,11 +37,8 @@ function harness(powerOn = true) {
     renderROM() {},
     updateCircuitBoard() {}
   };
-  const start = compiled.indexOf('    /** Read-only snapshot for the board-adjacent CPU STATE widget. */');
-  const end = compiled.indexOf('    /** Apply the same UI refresh after editing ROM from either board surface. */', start);
-  assert.ok(start !== -1 && end > start, 'compiled CPU renderer exists');
-  const api = vm.runInNewContext(compiled.slice(start, end) +
-    '\n({readCpuState,markCpuStateChanges,renderCpuState,renderCPU})', context);
+  const api = loadAppFunctions(
+    ['readCpuState', 'markCpuStateChanges', 'renderCpuState', 'renderCPU'], context);
   return {cpu, context, element, api, changed: field => element('cpuState' + field + 'Card').classList.contains('is-changed')};
 }
 

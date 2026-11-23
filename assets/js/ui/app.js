@@ -3,10 +3,16 @@
 (function () {
     'use strict';
     const { CPU, assemble, HEX, disassemble, isStandard, romToSource } = window.TD4;
+    // Stable, static page nodes are looked up once instead of on every clock edge.
+    const elementCache = new Map();
     function $(id) {
-        const element = document.getElementById(id);
-        if (!element)
-            throw new Error(`Required UI element not found: ${id}`);
+        let element = elementCache.get(id);
+        if (!element) {
+            element = document.getElementById(id) ?? undefined;
+            if (!element)
+                throw new Error(`Required UI element not found: ${id}`);
+            elementCache.set(id, element);
+        }
         return element;
     }
     const SAMPLES = window.TD4Samples;
@@ -34,10 +40,7 @@
     let scopeTriggerEnabled = false;
     let scopeTriggerChannel = 'CLK';
     let scopeTriggerEdge = 'rise';
-    let scopeTriggered = false;
-    let scopeCaptureStopped = false;
-    let frozenScopeLevels = null;
-    let previousTriggerLevel = null;
+    let scopeCaptureState = { status: 'live', previousLevel: null };
     // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
     const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20;
     const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40;
@@ -45,9 +48,11 @@
     let lastWaveDrawAt = 0;
     const scopeRows = [];
     let boardResizeObserver = null;
+    const romRowNodes = [];
     function buildRomRows() {
         const tbody = $('romRows');
         tbody.replaceChildren();
+        romRowNodes.length = 0;
         for (let addr = 0; addr < 16; addr++) {
             const tr = document.createElement('tr');
             tr.dataset.addr = String(addr);
@@ -69,6 +74,7 @@
             const dataTd = document.createElement('td');
             const bits = document.createElement('div');
             bits.className = 'rom-bit-list';
+            const bitButtons = [];
             for (let bit = 7; bit >= 0; bit--) {
                 const button = document.createElement('button');
                 button.className = 'rom-bit';
@@ -82,6 +88,7 @@
                     refreshRomAfterEdit('ROMを直接変更しました。ソースとの内容が異なります。');
                 });
                 bits.append(button);
+                bitButtons[bit] = button;
             }
             dataTd.append(bits);
             const hexTd = document.createElement('td');
@@ -90,29 +97,32 @@
             asmTd.className = 'rom-asm';
             tr.append(addrTd, dataTd, hexTd, asmTd);
             tbody.append(tr);
+            romRowNodes.push({ row: tr, breakpoint: address, bits: bitButtons,
+                hex: hexTd, asm: asmTd, renderedByte: -1 });
         }
     }
     function renderROM() {
-        [...$('romRows').children].forEach((tr, addr) => {
+        for (const [addr, nodes] of romRowNodes.entries()) {
             const byte = cpu.rom[addr];
-            tr.classList.toggle('current', addr === cpu.pc);
-            tr.classList.toggle('has-breakpoint', breakpoints.has(addr));
-            const bp = tr.querySelector('.address-btn');
-            bp.classList.toggle('breaked', breakpoints.has(addr));
-            bp.setAttribute('aria-pressed', String(breakpoints.has(addr)));
-            tr.querySelectorAll('.rom-bit').forEach(btn => {
-                const on = (byte >> Number(btn.dataset.bit)) & 1;
-                btn.textContent = String(on);
-                btn.classList.toggle('on', !!on);
-            });
-            tr.querySelector('.rom-hex').textContent = byte.toString(16).toUpperCase().padStart(2, '0');
-            const asm = tr.querySelector('.rom-asm');
-            asm.textContent = disassemble(byte);
-            if (!isStandard(byte))
-                asm.title = 'オリジナルの命令セットでは未定義。実機の回路動作を再現。';
-            else
-                asm.title = '';
-        });
+            const hasBreakpoint = breakpoints.has(addr);
+            nodes.row.classList.toggle('current', addr === cpu.pc);
+            nodes.row.classList.toggle('has-breakpoint', hasBreakpoint);
+            nodes.breakpoint.classList.toggle('breaked', hasBreakpoint);
+            nodes.breakpoint.setAttribute('aria-pressed', String(hasBreakpoint));
+            // PC and breakpoint indicators move each step, but ROM data rarely changes.
+            if (nodes.renderedByte === byte)
+                continue;
+            nodes.renderedByte = byte;
+            for (let bit = 0; bit < 8; bit++) {
+                const button = nodes.bits[bit];
+                const on = (byte >> bit) & 1;
+                button.textContent = String(on);
+                button.classList.toggle('on', !!on);
+            }
+            nodes.hex.textContent = byte.toString(16).toUpperCase().padStart(2, '0');
+            nodes.asm.textContent = disassemble(byte);
+            nodes.asm.title = isStandard(byte) ? '' : 'オリジナルの命令セットでは未定義。実機の回路動作を再現。';
+        }
     }
     /** Read-only snapshot for the board-adjacent CPU STATE widget. */
     function readCpuState() {
@@ -279,6 +289,19 @@
             parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
         viewport.style.height = Math.ceil(board.offsetHeight * scale + verticalSpace) + 'px';
     }
+    function createTraceItem(item) {
+        const li = document.createElement('li');
+        const loc = document.createElement('span');
+        loc.className = 'trace-address';
+        loc.textContent = `${HEX(item.pc)} [${item.byte.toString(16).toUpperCase().padStart(2, '0')}]`;
+        const asm = document.createElement('span');
+        asm.textContent = item.asm;
+        const pc = document.createElement('span');
+        pc.className = 'trace-next';
+        pc.textContent = `→ ${HEX(item.pcAfter)}`;
+        li.append(loc, asm, pc);
+        return li;
+    }
     function renderHistory() {
         const list = $('traceList');
         list.replaceChildren();
@@ -289,24 +312,23 @@
             list.append(placeholder);
             return;
         }
-        for (const item of history) {
-            const li = document.createElement('li');
-            const loc = document.createElement('span');
-            loc.className = 'trace-address';
-            loc.textContent = `${HEX(item.pc)} [${item.byte.toString(16).toUpperCase().padStart(2, '0')}]`;
-            const asm = document.createElement('span');
-            asm.textContent = item.asm;
-            const pc = document.createElement('span');
-            pc.className = 'trace-next';
-            pc.textContent = `→ ${HEX(item.pcAfter)}`;
-            li.append(loc, asm, pc);
-            list.append(li);
-        }
+        for (const item of history)
+            list.append(createTraceItem(item));
+    }
+    /** Add only one trace row per instruction; rebuild all rows only on reset/clear. */
+    function prependHistory(item) {
+        const list = $('traceList');
+        if (list.firstElementChild?.classList.contains('placeholder'))
+            list.replaceChildren();
+        list.prepend(createTraceItem(item));
+        if (list.children.length > MAX_TRACE_ENTRIES)
+            list.lastElementChild?.remove();
     }
     /** Create the ten waveform channels once; only signal paths and levels change afterward. */
     function renderWaveforms(levels) {
         // Once triggered, even the H/L badges must show the captured instant, not live CPU levels.
-        const visibleLevels = (scopeTriggered || scopeCaptureStopped) && frozenScopeLevels ? frozenScopeLevels : levels;
+        const visibleLevels = scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped'
+            ? scopeCaptureState.levels : levels;
         const area = $('scopeView');
         const group = GROUPS[$('signalGroup').value] || GROUPS.basic;
         const svgNS = 'http://www.w3.org/2000/svg';
@@ -373,11 +395,18 @@
             return false;
         return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
     }
+    /** Frozen states always own the captured H/L snapshot. */
+    function isScopeFrozen() {
+        return scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped';
+    }
+    /** Restore the sampling state from the current TRIGGER setting. */
+    function resetScopeCaptureState() {
+        scopeCaptureState = { status: scopeTriggerEnabled ? 'armed' : 'live', previousLevel: null };
+    }
     function syncScopeTriggerStatus() {
         const status = $('scopeTriggerStatus');
-        const frozen = scopeTriggered || scopeCaptureStopped;
-        const state = !powerOn ? 'off' : scopeTriggered ? 'triggered' : scopeCaptureStopped ? 'stopped'
-            : scopeTriggerEnabled ? 'armed' : 'live';
+        const frozen = isScopeFrozen();
+        const state = powerOn ? scopeCaptureState.status : 'off';
         status.className = 'scope-trigger-status is-' + state;
         status.textContent = state.toUpperCase();
         const captureButton = $('scopeRunBtn');
@@ -400,13 +429,15 @@
     /** Setting changes never release an already-frozen capture; only RUN/Clear can do so. */
     function rearmScopeTrigger() {
         const levels = snapshot(cpu, clockHigh);
-        if (scopeTriggered || scopeCaptureStopped) {
+        if (isScopeFrozen()) {
             syncScopeTriggerStatus();
             renderWaveforms(levels);
             return;
         }
-        frozenScopeLevels = null;
-        previousTriggerLevel = powerOn ? levels[scopeTriggerChannel] : null;
+        scopeCaptureState = {
+            status: scopeTriggerEnabled ? 'armed' : 'live',
+            previousLevel: powerOn ? levels[scopeTriggerChannel] : null
+        };
         syncScopeTriggerStatus();
         renderWaveforms(levels);
         lastWaveDrawAt = performance.now();
@@ -420,15 +451,15 @@
     }
     /** Only the oscilloscope capture freezes; no CPU interval or board state is changed. */
     function captureScopeSample(levels) {
-        if (scopeTriggered || scopeCaptureStopped)
+        if (scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped')
             return;
         const current = levels[scopeTriggerChannel];
-        const triggered = scopeTriggerEnabled && matchesScopeEdge(previousTriggerLevel, current, scopeTriggerEdge);
-        previousTriggerLevel = current;
+        const triggered = scopeCaptureState.status === 'armed' &&
+            matchesScopeEdge(scopeCaptureState.previousLevel, current, scopeTriggerEdge);
+        scopeCaptureState = { status: scopeCaptureState.status === 'armed' ? 'armed' : 'live', previousLevel: current };
         appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         if (triggered) {
-            scopeTriggered = true;
-            frozenScopeLevels = levels;
+            scopeCaptureState = { status: 'triggered', levels };
             syncScopeTriggerStatus();
         }
     }
@@ -436,14 +467,13 @@
     function toggleScopeCapture() {
         if (!powerOn)
             return;
-        if (scopeTriggered || scopeCaptureStopped) {
+        if (isScopeFrozen()) {
             restartWaveCapture();
             return;
         }
         const levels = snapshot(cpu, clockHigh);
         appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
-        scopeCaptureStopped = true;
-        frozenScopeLevels = levels;
+        scopeCaptureState = { status: 'stopped', levels };
         syncScopeTriggerStatus();
         renderWaveforms(levels);
         lastWaveDrawAt = performance.now();
@@ -451,10 +481,7 @@
     /** Explicit RUN, Clear, and display-group changes reset the waveform history. */
     function restartWaveCapture() {
         waveSamples.splice(0);
-        scopeTriggered = false;
-        scopeCaptureStopped = false;
-        frozenScopeLevels = null;
-        previousTriggerLevel = null;
+        resetScopeCaptureState();
         const levels = snapshot(cpu, clockHigh);
         const trigger = waveCaptureMode === 'cpu' ? 'clock' : 'timer';
         if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
@@ -476,13 +503,13 @@
         if (!powerOn || waveCaptureMode !== 'oscilloscope')
             return;
         scopeCaptureIntervalId = setInterval(() => {
-            if (scopeTriggered || scopeCaptureStopped || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer'))
+            if (isScopeFrozen() || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer'))
                 return;
             const levels = snapshot(cpu, clockHigh);
             captureScopeSample(levels);
             // Draw the trigger sample immediately, even when the frame limit has not elapsed.
             const now = performance.now();
-            if (scopeTriggered || now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
+            if (scopeCaptureState.status === 'triggered' || now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
                 renderWaveforms(levels);
                 lastWaveDrawAt = now;
             }
@@ -499,14 +526,13 @@
     }
     function recordSignals(trigger = 'clock') {
         const levels = snapshot(cpu, clockHigh);
-        const wasFrozen = scopeTriggered || scopeCaptureStopped;
+        const wasFrozen = isScopeFrozen();
         if (!wasFrozen && ((stepInProgress && powerOn) ||
             shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger))) {
             captureScopeSample(levels);
         }
-        updateCircuitBoard();
         const now = performance.now();
-        if (!wasFrozen && (scopeTriggered || intervalId === null || now - lastWaveDrawAt > 35)) {
+        if (!wasFrozen && (scopeCaptureState.status === 'triggered' || intervalId === null || now - lastWaveDrawAt > 35)) {
             renderWaveforms(levels);
             lastWaveDrawAt = now;
         }
@@ -515,6 +541,7 @@
         if (!clockHigh)
             return;
         clockHigh = false;
+        updateCircuitBoard();
         recordSignals();
     }
     function buildSamples() {
@@ -588,10 +615,7 @@
             stop();
             stopScopeCapture();
             powerOn = false;
-            scopeTriggered = false;
-            scopeCaptureStopped = false;
-            frozenScopeLevels = null;
-            previousTriggerLevel = null;
+            resetScopeCaptureState();
             cpu.reset();
             changedCpuFields.clear();
             history.splice(0);
@@ -651,7 +675,7 @@
         history.unshift(outcome);
         history.splice(MAX_TRACE_ENTRIES);
         renderCPU();
-        renderHistory();
+        prependHistory(outcome);
         recordSignals();
     }
     function run() {

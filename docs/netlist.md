@@ -1,6 +1,6 @@
 # TD4 主要部品ネットリスト（暫定確定版 v0.1）
 
-> **適用先：** `naoiw/td4` の `develop`。CPU動作仕様は変更せず、基板の信号表示・端子追跡用の接続資料。
+> **適用先：** `naoiw/td4` の現行結線モデル（`main` / `develop` 共通）。CPU命令の実行仕様とは独立した、基板の信号表示・端子追跡用の接続資料。
 >
 > **状態：** レジスタ・MUX・加算器・ROMの主要端子は確認済み。74HC32（PDF U7）・74HC10（PDF U2）の全ゲート入力／出力と中間配線を確認済み。CR受動部品などには未確認箇所あり。完全なKiCadネットリストではない。
 >
@@ -10,7 +10,7 @@
 
 - 添付 `TD4.pdf`（2021年KiCad回路図。p.1 CPU / p.2 ROM / p.3 CLOCK/RESET）
 - https://xyama.sakura.ne.jp/hp/4bitCPU_TD4.html
-- `src/core/ic-circuit.ts`・`src/core/signals.ts`（`develop`）
+- `src/core/ic-circuit.ts`・`src/core/signals.ts`（現行実装）
 
 添付PDFと参考ページはROMのアドレス選択に **74HC138×2** を使用するが、オリジナルTD4は **74HC154×1**。本アプリは既存UIどおり **74HC154×1** を採用する。ROMスイッチは16組×8bit、出力には74HC540を使用する。
 

@@ -1,8 +1,7 @@
 /* IC-level TD4 board: stylized functional probe diagram, not physical pinout. */
 .schematic-scroll{overflow-x:auto;overflow-y:hidden;}
 .schematic-board{position:relative;display:grid;margin:auto;overflow:hidden;}
-.schematic-zone-head{justify-content:space-between;align-items:center;color:#dbecd6;font:800 15px ui-monospace,monospace;letter-spacing:.7px;margin:0 0 12px}
-.schematic-zone-head span{font:600 10px ui-monospace,monospace;color:#92bca9;letter-spacing:0}
+
 .ic-zone,.rom-zone{position:relative;z-index:3;min-width:0}
 
 .ic-chip{min-width:0;padding:10px 9px 12px;border:1px solid #66877f;background:linear-gradient(140deg,#253238,#16242b);box-shadow:0 3px 0 #0c1b21,0 8px 14px #051c1969;border-radius:7px;color:#daece4;position:relative}
@@ -12,7 +11,7 @@
 .ic-head{display:flex;align-items:baseline;justify-content:space-between;gap:4px;padding:2px 4px 0}
 .ic-head span{font:800 10px ui-monospace,monospace;color:#9fc4ad}.ic-head strong{font:850 15px ui-monospace,monospace;color:#f5faf4}
 .ic-description{font:600 9px/1.2 ui-monospace,monospace;color:#97aea9;min-height:22px;margin:6px 4px 7px}
-.ic-pin-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+
 .ic-probe{min-width:0;min-height:24px;padding:3px 5px;border-radius:3px;border:1px solid #334a4b;color:#a7c8bb;background:#27373a;display:flex;justify-content:space-between;gap:3px;align-items:center;text-align:left;font:650 9px ui-monospace,monospace;cursor:pointer}
 .ic-probe span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ic-probe b{flex:none;font:900 10px ui-monospace,monospace;border-radius:2px;padding:1px 4px;background:#344c4b;color:#94b6ae}
@@ -225,8 +224,6 @@
 /* PCB-like packed presentation. DIP pitch, per-pin logic colors and
  * click-to-expand details continue to use the existing element structure. */
 
-.schematic-zone-head{font-size:13px;margin-bottom:9px}
-.schematic-zone-head span{font-size:9px}
 .ic-chip-grid{
   isolation:isolate;
 }
@@ -531,7 +528,7 @@
   border:6px solid #0d4b32;
   padding:28px 24px;
 }
-.schematic-zone-head{display:none}
+
 .ic-zone{align-self:stretch}
 .ic-chip-grid{
   display:grid;
@@ -734,7 +731,6 @@
 .pcb-osc-silk-text{fill:#e0f0d6;font:750 11px ui-monospace,monospace}
 .pcb-osc-selector{display:flex;align-items:center;gap:5px;flex:none}
 .pcb-osc-selector .pcb-switch-labels{font-size:11px}
-
 
 /* Selected electrical net: illuminated orange terminals, independent of H/L. */
 .schematic-board:not(.is-powered-off) .ic-footprint .ic-leg.net-selected:before{

@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
+const {loadAppFunctions} = require('./helpers/compiled-app.cjs');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const source = fs.readFileSync(path.join(root, 'src/ui/app.ts'), 'utf8');
@@ -39,10 +39,7 @@ function harness({powerOn = true, enabled = true, group = 'basic', channel = 'CL
     scopeTriggerEnabled:enabled,
     scopeTriggerChannel:channel,
     scopeTriggerEdge:edge,
-    scopeTriggered:false,
-    scopeCaptureStopped:false,
-    frozenScopeLevels:null,
-    previousTriggerLevel:null,
+    scopeCaptureState:{status:enabled?'armed':'live',previousLevel:null},
     waveSamples:[],
     MAX_WAVE_SAMPLES:80,
     powerOn,
@@ -55,12 +52,11 @@ function harness({powerOn = true, enabled = true, group = 'basic', channel = 'CL
     performance:{now:()=>1250},
     lastWaveDrawAt:0
   };
-  const start=compiled.indexOf('    /** Use sampled digital levels;');
-  const end=compiled.indexOf('    /** An independent sample clock',start);
-  assert.ok(start>0 && end>start, 'trigger and rearm function region exists');
-  const api=vm.runInNewContext(compiled.slice(start,end)+
-    '\n({matchesScopeEdge,syncScopeTriggerStatus,syncScopeTriggerChannel,selectScopeTriggerChannel,rearmScopeTrigger,captureScopeSample,toggleScopeCapture,restartWaveCapture})',
-    context);
+  const api = loadAppFunctions([
+    'matchesScopeEdge', 'isScopeFrozen', 'resetScopeCaptureState',
+    'syncScopeTriggerStatus', 'syncScopeTriggerChannel', 'selectScopeTriggerChannel',
+    'rearmScopeTrigger', 'captureScopeSample', 'toggleScopeCapture', 'restartWaveCapture'
+  ], context);
   return {context, control, api, rendered, setLive: next => {live=next;}};
 }
 
@@ -120,10 +116,10 @@ test('trigger captures rising sample, freezes scope history, and leaves CPU runn
   assert.equal(h.context.waveSamples.length,1);
   h.api.captureScopeSample({CLK:0,IN0:0});
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
   assert.equal(h.control.scopeTriggerStatus.textContent,'TRIGGERED');
   assert.equal(h.control.scopeRunBtn.textContent,'RUN');
-  assert.equal(h.context.frozenScopeLevels.CLK,1);
+  assert.equal(h.context.scopeCaptureState.levels.CLK,1);
   assert.deepEqual(h.context.waveSamples.map(x=>x.CLK),[0,0,1]);
   const count=h.context.waveSamples.length;
   h.api.captureScopeSample({CLK:0,IN0:1});
@@ -136,18 +132,18 @@ test('RUN clears frozen capture, re-arms using current level, and requires a fre
   const h=harness();
   h.api.restartWaveCapture();
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
   h.setLive({CLK:1,IN0:0});
   h.api.toggleScopeCapture(); // RUN while triggered clears and resumes
-  assert.equal(h.context.scopeTriggered,false);
-  assert.equal(h.context.frozenScopeLevels,null);
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered');
+  assert.equal('levels' in h.context.scopeCaptureState,false);
   assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
   assert.deepEqual(h.context.waveSamples.map(x=>x.CLK),[1]);
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,false,'already-high is not a new rising edge');
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered','already-high is not a new rising edge');
   h.api.captureScopeSample({CLK:0,IN0:0});
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
 });
 
 test('falling trigger works on a single input channel, with pre-trigger history capped at 80 samples',()=>{
@@ -158,12 +154,12 @@ test('falling trigger works on a single input channel, with pre-trigger history 
   for(let i=0;i<100;i++)h.api.captureScopeSample({CLK:i%2,IN0:1});
   assert.equal(h.context.waveSamples.length,80);
   h.api.captureScopeSample({CLK:0,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
   assert.equal(h.context.waveSamples.length,80);
   assert.equal(h.context.waveSamples.at(-1).IN0,0);
   assert.ok(h.context.waveSamples.slice(0,-1).some(x=>x.IN0===1),
     'pre-trigger high samples remain');
-  assert.equal(h.context.frozenScopeLevels.IN0,0);
+  assert.equal(h.context.scopeCaptureState.levels.IN0,0);
 });
 
 test('selected channel comes from visible signal names and remains valid across groups',()=>{
@@ -190,7 +186,7 @@ test('CH and EDGE changes preserve the live waveform while re-arming',()=>{
   h.setLive({CLK:0,IN0:0});
   h.api.selectScopeTriggerChannel('IN0');
   assert.equal(h.context.scopeTriggerChannel,'IN0');
-  assert.equal(h.context.previousTriggerLevel,0);
+  assert.equal(h.context.scopeCaptureState.previousLevel,0);
   assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
   assert.deepEqual(h.context.waveSamples,original);
   h.context.scopeTriggerEdge='fall';
@@ -198,23 +194,23 @@ test('CH and EDGE changes preserve the live waveform while re-arming',()=>{
   assert.deepEqual(h.context.waveSamples,original);
   h.api.captureScopeSample({CLK:0,IN0:1});
   h.api.captureScopeSample({CLK:0,IN0:0});
-  assert.equal(h.context.scopeTriggered,true,'falling IN0 triggers');
+  assert.equal(h.context.scopeCaptureState.status,'triggered','falling IN0 triggers');
 });
 
 test('TRIGGERED stays frozen after ENABLE OFF or ON or channel/edge changes until RUN',()=>{
   const h=harness({enabled:true,baseline:{CLK:0,IN0:0}});
   h.api.restartWaveCapture();
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
   const history=h.context.waveSamples.slice();
-  const captured=h.context.frozenScopeLevels;
+  const captured=h.context.scopeCaptureState.levels;
   h.setLive({CLK:0,IN0:1});
   h.context.scopeTriggerEnabled=false;
   h.api.rearmScopeTrigger();
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
   assert.equal(h.control.scopeTriggerStatus.textContent,'TRIGGERED');
   assert.equal(h.control.scopeRunBtn.textContent,'RUN');
-  assert.equal(h.context.frozenScopeLevels,captured);
+  assert.equal(h.context.scopeCaptureState.levels,captured);
   assert.deepEqual(h.context.waveSamples,history);
   h.context.scopeTriggerEnabled=true;
   h.api.rearmScopeTrigger();
@@ -223,11 +219,11 @@ test('TRIGGERED stays frozen after ENABLE OFF or ON or channel/edge changes unti
   h.api.rearmScopeTrigger();
   h.api.captureScopeSample({CLK:0,IN0:1});
   h.api.captureScopeSample({CLK:0,IN0:0});
-  assert.equal(h.context.scopeTriggered,true);
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
   assert.deepEqual(h.context.waveSamples,history,'settings never restart a frozen capture');
   assert.equal(h.context.intervalId,1,'CPU remains running');
   h.api.toggleScopeCapture(); // explicit RUN
-  assert.equal(h.context.scopeTriggered,false);
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered');
   assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
   assert.equal(h.control.scopeRunBtn.textContent,'STOP');
   assert.equal(h.context.waveSamples.length,1,'RUN clears the old trace');
@@ -250,8 +246,11 @@ test('group changes disable trigger and responsive analyzer never clips taller c
     assert.ok(fall.includes('rearmScopeTrigger()'));
     assert.ok(!fall.includes('restartWaveCapture()'));
   }
-  assert.ok(css.includes('.scope-layout>.panel{height:auto;min-height:550px;min-width:0}'), 'both panels share responsive height');
-  assert.ok(css.includes('grid-auto-rows:minmax(550px,1fr)'), 'stacked panels keep equal heights');
+  assert.ok(css.includes('.scope-layout>.panel{height:100%;min-height:0;min-width:0}'), 'both panels fit their fixed grid track');
+  assert.ok(css.includes('grid-auto-rows:600px'), 'desktop panels have a fixed height irrespective of trace length');
+  assert.ok(css.includes('@media(max-width:650px){.scope-layout{grid-auto-rows:680px}'), 'narrow screens use a fixed, taller row for wrapped controls');
+  assert.ok(css.includes('.scope-layout .trace-panel ol{flex:1;min-height:0;max-height:none;overflow-x:hidden;overflow-y:auto;'), 'only the execution trace contents scroll');
+  assert.ok(!css.includes('grid-auto-rows:minmax(550px,1fr)'), 'trace content must never increase the grid track height');
   assert.ok(css.includes('.scope-panel .scope-view{min-width:0}'));
   assert.ok(!html.includes('id="triggerChannel"'));
   assert.ok(css.includes('.scope-row.is-trigger-channel .scope-channel-button{'));
@@ -264,8 +263,8 @@ test('disabled trigger stays LIVE and samples continuously through both edge dir
   h.api.restartWaveCapture();
   assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
   for (let i=0;i<100;i++)h.api.captureScopeSample({CLK:i%2,IN0:0});
-  assert.equal(h.context.scopeTriggered,false);
-  assert.equal(h.context.frozenScopeLevels,null);
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered');
+  assert.equal('levels' in h.context.scopeCaptureState,false);
   assert.equal(h.context.waveSamples.length,80,'rolling window works with trigger disabled');
   assert.equal(h.context.cpu.cycles,12,'CPU unaffected');
   assert.equal(h.context.intervalId,1,'CPU timer remains active');
@@ -278,23 +277,23 @@ test('TRIGGER ENABLE preserves prior live waveform and catches only the first fu
   h.api.captureScopeSample({CLK:1,IN0:0});
   h.api.captureScopeSample({CLK:0,IN0:0});
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,false);
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered');
   const history=h.context.waveSamples.slice();
   // Switch ON while the signal is HIGH. This HIGH is the new baseline, not a trigger.
   h.setLive({CLK:1,IN0:0});
   h.context.scopeTriggerEnabled=true;
   h.api.rearmScopeTrigger();
   assert.equal(h.control.scopeTriggerStatus.textContent,'ARMED');
-  assert.equal(h.context.previousTriggerLevel,1);
-  assert.equal(h.context.scopeTriggered,false);
+  assert.equal(h.context.scopeCaptureState.previousLevel,1);
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered');
   assert.deepEqual(h.context.waveSamples,history,'ENABLE must not clear prior waveform');
   assert.equal(h.context.intervalId,1,'CPU keeps running during arming');
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,false,'high level alone must not trigger');
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered','high level alone must not trigger');
   h.api.captureScopeSample({CLK:0,IN0:0});
-  assert.equal(h.context.scopeTriggered,false,'wrong-direction edge must not trigger');
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered','wrong-direction edge must not trigger');
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,true,'first subsequent rising edge triggers');
+  assert.equal(h.context.scopeCaptureState.status,'triggered','first subsequent rising edge triggers');
   assert.equal(h.control.scopeTriggerStatus.textContent,'TRIGGERED');
   assert.deepEqual(h.context.waveSamples.slice(0,history.length),history,
     'pre-enable waveform remains visible alongside triggering edge');
@@ -313,8 +312,32 @@ test('disabling an ARMED trigger continues LIVE and preserves waveform',()=>{
   assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
   assert.deepEqual(h.context.waveSamples,history);
   h.api.captureScopeSample({CLK:1,IN0:0});
-  assert.equal(h.context.scopeTriggered,false);
+  assert.notEqual(h.context.scopeCaptureState.status,'triggered');
   assert.equal(h.context.waveSamples.length,history.length+1);
+});
+
+test('capture status is a single state and frozen variants always carry a snapshot',()=>{
+  const h=harness({enabled:true,baseline:{CLK:0,IN0:0}});
+  h.api.restartWaveCapture();
+  assert.equal(h.context.scopeCaptureState.status,'armed');
+  assert.equal('levels' in h.context.scopeCaptureState,false);
+  assert.equal(h.context.scopeCaptureState.previousLevel,0);
+  h.api.captureScopeSample({CLK:1,IN0:0});
+  assert.equal(h.context.scopeCaptureState.status,'triggered');
+  assert.deepEqual(h.context.scopeCaptureState.levels,{CLK:1,IN0:0});
+  assert.equal('previousLevel' in h.context.scopeCaptureState,false);
+  h.context.scopeTriggerEnabled=false;
+  h.api.rearmScopeTrigger();
+  assert.equal(h.context.scopeCaptureState.status,'triggered','changing config preserves captured state');
+  h.api.toggleScopeCapture();
+  assert.equal(h.context.scopeCaptureState.status,'live');
+  assert.equal('levels' in h.context.scopeCaptureState,false);
+  h.api.toggleScopeCapture();
+  assert.equal(h.context.scopeCaptureState.status,'stopped');
+  assert.ok(h.context.scopeCaptureState.levels);
+  h.api.toggleScopeCapture();
+  assert.equal(h.context.scopeCaptureState.status,'live');
+  assert.equal('levels' in h.context.scopeCaptureState,false);
 });
 
 test('STOP freezes only the scope; RUN clears and resumes capture',()=>{
@@ -324,16 +347,16 @@ test('STOP freezes only the scope; RUN clears and resumes capture',()=>{
   h.api.captureScopeSample({CLK:1,IN0:0});
   h.setLive({CLK:1,IN0:0});
   h.api.toggleScopeCapture();
-  assert.equal(h.context.scopeCaptureStopped,true);
+  assert.equal(h.context.scopeCaptureState.status,'stopped');
   assert.equal(h.control.scopeTriggerStatus.textContent,'STOPPED');
   assert.equal(h.control.scopeRunBtn.textContent,'RUN');
-  assert.equal(h.context.frozenScopeLevels.CLK,1);
+  assert.equal(h.context.scopeCaptureState.levels.CLK,1);
   const history=h.context.waveSamples.slice();
   h.api.captureScopeSample({CLK:0,IN0:0});
   assert.deepEqual(h.context.waveSamples,history);
   assert.equal(h.context.intervalId,1,'CPU keeps running');
   h.api.toggleScopeCapture();
-  assert.equal(h.context.scopeCaptureStopped,false);
+  assert.notEqual(h.context.scopeCaptureState.status,'stopped');
   assert.equal(h.control.scopeRunBtn.textContent,'STOP');
   assert.equal(h.control.scopeTriggerStatus.textContent,'LIVE');
   assert.equal(h.context.waveSamples.length,1,'RUN starts a fresh trace');
@@ -354,7 +377,7 @@ test('ENABLE click uses no-reset re-arm; RUN and Clear still explicitly clear',(
     const rearm=app.slice(app.indexOf('function rearmScopeTrigger('),
       app.indexOf('function selectScopeTriggerChannel('));
     assert.ok(!rearm.includes('waveSamples.splice'), 're-arm leaves samples untouched');
-    assert.ok(rearm.includes('previousTriggerLevel = powerOn ? levels[scopeTriggerChannel] : null'),
+    assert.ok(rearm.includes('previousLevel: powerOn ? levels[scopeTriggerChannel] : null'),
       'sample current level on enable, not historical last edge');
   }
 });
@@ -366,14 +389,14 @@ test('power-off and on transitions update trigger state while preserving indepen
   assert.equal(h.control.scopeRunBtn.disabled,true);
   assert.equal(h.control.scopeRunBtn.textContent,'RUN');
   for(const app of [source,compiled]) {
-    assert.ok(app.includes('if (scopeTriggered || scopeCaptureStopped || !shouldCaptureSample('),
+    assert.ok(app.includes('if (isScopeFrozen() || !shouldCaptureSample('),
       'timer stops writing but is not cleared');
-    assert.ok(app.includes('if (!wasFrozen && (scopeTriggered || intervalId === null'),
+    assert.ok(app.includes("if (!wasFrozen && (scopeCaptureState.status === 'triggered' || intervalId === null"),
       'live board signals cannot overwrite the frozen scope');
     assert.ok(app.includes('updateCircuitBoard();'), 'CPU/board display path remains alive');
     assert.ok(app.includes('restartWaveCapture();'), 'power-on resets trigger');
-    assert.ok(app.includes('scopeTriggered = false;'), 'power-off clears capture state');
-    assert.ok(app.includes('(scopeTriggered || scopeCaptureStopped) && frozenScopeLevels ? frozenScopeLevels : levels'),
+    assert.ok(app.includes('resetScopeCaptureState();'), 'power-off clears capture state');
+    assert.ok(app.includes("scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped'"),
       'frozen H/L badges show sampled levels');
   }
 });

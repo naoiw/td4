@@ -16,14 +16,15 @@ test('all script and stylesheet references resolve inside repository', () => {
 
 test('runtime JS stays in assets and loads in dependency order', () => {
   const scripts = [...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(match => match[1]);
-  assert.deepEqual(scripts, [
+  // Cache-busting query strings may change without changing the dependency graph.
+  assert.deepEqual(scripts.map(src => src.split('?')[0]), [
     'assets/js/core/td4-core.js',
     'assets/js/data/samples.js',
     'assets/js/core/signals.js',
     'assets/js/data/netlist.js',
     'assets/js/core/ic-circuit.js',
     'assets/js/ui/board.js',
-    'assets/js/ui/app.js?v=20261123-cpu-state'
+    'assets/js/ui/app.js'
   ]);
   for (const file of ['app.js', 'td4-core.js', 'samples.js', 'signals.js']) {
     assert.ok(!fs.existsSync(path.join(root, file)), 'root runtime file must be removed: ' + file);
