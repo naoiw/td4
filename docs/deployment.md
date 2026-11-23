@@ -27,13 +27,14 @@ Pagesの公開アーティファクト内：
 publish/
 ├── .nojekyll
 ├── index.html          # main
+├── sitemap.xml         # main の正規URL一覧
 ├── assets/             # main
 └── develop/
-    ├── index.html      # develop
-    └── assets/         # develop
+    ├── index.html      # develop (noindex)
+    └── assets/         # develop (Educationもnoindex)
 ```
 
-Educationは `assets/education/index.html` に配置し、既存の `assets/` コピー処理によって本番の `/td4/assets/education/` とプレビューの `/td4/develop/assets/education/` に同時公開します。各ページのヘッダーの相対リンクで行き来できます。デプロイ用workflowの変更は不要です。
+Educationは `assets/education/index.html` に配置し、既存の `assets/` コピー処理によって本番の `/td4/assets/education/` とプレビューの `/td4/develop/assets/education/` に同時公開します。各ページのヘッダーの相対リンクで行き来できます。加えて、本番に `sitemap.xml` をコピーし、プレビューの2つのHTMLにだけ `noindex,follow` を設定します。詳細は[SEO・AI検索向け設定](seo.md)を参照してください。
 
 どちらのHTMLも相対URL（`assets/...`）を使用しているため、`/td4/` と `/td4/develop/` の両方でそのまま読み込めます。生成物にはソースやテストを含めず、エミュレータのWebファイルだけを置きます。
 

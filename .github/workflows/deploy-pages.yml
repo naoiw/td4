@@ -71,11 +71,18 @@ jobs:
           set -euo pipefail
           mkdir -p publish/develop
           cp production/index.html publish/index.html
+          cp production/sitemap.xml publish/sitemap.xml
           cp -a production/assets publish/assets
           cp preview/index.html publish/develop/index.html
           cp -a preview/assets publish/develop/assets
+          # Preview duplicates the production pages. Keep it publicly testable but not indexable.
+          sed -i '/<meta charset=/a\  <meta name="robots" content="noindex,follow">' publish/develop/index.html
+          sed -i '/<meta charset=/a\  <meta name="robots" content="noindex,follow">' publish/develop/assets/education/index.html
           touch publish/.nojekyll
           test -s publish/index.html
+          test -s publish/sitemap.xml
+          grep -q 'noindex,follow' publish/develop/index.html
+          grep -q 'noindex,follow' publish/develop/assets/education/index.html
           test -s publish/develop/index.html
           test -f publish/assets/js/ui/app.js
           test -f publish/develop/assets/js/ui/app.js
