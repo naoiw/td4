@@ -39,10 +39,10 @@ Educationは `assets/education/index.html` に配置し、既存の `assets/` �
 
 ## 開発時の手順
 
-1. developへ変更をpushし、`Validate develop` と `Deploy GitHub Pages` の成功を確認する。
-2. https://naoiw.github.io/td4/develop/ で操作を確認する。
-3. 問題がなければdevelopのPRをmainにマージする。
-4. https://naoiw.github.io/td4/ に反映されたことを確認する。
+1. `develop`から機能ブランチを作り、`develop`向けPRを作成する。PRの`Validate develop`でビルド・型チェック・Lint・テスト・生成JS整合性を検証する（PR作成だけではプレビューは更新されない）。
+2. PRのチェックが通ったら`develop`へマージする。`develop`へのpushを契機とした検証・Pagesデプロイの成功を確認し、https://naoiw.github.io/td4/develop/ で操作を確認する。
+3. 問題がなければ`develop`から`main`へのリリースPRを作成し、チェック後にマージする。
+4. https://naoiw.github.io/td4/ に反映されたことを確認し、必要に応じて`develop`を`main`の最新コミットへfast-forwardして同期する。
 
 ソースは `src/**/*.ts`、JavaScript生成物は `assets/js/**`、スタイルは `assets/css/**` に置きます。パッケージマネージャーは `package.json` で固定されたpnpmを使用し、Vite・Reactは導入しません。
 
@@ -51,7 +51,7 @@ Educationは `assets/education/index.html` に配置し、既存の `assets/` �
 - ローカルでは Node.js 22以降と pnpm 9.14.2 を使用し、`pnpm install --frozen-lockfile`、`pnpm run verify` を実行します。
 - `Validate develop` は共有CIに `package-manager: pnpm` と `pnpm-version: "9.14.2"` を渡します。
 - Pagesは `main` / `develop` をそれぞれ pnpm でインストール・ビルド・検証します。
-- ローカルでの整形・チェックは `pnpm run lint`、型チェックは `pnpm run typecheck`、テストは `pnpm test`、ビルドを含む総合検証は `pnpm run verify` です。
+- ローカルでの整形・チェックは `pnpm run lint`、型チェックは `pnpm run typecheck`、テストは `pnpm test`、ビルドを含む総合検証は `pnpm run verify` です。テストはNode.jsの実行結果検証とHTML/CSSの静的構造検証を併用しています。詳しくは[テスト方針](testing.md)を参照してください。
 - 依存関係の更新時は `pnpm install` で `pnpm-lock.yaml` を更新してコミットします。`package-lock.json` は使用しません。生成した `assets/js/` はソースと一緒にコミットし、CIで整合性を確認します。
 
 ## 注意
