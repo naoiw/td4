@@ -414,6 +414,12 @@
     }
   }
 
+  /** Use sampled digital levels; the first observation establishes a baseline. */
+  function matchesScopeEdge(previous: number | null, current: number, edge: ScopeTriggerEdge): boolean {
+    if (previous === null) return false;
+    return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
+  }
+
   /** Frozen states always own the captured H/L snapshot. */
   function isScopeFrozen(): boolean {
     return scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped';
@@ -422,12 +428,6 @@
   /** Restore the sampling state from the current TRIGGER setting. */
   function resetScopeCaptureState(): void {
     scopeCaptureState = {status: scopeTriggerEnabled ? 'armed' : 'live', previousLevel: null};
-  }
-
-  /** Use sampled digital levels; the first observation establishes a baseline. */
-  function matchesScopeEdge(previous: number | null, current: number, edge: ScopeTriggerEdge): boolean {
-    if (previous === null) return false;
-    return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
   }
 
   function syncScopeTriggerStatus(): void {
