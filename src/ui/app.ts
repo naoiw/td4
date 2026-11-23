@@ -2,9 +2,15 @@
 (function () {
   'use strict';
   const {CPU, assemble, HEX, disassemble, isStandard, romToSource} = window.TD4;
+  // Stable, static page nodes are looked up once instead of on every clock edge.
+  const elementCache = new Map<string, HTMLElement>();
   function $<T extends HTMLElement = HTMLElement>(id: string): T {
-    const element = document.getElementById(id);
-    if (!element) throw new Error(`Required UI element not found: ${id}`);
+    let element = elementCache.get(id);
+    if (!element) {
+      element = document.getElementById(id) ?? undefined;
+      if (!element) throw new Error(`Required UI element not found: ${id}`);
+      elementCache.set(id, element);
+    }
     return element as T;
   }
   const SAMPLES = window.TD4Samples;
@@ -52,9 +58,20 @@
   }[] = [];
   let boardResizeObserver: ResizeObserver | null = null;
 
+  interface RomRowNodes {
+    row: HTMLTableRowElement;
+    breakpoint: HTMLButtonElement;
+    bits: HTMLButtonElement[];
+    hex: HTMLTableCellElement;
+    asm: HTMLTableCellElement;
+    renderedByte: number;
+  }
+  const romRowNodes: RomRowNodes[] = [];
+
   function buildRomRows(): void {
     const tbody = $<HTMLTableSectionElement>('romRows');
     tbody.replaceChildren();
+    romRowNodes.length = 0;
     for (let addr = 0; addr < 16; addr++) {
       const tr = document.createElement('tr');
       tr.dataset.addr = String(addr);
@@ -74,6 +91,7 @@
       const dataTd = document.createElement('td');
       const bits = document.createElement('div');
       bits.className = 'rom-bit-list';
+      const bitButtons: HTMLButtonElement[] = [];
       for (let bit = 7; bit >= 0; bit--) {
         const button = document.createElement('button');
         button.className = 'rom-bit';
@@ -87,6 +105,7 @@
           refreshRomAfterEdit('ROMを直接変更しました。ソースとの内容が異なります。');
         });
         bits.append(button);
+        bitButtons[bit] = button;
       }
       dataTd.append(bits);
       const hexTd = document.createElement('td');
@@ -95,28 +114,32 @@
       asmTd.className = 'rom-asm';
       tr.append(addrTd, dataTd, hexTd, asmTd);
       tbody.append(tr);
+      romRowNodes.push({row: tr, breakpoint: address, bits: bitButtons,
+        hex: hexTd, asm: asmTd, renderedByte: -1});
     }
   }
 
   function renderROM(): void {
-    [...$('romRows').children].forEach((tr, addr) => {
+    for (const [addr, nodes] of romRowNodes.entries()) {
       const byte = cpu.rom[addr];
-      tr.classList.toggle('current', addr === cpu.pc);
-      tr.classList.toggle('has-breakpoint', breakpoints.has(addr));
-      const bp = tr.querySelector<HTMLButtonElement>('.address-btn')!;
-      bp.classList.toggle('breaked', breakpoints.has(addr));
-      bp.setAttribute('aria-pressed', String(breakpoints.has(addr)));
-      tr.querySelectorAll<HTMLButtonElement>('.rom-bit').forEach(btn => {
-        const on = (byte >> Number(btn.dataset.bit)) & 1;
-        btn.textContent = String(on);
-        btn.classList.toggle('on', !!on);
-      });
-      tr.querySelector<HTMLElement>('.rom-hex')!.textContent = byte.toString(16).toUpperCase().padStart(2, '0');
-      const asm = tr.querySelector<HTMLElement>('.rom-asm')!;
-      asm.textContent = disassemble(byte);
-      if (!isStandard(byte)) asm.title = 'オリジナルの命令セットでは未定義。実機の回路動作を再現。';
-      else asm.title = '';
-    });
+      const hasBreakpoint = breakpoints.has(addr);
+      nodes.row.classList.toggle('current', addr === cpu.pc);
+      nodes.row.classList.toggle('has-breakpoint', hasBreakpoint);
+      nodes.breakpoint.classList.toggle('breaked', hasBreakpoint);
+      nodes.breakpoint.setAttribute('aria-pressed', String(hasBreakpoint));
+      // PC and breakpoint indicators move each step, but ROM data rarely changes.
+      if (nodes.renderedByte === byte) continue;
+      nodes.renderedByte = byte;
+      for (let bit = 0; bit < 8; bit++) {
+        const button = nodes.bits[bit];
+        const on = (byte >> bit) & 1;
+        button.textContent = String(on);
+        button.classList.toggle('on', !!on);
+      }
+      nodes.hex.textContent = byte.toString(16).toUpperCase().padStart(2, '0');
+      nodes.asm.textContent = disassemble(byte);
+      nodes.asm.title = isStandard(byte) ? '' : 'オリジナルの命令セットでは未定義。実機の回路動作を再現。';
+    }
   }
 
   /** Read-only snapshot for the board-adjacent CPU STATE widget. */
@@ -290,6 +313,20 @@
   }
 
 
+  function createTraceItem(item: TD4Step): HTMLLIElement {
+    const li = document.createElement('li');
+    const loc = document.createElement('span');
+    loc.className = 'trace-address';
+    loc.textContent = `${HEX(item.pc)} [${item.byte.toString(16).toUpperCase().padStart(2,'0')}]`;
+    const asm = document.createElement('span');
+    asm.textContent = item.asm;
+    const pc = document.createElement('span');
+    pc.className = 'trace-next';
+    pc.textContent = `→ ${HEX(item.pcAfter)}`;
+    li.append(loc, asm, pc);
+    return li;
+  }
+
   function renderHistory(): void {
     const list = $('traceList');
     list.replaceChildren();
@@ -297,21 +334,18 @@
       const placeholder = document.createElement('li');
       placeholder.className = 'placeholder';
       placeholder.textContent = 'まだ命令を実行していません';
-      list.append(placeholder); return;
+      list.append(placeholder);
+      return;
     }
-    for (const item of history) {
-      const li = document.createElement('li');
-      const loc = document.createElement('span');
-      loc.className = 'trace-address';
-      loc.textContent = `${HEX(item.pc)} [${item.byte.toString(16).toUpperCase().padStart(2,'0')}]`;
-      const asm = document.createElement('span');
-      asm.textContent = item.asm;
-      const pc = document.createElement('span');
-      pc.className = 'trace-next';
-      pc.textContent = `→ ${HEX(item.pcAfter)}`;
-      li.append(loc, asm, pc);
-      list.append(li);
-    }
+    for (const item of history) list.append(createTraceItem(item));
+  }
+
+  /** Add only one trace row per instruction; rebuild all rows only on reset/clear. */
+  function prependHistory(item: TD4Step): void {
+    const list = $('traceList');
+    if (list.firstElementChild?.classList.contains('placeholder')) list.replaceChildren();
+    list.prepend(createTraceItem(item));
+    if (list.children.length > MAX_TRACE_ENTRIES) list.lastElementChild?.remove();
   }
 
   /** Create the ten waveform channels once; only signal paths and levels change afterward. */
@@ -515,7 +549,6 @@
         shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger))) {
       captureScopeSample(levels);
     }
-    updateCircuitBoard();
     const now = performance.now();
     if (!wasFrozen && (scopeTriggered || intervalId === null || now - lastWaveDrawAt > 35)) {
       renderWaveforms(levels);
@@ -526,6 +559,7 @@
   function setClockLow(): void {
     if (!clockHigh) return;
     clockHigh = false;
+    updateCircuitBoard();
     recordSignals();
   }
 
@@ -660,7 +694,7 @@
     history.unshift(outcome);
     history.splice(MAX_TRACE_ENTRIES);
     renderCPU();
-    renderHistory();
+    prependHistory(outcome);
     recordSignals();
   }
 
