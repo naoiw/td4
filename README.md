@@ -68,6 +68,7 @@ TypeScriptの編集元は `src/`、生成JavaScriptは `assets/js/` です。生
 | [設計・実装仕様](docs/architecture.md) | CPU・IC・波形モデル、画面構造、コードの責務 |
 | [ネットリスト](docs/netlist.md) | 部品端子・電気ネット・接続の確定状況 |
 | [開発・デプロイ](docs/deployment.md) | pnpm、ブランチ運用、CI、Pages公開 |
+| [テスト方針](docs/testing.md) | 単体・UIロジック・静的構造のテスト分類と実行手順 |
 | [共通開発規約](https://github.com/naoiw/.github) | リポジトリ共通の開発方針 |
 
 ## ライセンス
