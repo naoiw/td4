@@ -85,6 +85,8 @@ test('3-bit adder computes all 64 operand pairs and exposes the carry on LED3',(
       for(let i=0;i<3;i++)used.add(cpu.step().pc);
       assert.equal(cpu.pc,3,'high SW3 arms the second input');
       assert.equal(cpu.a,first,'A holds the first 3-bit operand');
+      for(let i=0;i<4;i++)used.add(cpu.step().pc);
+      assert.equal(cpu.pc,3,'SW3 high keeps the CPU waiting at the second-input loop');
       cpu.setInput(second);
       let writes=0;
       let sawReturn=false;
