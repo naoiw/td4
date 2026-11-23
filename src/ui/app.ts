@@ -24,7 +24,7 @@
   const waveSamples: SignalLevels[] = [];
   const MAX_WAVE_SAMPLES = 80;
   const MAX_TRACE_ENTRIES = 25;
-  const CPU_STATE_FIELDS = ['A', 'B', 'PC', 'OUT', 'C', 'IN'] as const;
+  const CPU_STATE_FIELDS = ['PC', 'C', 'A', 'B', 'IN', 'OUT'] as const;
   type CpuStateField = typeof CPU_STATE_FIELDS[number];
   type CpuStateValues = Record<CpuStateField, number>;
   let changedCpuFields = new Set<CpuStateField>();
