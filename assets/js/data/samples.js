@@ -60,16 +60,6 @@ loop:  OUT B
        JMP loop`
         },
         {
-            id: 'blink',
-            icon: '◉',
-            title: 'LED点滅',
-            description: '全LEDをON/OFF',
-            source: `; 4個のLEDを点滅
-loop:  OUT 15
-       OUT 0
-       JMP loop`
-        },
-        {
             id: 'bounce',
             icon: '◆',
             title: '2進パターン',
@@ -118,6 +108,39 @@ under8:
 show:   OUT B
         ADD B, 12    ; 1クロックの間、CPUのCにも桁上がりを表示
         JMP start`
+        },
+        {
+            id: 'sum3',
+            icon: '3+',
+            title: '3bit加算（14命令）',
+            description: 'SW3 ONで第1数、OFFで第2数 → LED3:0',
+            source: `; SW2:0を3bit値として2回入力し、LED3:0へ加算結果を出す
+; SW3=ONで1つ目を取得、SW3=OFFで2つ目を取得
+; LED3は桁上がり(8)、LED2:0は下位3bit
+start:  IN A
+        ADD A, 8
+        JNC start       ; SW3=ONになるまで待つ
+second: IN B
+        ADD B, 8
+        JNC ready       ; SW3=OFFなら次へ
+        JMP second      ; SW3=ONの間は待つ
+ready:  ADD B, 8       ; 2回目の入力からSW3を除去
+add:    ADD A, 15      ; Aを1減らす
+        JNC show       ; Aが0になったら表示
+        ADD B, 1       ; Bに1加える
+        JMP add
+show:   OUT B
+        JMP start`
+        },
+        {
+            id: 'blink',
+            icon: '◉',
+            title: 'LED点滅',
+            description: '全LEDをON/OFF',
+            source: `; 4個のLEDを点滅
+loop:  OUT 15
+       OUT 0
+       JMP loop`
         },
         {
             id: 'countdown',
