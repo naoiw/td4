@@ -96,6 +96,11 @@
 .scope-controls .scope-run-btn{padding:7px 12px;font-size:11px}
 .scope-row.is-trigger-channel .scope-name{color:#ffd38b}
 .scope-layout .trace-panel{display:flex;flex-direction:column;min-height:0;margin:0;padding:17px 18px}.scope-layout .trace-panel ol{flex:1;min-height:0;max-height:none;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;margin-top:5px}.scope-layout .trace-panel li{font-size:10px}
+/* Crawlable explanation is visible and remains below the interactive workbench. */
+.emulator-about{padding:16px 20px}
+.emulator-about .panel-heading{margin-bottom:10px}
+.emulator-about p{margin:8px 0;color:#5e6f7e;font-size:12px;line-height:1.75}
+.emulator-about a{color:#225edb}
 .detail-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,1fr);gap:15px;align-items:stretch}
 .detail-grid .editor-panel,.detail-grid .rom-panel{grid-column:auto}
 .detail-grid .code-editor{height:265px}

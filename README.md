@@ -36,6 +36,7 @@
 - TypeScript（strict）＋ Vanilla JavaScript / DOM / SVG / CSS。React・Vite・バンドラーなし
 - Node.js 26・pnpm 9.14.2（CI）。ローカル開発はNode.js 22以降
 - GitHub Actions / GitHub Pages。実行時の外部ライブラリ・バックエンド不要
+- 検索対策：本番2ページのcanonical、XMLサイトマップ、Webアプリ／技術解説の構造化データ、開発プレビューのnoindex
 
 ## ローカル開発
 
@@ -69,6 +70,7 @@ TypeScriptの編集元は `src/`、生成JavaScriptは `assets/js/` です。生
 | [ネットリスト](docs/netlist.md) | 部品端子・電気ネット・接続の確定状況 |
 | [開発・デプロイ](docs/deployment.md) | pnpm、ブランチ運用、CI、Pages公開 |
 | [テスト方針](docs/testing.md) | 単体・UIロジック・静的構造のテスト分類と実行手順 |
+| [SEO・AI検索向け設定](docs/seo.md) | 検索対象URL、メタデータ、プレビューのnoindex、Google・Bingへの登録手順 |
 | [共通開発規約](https://github.com/naoiw/.github) | リポジトリ共通の開発方針 |
 
 ## ライセンス
