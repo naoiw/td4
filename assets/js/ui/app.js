@@ -40,10 +40,9 @@
     let scopeTriggerEnabled = false;
     let scopeTriggerChannel = 'CLK';
     let scopeTriggerEdge = 'rise';
-    let scopeTriggered = false;
-    let scopeCaptureStopped = false;
-    let frozenScopeLevels = null;
-    let previousTriggerLevel = null;
+    // A discriminated union makes frozen captures carry their required snapshot.
+    // The trigger-enabled checkbox is a setting, independent of a frozen capture.
+    let scopeCaptureState = { status: 'live', previousLevel: null };
     // A 20ms sample period (50Hz) captures 10Hz CLK at five samples per cycle.
     const OSCILLOSCOPE_SAMPLE_INTERVAL_MS = 20;
     const OSCILLOSCOPE_RENDER_INTERVAL_MS = 40;
@@ -330,7 +329,8 @@
     /** Create the ten waveform channels once; only signal paths and levels change afterward. */
     function renderWaveforms(levels) {
         // Once triggered, even the H/L badges must show the captured instant, not live CPU levels.
-        const visibleLevels = (scopeTriggered || scopeCaptureStopped) && frozenScopeLevels ? frozenScopeLevels : levels;
+        const visibleLevels = scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped'
+            ? scopeCaptureState.levels : levels;
         const area = $('scopeView');
         const group = GROUPS[$('signalGroup').value] || GROUPS.basic;
         const svgNS = 'http://www.w3.org/2000/svg';
@@ -391,6 +391,14 @@
             }
         }
     }
+    /** Frozen states always own the captured H/L snapshot. */
+    function isScopeFrozen() {
+        return scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped';
+    }
+    /** Restore the sampling state from the current TRIGGER setting. */
+    function resetScopeCaptureState() {
+        scopeCaptureState = { status: scopeTriggerEnabled ? 'armed' : 'live', previousLevel: null };
+    }
     /** Use sampled digital levels; the first observation establishes a baseline. */
     function matchesScopeEdge(previous, current, edge) {
         if (previous === null)
@@ -399,9 +407,8 @@
     }
     function syncScopeTriggerStatus() {
         const status = $('scopeTriggerStatus');
-        const frozen = scopeTriggered || scopeCaptureStopped;
-        const state = !powerOn ? 'off' : scopeTriggered ? 'triggered' : scopeCaptureStopped ? 'stopped'
-            : scopeTriggerEnabled ? 'armed' : 'live';
+        const frozen = isScopeFrozen();
+        const state = powerOn ? scopeCaptureState.status : 'off';
         status.className = 'scope-trigger-status is-' + state;
         status.textContent = state.toUpperCase();
         const captureButton = $('scopeRunBtn');
@@ -424,13 +431,15 @@
     /** Setting changes never release an already-frozen capture; only RUN/Clear can do so. */
     function rearmScopeTrigger() {
         const levels = snapshot(cpu, clockHigh);
-        if (scopeTriggered || scopeCaptureStopped) {
+        if (isScopeFrozen()) {
             syncScopeTriggerStatus();
             renderWaveforms(levels);
             return;
         }
-        frozenScopeLevels = null;
-        previousTriggerLevel = powerOn ? levels[scopeTriggerChannel] : null;
+        scopeCaptureState = {
+            status: scopeTriggerEnabled ? 'armed' : 'live',
+            previousLevel: powerOn ? levels[scopeTriggerChannel] : null
+        };
         syncScopeTriggerStatus();
         renderWaveforms(levels);
         lastWaveDrawAt = performance.now();
@@ -444,15 +453,15 @@
     }
     /** Only the oscilloscope capture freezes; no CPU interval or board state is changed. */
     function captureScopeSample(levels) {
-        if (scopeTriggered || scopeCaptureStopped)
+        if (scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped')
             return;
         const current = levels[scopeTriggerChannel];
-        const triggered = scopeTriggerEnabled && matchesScopeEdge(previousTriggerLevel, current, scopeTriggerEdge);
-        previousTriggerLevel = current;
+        const triggered = scopeCaptureState.status === 'armed' &&
+            matchesScopeEdge(scopeCaptureState.previousLevel, current, scopeTriggerEdge);
+        scopeCaptureState = { ...scopeCaptureState, previousLevel: current };
         appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
         if (triggered) {
-            scopeTriggered = true;
-            frozenScopeLevels = levels;
+            scopeCaptureState = { status: 'triggered', levels };
             syncScopeTriggerStatus();
         }
     }
@@ -460,14 +469,13 @@
     function toggleScopeCapture() {
         if (!powerOn)
             return;
-        if (scopeTriggered || scopeCaptureStopped) {
+        if (isScopeFrozen()) {
             restartWaveCapture();
             return;
         }
         const levels = snapshot(cpu, clockHigh);
         appendSample(waveSamples, levels, MAX_WAVE_SAMPLES);
-        scopeCaptureStopped = true;
-        frozenScopeLevels = levels;
+        scopeCaptureState = { status: 'stopped', levels };
         syncScopeTriggerStatus();
         renderWaveforms(levels);
         lastWaveDrawAt = performance.now();
@@ -475,10 +483,7 @@
     /** Explicit RUN, Clear, and display-group changes reset the waveform history. */
     function restartWaveCapture() {
         waveSamples.splice(0);
-        scopeTriggered = false;
-        scopeCaptureStopped = false;
-        frozenScopeLevels = null;
-        previousTriggerLevel = null;
+        resetScopeCaptureState();
         const levels = snapshot(cpu, clockHigh);
         const trigger = waveCaptureMode === 'cpu' ? 'clock' : 'timer';
         if (shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger)) {
@@ -500,13 +505,13 @@
         if (!powerOn || waveCaptureMode !== 'oscilloscope')
             return;
         scopeCaptureIntervalId = setInterval(() => {
-            if (scopeTriggered || scopeCaptureStopped || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer'))
+            if (isScopeFrozen() || !shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, 'timer'))
                 return;
             const levels = snapshot(cpu, clockHigh);
             captureScopeSample(levels);
             // Draw the trigger sample immediately, even when the frame limit has not elapsed.
             const now = performance.now();
-            if (scopeTriggered || now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
+            if (scopeCaptureState.status === 'triggered' || now - lastWaveDrawAt >= OSCILLOSCOPE_RENDER_INTERVAL_MS) {
                 renderWaveforms(levels);
                 lastWaveDrawAt = now;
             }
@@ -523,13 +528,13 @@
     }
     function recordSignals(trigger = 'clock') {
         const levels = snapshot(cpu, clockHigh);
-        const wasFrozen = scopeTriggered || scopeCaptureStopped;
+        const wasFrozen = isScopeFrozen();
         if (!wasFrozen && ((stepInProgress && powerOn) ||
             shouldCaptureSample(waveCaptureMode, powerOn, intervalId !== null, trigger))) {
             captureScopeSample(levels);
         }
         const now = performance.now();
-        if (!wasFrozen && (scopeTriggered || intervalId === null || now - lastWaveDrawAt > 35)) {
+        if (!wasFrozen && (scopeCaptureState.status === 'triggered' || intervalId === null || now - lastWaveDrawAt > 35)) {
             renderWaveforms(levels);
             lastWaveDrawAt = now;
         }
@@ -612,10 +617,7 @@
             stop();
             stopScopeCapture();
             powerOn = false;
-            scopeTriggered = false;
-            scopeCaptureStopped = false;
-            frozenScopeLevels = null;
-            previousTriggerLevel = null;
+            resetScopeCaptureState();
             cpu.reset();
             changedCpuFields.clear();
             history.splice(0);
