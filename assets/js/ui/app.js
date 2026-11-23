@@ -397,7 +397,7 @@
             return false;
         return edge === 'rise' ? previous === 0 && current === 1 : previous === 1 && current === 0;
     }
-  /** Frozen states always own the captured H/L snapshot. */
+    /** Frozen states always own the captured H/L snapshot. */
     function isScopeFrozen() {
         return scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped';
     }
@@ -405,7 +405,7 @@
     function resetScopeCaptureState() {
         scopeCaptureState = { status: scopeTriggerEnabled ? 'armed' : 'live', previousLevel: null };
     }
-      function syncScopeTriggerStatus() {
+    function syncScopeTriggerStatus() {
         const status = $('scopeTriggerStatus');
         const frozen = isScopeFrozen();
         const state = powerOn ? scopeCaptureState.status : 'off';
