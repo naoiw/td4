@@ -4,8 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f6f8">
-  <meta name="description" content="TD4 4-bit CPU emulator — 実機の命令デコードを再現するオフライン対応Webエミュレータ。">
-  <title>TD4 (4-bit CPU) Emulator</title>
+  <meta name="description" content="TD4（とりあえず動作するだけの4bit CPU）をブラウザで動かせる無料のWebエミュレータ。16×8bit ROM、74HCロジックIC、アセンブリ編集、STEP実行、波形表示に対応。インストール不要。">
+  <title>TD4 4bit CPU エミュレータ | ブラウザで学ぶ4ビットCPU</title>
+  <link rel="canonical" href="https://naoiw.github.io/td4/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TD4 Web Emulator">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:title" content="TD4 4bit CPU エミュレータ | ブラウザで学ぶ4ビットCPU">
+  <meta property="og:description" content="TD4（とりあえず動作するだけの4bit CPU）をブラウザで動かせる無料のWebエミュレータ。16×8bit ROM、74HCロジックIC、アセンブリ編集、STEP実行、波形表示に対応。インストール不要。">
+  <meta property="og:url" content="https://naoiw.github.io/td4/">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "TD4 4bit CPU Web Emulator",
+    "url": "https://naoiw.github.io/td4/",
+    "description": "TD4（とりあえず動作するだけの4bit CPU）をブラウザで動かせる無料のWebエミュレータ。16×8bit ROM、74HCロジックIC、アセンブリ編集、STEP実行、波形表示に対応。インストール不要。",
+    "inLanguage": "ja",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    },
+    "creator": {
+      "@type": "Person",
+      "name": "naoiw",
+      "url": "https://github.com/naoiw"
+    }
+  }
+  </script>
   <link rel="stylesheet" href="assets/css/style.css?v=20261123-fixed-panels">
   <script src="assets/js/core/td4-core.js" defer></script>
   <script src="assets/js/data/samples.js" defer></script>
@@ -223,6 +254,11 @@
         <div class="hint-box"><strong>書き方の例</strong><code>MOV B, 3<br>OUT B<br>ADD B, 1<br>JMP 1</code><p>1行1命令。即値は10進数、<code>0xF</code> 形式の16進数、<code>F</code> 形式の16進1桁に対応。ラベル、<code>DB</code>、<code>ORG</code>、<code>; コメント</code> も使えます。</p></div>
       </section>
       </div>
+      <section class="panel emulator-about" aria-labelledby="aboutTd4Title">
+        <div class="panel-heading"><h2 id="aboutTd4Title">TD4 4bit CPUエミュレータとは</h2></div>
+        <p>TD4は『CPUの創りかた』で紹介される4bit CPUです。このエミュレータでは、16番地×8bitのROMを書き換えながら命令を実行し、A/Bレジスタ、プログラムカウンタ、キャリー、74HCロジックICの信号をブラウザで確認できます。</p>
+        <p>STEP実行、アセンブリ編集、INPUTスイッチとOUTPUT LED、クロックやレジスタの論理波形に対応。インストール不要で試せます。<a href="assets/education/">TD4の仕組み・標準12命令の解説</a>も参照してください。</p>
+      </section>
     </main>
 
     <footer class="site-footer">
