@@ -61,7 +61,7 @@ test('CPU STATE is a compact, read-only, six-value widget directly beneath the P
   assert.equal((widget.match(/class="cpu-state-cell"/g) || []).length, 6);
   assert.doesNotMatch(widget, /<button|<input|<select|<textarea/, 'read-only values');
   assert.match(css, /\.cpu-state-grid\{[^}]*grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
-  assert.match(css, /@media\(max-width:650px\)\{[^}]*\.cpu-state-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css, /@media\(max-width:650px\)\{\.cpu-state-panel\{[^}]*\}\.cpu-state-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /@media\(max-width:380px\)\{\.cpu-state-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /\.cpu-state-cell\.is-changed\{/);
 });
