@@ -394,7 +394,7 @@ test('power-off and on transitions update trigger state while preserving indepen
     assert.ok(app.includes('updateCircuitBoard();'), 'CPU/board display path remains alive');
     assert.ok(app.includes('restartWaveCapture();'), 'power-on resets trigger');
     assert.ok(app.includes('resetScopeCaptureState();'), 'power-off clears capture state');
-    assert.ok(app.includes('scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped''),
+    assert.ok(app.includes("scopeCaptureState.status === 'triggered' || scopeCaptureState.status === 'stopped'"),
       'frozen H/L badges show sampled levels');
   }
 });
