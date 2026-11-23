@@ -60,6 +60,9 @@ test('CPU STATE is a compact, read-only, six-value widget directly beneath the P
   }
   assert.equal((widget.match(/class="cpu-state-cell"/g) || []).length, 6);
   assert.deepEqual([...widget.matchAll(/id="cpuState(PC|C|A|B|IN|OUT)Card"/g)].map(match => match[1]), FIELDS, 'visual order matches requested sequence');
+  for (const app of [source, compiled]) {
+    assert.ok(app.includes("const CPU_STATE_FIELDS = ['PC', 'C', 'A', 'B', 'IN', 'OUT']"), 'runtime order follows the visual order');
+  }
   assert.doesNotMatch(widget, /<button|<input|<select|<textarea/, 'read-only values');
   assert.match(css, /\.cpu-state-grid\{[^}]*grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
   assert.match(css, /@media\(max-width:650px\)\{\.cpu-state-panel\{[^}]*\}\.cpu-state-grid\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
