@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f6f8">
-  <meta name="description" content="TD4 4bit CPUの基本構造、命令デコード、標準12命令の機械語と74HC ICの役割を解説。ブラウザ上のエミュレータと合わせてCPUの仕組みを学べます。">
+  <meta name="description" content="TD4 4bit CPUの2進数・16進数、命令デコード、標準12命令、STEP実行例、キャリーとJNC、74HC ICを解説。演習とFAQ付きの無料学習資料。">
   <title>TD4 4bit CPUの仕組みと命令セット | TD4 Emulator Education</title>
   <link rel="canonical" href="https://naoiw.github.io/td4/assets/education/">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="TD4 Web Emulator">
   <meta property="og:locale" content="ja_JP">
   <meta property="og:title" content="TD4 4bit CPUの仕組みと命令セット | TD4 Emulator Education">
-  <meta property="og:description" content="TD4 4bit CPUの基本構造、命令デコード、標準12命令の機械語と74HC ICの役割を解説。ブラウザ上のエミュレータと合わせてCPUの仕組みを学べます。">
+  <meta property="og:description" content="TD4 4bit CPUの2進数・16進数、命令デコード、標準12命令、STEP実行例、キャリーとJNC、74HC ICを解説。演習とFAQ付きの無料学習資料。">
   <meta property="og:url" content="https://naoiw.github.io/td4/assets/education/">
   <meta name="twitter:card" content="summary">
   <script type="application/ld+json">
@@ -20,7 +20,7 @@
     "@type": "TechArticle",
     "headline": "TD4 4bit CPUの仕組みと命令セット",
     "url": "https://naoiw.github.io/td4/assets/education/",
-    "description": "TD4 4bit CPUの基本構造、命令デコード、標準12命令の機械語と74HC ICの役割を解説。ブラウザ上のエミュレータと合わせてCPUの仕組みを学べます。",
+    "description": "TD4 4bit CPUの2進数・16進数、命令デコード、標準12命令、STEP実行例、キャリーとJNC、74HC ICを解説。演習とFAQ付きの無料学習資料。",
     "inLanguage": "ja",
     "about": {
       "@type": "Thing",
@@ -66,10 +66,14 @@
       <p>TD4が命令を読み、計算し、出力するまでを順番に理解するための技術資料です。実機風の基板を直接操作する場合は<a href="../../">Emulator</a>に戻って試せます。</p>
       <nav class="education-toc" aria-label="教育ページの目次">
         <a href="#overview">基本構造</a>
+        <a href="#binary">4bitと2進数</a>
         <a href="#cycle">命令実行の流れ</a>
         <a href="#decode">デコード解説</a>
         <a href="#instruction-set">命令セット</a>
+        <a href="#walkthrough">プログラム実行例</a>
         <a href="#hardware">74HC ICの役割</a>
+        <a href="#practice">演習</a>
+        <a href="#faq">よくある疑問</a>
       </nav>
     </section>
 
@@ -87,8 +91,29 @@
       <p class="edu-muted">A/B・PC・OUTなどは74HC161、キャリーは74HC74の論理モデルで表現しています。電圧や伝搬遅延まで再現する回路シミュレータではありません。</p>
     </section>
 
+    <section class="panel edu-section" id="binary">
+      <div class="edu-section-heading"><p class="eyebrow">02 / BINARY &amp; HEX</p><h2>4bit・2進数・16進数の読み方</h2></div>
+      <p>1bitは <strong>0か1</strong> を表します。4bitを並べると <strong>0000〜1111</strong> の16通りの値を表せます。TD4では4bitの値を、短く書ける16進数（<code>0x0</code>〜<code>0xF</code>）でも表示します。</p>
+      <div class="edu-number-grid" aria-label="4bitの値の対応例">
+        <div><span>10進数</span><strong>0</strong><code>0000₂</code><small>0x0</small></div>
+        <div><span>10進数</span><strong>5</strong><code>0101₂</code><small>0x5</small></div>
+        <div><span>10進数</span><strong>10</strong><code>1010₂</code><small>0xA</small></div>
+        <div><span>10進数</span><strong>15</strong><code>1111₂</code><small>0xF</small></div>
+      </div>
+      <p>各bitの重みは左から <strong>8・4・2・1</strong> です。例えば <code>1010₂</code> は「8 + 0 + 2 + 0 = 10」、16進数では <code>0xA</code> になります。</p>
+      <div class="edu-example">
+        <span class="edu-example-tag">EXAMPLE · 4bit OVERFLOW</span>
+        <h3>14 + 3 = 17 の結果はどうなる？</h3>
+        <div class="edu-binary-equation" aria-label="1110 + 0011 = 10001、下位4bitが0001でキャリーは1">
+          <code>1110₂</code><span>+</span><code>0011₂</code><span>=</span><code>1<span class="edu-carry-bit">0001</span>₂</code>
+        </div>
+        <p>計算結果の <code>10001₂</code> は5bit必要です。TD4のA/Bレジスタに保存するのは<strong>下位4bitの <code>0001₂</code>（1）</strong>だけで、あふれた上位1bitが<strong>キャリーフラグ C=1</strong>です。</p>
+        <p>つまり <code>MOV A, 14</code> → <code>ADD A, 3</code> の結果は <strong>A=1、C=1</strong> になります。この動作はエミュレータの「4bit加算」サンプルで確認できます。</p>
+      </div>
+    </section>
+
     <section class="panel edu-section" id="cycle">
-      <div class="edu-section-heading"><p class="eyebrow">02 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">03 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
       <div class="edu-flow">
         <div class="edu-flow-step"><span>01 · FETCH</span><strong>ROMから取得</strong><small>PCが示す番地の8bitを読む</small></div>
         <div class="edu-flow-step"><span>02 · DECODE</span><strong>入力元と書込先を選択</strong><small>命令上位4bitでMUXと制御信号を決める</small></div>
@@ -99,7 +124,7 @@
     </section>
 
     <section class="panel edu-section" id="decode">
-      <div class="edu-section-heading"><p class="eyebrow">03 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">04 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
       <div class="edu-byte-diagram" aria-label="8bit命令は上位4bitのopcodeと下位4bitのimmediateで構成">
         <div class="edu-opcode"><span>bit7 … bit4</span><strong>opcode</strong><small>命令の種類・操作先</small></div>
         <div class="edu-immediate"><span>bit3 … bit0</span><strong>Im</strong><small>加算する即値 0〜15</small></div>
@@ -263,8 +288,55 @@
       </div>
     </details>
 
+    <section class="panel edu-section" id="walkthrough">
+      <div class="edu-section-heading"><p class="eyebrow">06 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
+      <p>TD4のプログラムは、PCが示すROMの1命令をクロックの<strong>L→H（立ち上がり）</strong>で実行します。実行後にPCが次の番地へ進み、次の立ち上がりまで状態を保持します。以下はCPUをリセットした状態（A=0、B=0、OUT=0、C=0、PC=0）からの実行例です。</p>
+      <h3>例1：Bレジスタの値をLEDに表示する</h3>
+      <p><code>MOV B</code> → <code>OUT B</code> → <code>ADD B</code> → <code>JMP</code> の繰り返しです。エミュレータで電源をONにして「停止」を押し、PROGRAM EDITORに次の4行を貼り付けて「ROMに書き込む」を押すとPC=0に戻ります。その状態からSTEPで確認できます。</p>
+      <pre class="edu-program"><code>MOV B, 3
+loop: OUT B
+      ADD B, 1
+      JMP loop</code></pre>
+      <div class="edu-table-scroll" role="region" aria-label="Bレジスタを増やしてLEDに表示する命令の実行結果" tabindex="0">
+        <table class="edu-state-table">
+          <thead><tr><th scope="col">STEP</th><th scope="col">実行前PC</th><th scope="col">命令</th><th scope="col">実行後B</th><th scope="col">実行後OUT</th><th scope="col">次のPC</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1</th><td>0x0</td><td><code>MOV B, 3</code></td><td>3</td><td>0</td><td>0x1</td></tr>
+            <tr><th scope="row">2</th><td>0x1</td><td><code>OUT B</code></td><td>3</td><td>3</td><td>0x2</td></tr>
+            <tr><th scope="row">3</th><td>0x2</td><td><code>ADD B, 1</code></td><td>4</td><td>3</td><td>0x3</td></tr>
+            <tr><th scope="row">4</th><td>0x3</td><td><code>JMP loop</code></td><td>4</td><td>3</td><td>0x1</td></tr>
+            <tr><th scope="row">5</th><td>0x1</td><td><code>OUT B</code></td><td>4</td><td>4</td><td>0x2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="edu-muted">ポイント：Bが変わってもLEDのOUTがすぐに変わるわけではありません。<code>OUT B</code>を実行して初めて、Bの値がOUTに書き込まれます。ここではどの命令も桁あふれしないためC=0です。</p>
+
+      <h3>例2：キャリーがあるとJNCはジャンプしない</h3>
+      <p>サンプルプログラム「キャリーと分岐」の最初の4命令を確認します。<code>JNC</code>は<strong>実行前のC=0</strong>のときだけ分岐します。JNC自身の実行後にはC=0になります。</p>
+      <pre class="edu-program"><code>MOV A, 15
+ADD A, 1
+JNC skip
+OUT 15
+end: JMP end
+skip: OUT 0
+      JMP end</code></pre>
+      <div class="edu-table-scroll" role="region" aria-label="JNCが実行前キャリーを見る実行例" tabindex="0">
+        <table class="edu-state-table">
+          <thead><tr><th scope="col">STEP</th><th scope="col">実行前PC</th><th scope="col">命令</th><th scope="col">実行後A</th><th scope="col">実行後C</th><th scope="col">次のPC</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1</th><td>0x0</td><td><code>MOV A, 15</code></td><td>15</td><td>0</td><td>0x1</td></tr>
+            <tr><th scope="row">2</th><td>0x1</td><td><code>ADD A, 1</code></td><td>0</td><td>1</td><td>0x2</td></tr>
+            <tr><th scope="row">3</th><td>0x2</td><td><code>JNC skip</code></td><td>0</td><td>0</td><td>0x3</td></tr>
+            <tr><th scope="row">4</th><td>0x3</td><td><code>OUT 15</code></td><td>0</td><td>0</td><td>0x4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>3番目の命令が実行される直前はC=1なので、<code>JNC skip</code>では分岐せずPCが0x3へ進みます。その後の <code>OUT 15</code> でLEDがすべてONになります。<strong>JNC実行後のC=0を見て分岐したと勘違いしない</strong>ことが重要です。</p>
+      <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を試す</a><a href="#practice">次の演習へ</a></div>
+    </section>
+
     <section class="panel edu-section" id="hardware">
-      <div class="edu-section-heading"><p class="eyebrow">05 / HARDWARE</p><h2>論理ICの役割</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">07 / HARDWARE</p><h2>論理ICの役割</h2></div>
       <div class="edu-chip-grid">
         <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
         <div><strong>74HC153</strong><span>入力MUX</span><p>A・B・INPUT・0の中から演算元を選択。2個使用。</p></div>
@@ -279,6 +351,45 @@
         <p>このページはTD4の<strong>理想的な論理動作</strong>を説明します。実ICの電圧、伝搬遅延、抵抗・コンデンサの過渡応答、完全な物理配線は扱いません。端子の具体的な接続は<a href="https://github.com/naoiw/td4/blob/main/docs/netlist.md">ネットリスト</a>、実装モデルは<a href="https://github.com/naoiw/td4/blob/main/docs/architecture.md">設計資料</a>を参照してください。</p>
       </div>
     </section>
+    <section class="panel edu-section" id="practice">
+      <div class="edu-section-heading"><p class="eyebrow">08 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
+      <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
+      <div class="edu-exercise-grid">
+        <article class="edu-exercise">
+          <span>01 / 入門 · LED</span><h3>LEDスキャナの出力を予想する</h3>
+          <p>PROGRAM EDITORの「LEDスキャナ」を選び、STEPで進めます。<code>OUT 1</code> → <code>OUT 2</code> → <code>OUT 4</code> でLEDはどう変化するでしょうか？</p>
+          <details><summary>答えと確認ポイント</summary><p>OUTは1 → 2 → 4、2進数では0001 → 0010 → 0100です。1つずつ違うLEDが点灯します。OUT命令ごとにCは0になります。</p></details>
+        </article>
+        <article class="edu-exercise">
+          <span>02 / 入門 · INPUT</span><h3>スイッチを変えたらいつLEDが変わる？</h3>
+          <p>「スイッチ入力」を選び、INPUTを例えば <code>0101</code> にしてSTEPで実行。<code>IN B</code> の直後と <code>OUT B</code> の直後を比べてください。</p>
+          <details><summary>答えと確認ポイント</summary><p><code>IN B</code>ではBに5が取り込まれますが、OUTは変わりません。次の<code>OUT B</code>でOUTが5に変わり、LED0とLED2が点灯します。</p></details>
+        </article>
+        <article class="edu-exercise">
+          <span>03 / 中級 · JNC</span><h3>桁あふれの直後はどこへ進む？</h3>
+          <p>「キャリーと分岐」を選択し、<code>ADD A, 1</code> の次のSTEPでPCがどこに進むか予想します。<code>JNC</code>実行後のC表示にも注目。</p>
+          <details><summary>答えと確認ポイント</summary><p>ADD後のCは1。JNCはその旧Cを見て分岐せず、PC=0x3に進みます。JNCの実行後はC=0に更新されます。</p></details>
+        </article>
+        <article class="edu-exercise">
+          <span>04 / 中級 · 波形</span><h3>クロックの立ち上がりと停止を観察</h3>
+          <p>10Hzで実行し、LOGIC ANALYZERのCLKとPCの変化を観察します。TRIGGERをONにしてCLKのL→Hを指定したとき、何が止まるでしょうか？</p>
+          <details><summary>答えと確認ポイント</summary><p>指定エッジで波形取得が固定（TRIGGERED）されますが、CPUの自動実行は続きます。CPUを停止するにはCPU側の「停止」を使います。</p></details>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel edu-section" id="faq">
+      <div class="edu-section-heading"><p class="eyebrow">09 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
+      <div class="edu-faq">
+        <details><summary>4bit CPUなのに、命令が8bitなのはなぜ？</summary><p>4bitはA/BレジスタやALUが扱うデータの幅です。TD4では命令の幅は8bitで、上位4bitに操作の種類、下位4bitに即値を収めています。データ幅と命令幅は同じでなくても構いません。</p></details>
+        <details><summary>INPUTスイッチを変えただけでAやBは更新される？</summary><p>いいえ。INPUTは外部入力の現在値です。<code>IN A</code>または<code>IN B</code>など、入力値を読み取る命令を実行した時点でレジスタに反映されます。</p></details>
+        <details><summary>キャリーフラグCは、一度1になったら保持される？</summary><p>いいえ。TD4では各命令の加算結果に応じてCが更新されます。例えば桁あふれでC=1になっても、次の<code>JNC</code>は分岐判定に旧Cを使ったあと、実行後のCを0に更新します。</p></details>
+        <details><summary>プログラムを終了する命令はある？</summary><p>標準TD4の12命令には専用の停止命令がありません。永続的に同じ位置へジャンプする<code>end: JMP end</code>で実質的に待機させるか、画面の「停止」でCPU実行を止めます。</p></details>
+        <details><summary>波形に実際の電圧やゲートの遅延が表示される？</summary><p>いいえ。表示されるのはモデル上の論理H/Lです。電圧・遅延・チャタリングは再現しません。また、波形は直近80サンプルなので長時間の履歴を保存する用途ではありません。</p></details>
+      </div>
+      <p class="edu-muted">より詳しい実装仕様は<a href="https://github.com/naoiw/td4/blob/main/docs/architecture.md">設計・実装仕様</a>、物理端子の対応は<a href="https://github.com/naoiw/td4/blob/main/docs/netlist.md">ネットリスト</a>を参照してください。</p>
+    </section>
+
     <div class="education-bottom"><a class="btn btn-primary" href="../../">Emulatorに戻って動かす</a></div>
   </main>
 

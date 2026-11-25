@@ -21,6 +21,7 @@ pnpm run lint        # スタイルとフォーマットの検証
 | CPU/ROM/実行履歴の画面更新 | `cpu-state.test.cjs`、`app-render.test.cjs` | 数値、変化ハイライト、ROM差分更新、TRACE最大25件、クロック1回につき命令1回 |
 | オシロスコープ・トリガー | `scope-trigger.test.cjs`、`signals.test.cjs` | LIVE/ARMED/TRIGGERED/STOPPED、入力エッジ、波形80点、フリーズと再開、CPUとの独立性 |
 | PCB・レスポンシブ・旧UIの除去 | `board-layout.test.cjs`、`legacy-ui-removal.test.cjs` | DOM/スタイルと基板配置の**静的契約**。実ブラウザでのピクセル一致は保証しない |
+| Educationの教材内容 | `education-guided.test.cjs` | 4bitの演算例、JNCの旧C分岐、STEP実行表の結果をCPUコアで検証し、演習・FAQ・見出しリンクを検査 |
 | 配布ファイル | `site-assets.test.cjs` | JSの依存順、CSSの参照、Educationのリンク、Pages成果物 |
 
 ### コンパイル済みUI関数のテスト

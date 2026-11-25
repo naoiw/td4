@@ -63,5 +63,41 @@
 .edu-note p{margin:8px 0 0;font-size:11px}
 .education-bottom{text-align:center;padding:8px 0 22px}
 .education-bottom .btn{display:inline-block;text-decoration:none}
+/* Guided lessons: concise, accessible examples, fixed-width data and expandable answers. */
+.edu-number-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}
+.edu-number-grid>div{min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;border:1px solid #e1e9f3;border-radius:9px;padding:14px 10px;background:#f7faff}
+.edu-number-grid span{color:#607d9a;font-size:10px;font-weight:800}
+.edu-number-grid strong{font:800 22px ui-monospace,monospace}
+.edu-number-grid code{font-size:13px;color:#375b80}
+.edu-number-grid small{font:750 11px ui-monospace,monospace;color:#637a93}
+.edu-binary-equation{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:14px 0}
+.edu-binary-equation code{background:#fff;border:1px solid #d6e6f6;border-radius:7px;padding:10px 13px;color:#2d4b69;font-size:17px;font-weight:800}
+.edu-binary-equation>span{font-size:18px;font-weight:800;color:#69819a}
+.edu-binary-equation .edu-carry-bit{color:#24679a}
+.edu-section>h3{font-size:15px;line-height:1.5;margin:25px 0 9px}
+.edu-program{margin:13px 0;padding:15px 18px;border-radius:9px;background:#142532;color:#d6ecfa;overflow-x:auto;font:600 12px/1.85 ui-monospace,Consolas,monospace}
+.edu-program code{font:inherit;white-space:pre}
+.edu-table-scroll{max-width:100%;overflow-x:auto;border:1px solid #e0e8f1;border-radius:9px;margin:15px 0}
+.edu-state-table{border-collapse:collapse;width:100%;min-width:575px;font-size:12px}
+.edu-state-table th,.edu-state-table td{padding:10px 12px;border-bottom:1px solid #e8edf2;text-align:left;white-space:nowrap}
+.edu-state-table thead th{background:#f2f6fa;color:#60778f;font-size:10px}
+.edu-state-table tbody th{font:800 11px ui-monospace,monospace;color:#476c91}
+.edu-state-table tbody tr:last-child th,.edu-state-table tbody tr:last-child td{border-bottom:0}
+.edu-state-table tbody tr:nth-child(even){background:#fafbfd}
+.edu-lesson-actions{display:flex;align-items:center;flex-wrap:wrap;gap:15px;margin-top:18px}
+.edu-lesson-actions .btn{text-decoration:none}
+.edu-lesson-actions>a:not(.btn){color:var(--blue);font-size:12px;font-weight:750}
+.edu-exercise-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:20px}
+.edu-exercise{min-width:0;border:1px solid #e1e9f1;background:#f9fbfd;border-radius:10px;padding:18px}
+.edu-exercise>span{font-size:10px;color:#4c769e;font-weight:850}
+.edu-exercise h3{font-size:14px;margin:10px 0}
+.edu-exercise p{font-size:12px;line-height:1.8;margin:8px 0}
+.edu-exercise details,.edu-faq details{border-top:1px solid #dce5ee;padding:13px 0}
+.edu-exercise summary,.edu-faq summary{cursor:pointer;color:#315b87;font-size:12px;font-weight:800}
+.edu-exercise details p,.edu-faq details p{margin:10px 0 2px;font-size:12px;line-height:1.85}
+.edu-faq{margin:16px 0}
+.edu-faq details:first-child{border-top:0}
+.edu-faq details:last-child{border-bottom:1px solid #dce5ee}
 @media(max-width:900px){.edu-flow,.edu-chip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow-step:after{display:none}}
 @media(max-width:600px){.education-hero{padding:15px 13px}.edu-section{padding:14px}.edu-spec-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow,.edu-two-cols,.edu-chip-grid{grid-template-columns:1fr}.edu-byte-diagram>div{padding:13px}.education-page .reference-card summary{padding:15px}.education-page .reference-card .reference-content{padding:3px 12px 17px}.edu-flow-step:after{display:none}}
+@media(max-width:700px){.edu-number-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-exercise-grid{grid-template-columns:1fr}.edu-binary-equation code{font-size:14px;padding:8px}.edu-lesson-actions .btn{white-space:normal}}
