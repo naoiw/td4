@@ -292,7 +292,7 @@
       <div class="edu-section-heading"><p class="eyebrow">06 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
       <p>TD4のプログラムは、PCが示すROMの1命令をクロックの<strong>L→H（立ち上がり）</strong>で実行します。実行後にPCが次の番地へ進み、次の立ち上がりまで状態を保持します。以下はCPUをリセットした状態（A=0、B=0、OUT=0、C=0、PC=0）からの実行例です。</p>
       <h3>例1：Bレジスタの値をLEDに表示する</h3>
-      <p><code>MOV B</code> → <code>OUT B</code> → <code>ADD B</code> → <code>JMP</code> の繰り返しです。エミュレータのPROGRAM EDITORに次の4行を貼り付け、ROMに書き込んでSTEPで確認できます。</p>
+      <p><code>MOV B</code> → <code>OUT B</code> → <code>ADD B</code> → <code>JMP</code> の繰り返しです。エミュレータで電源をONにして「停止」を押し、PROGRAM EDITORに次の4行を貼り付けて「ROMに書き込む」を押すとPC=0に戻ります。その状態からSTEPで確認できます。</p>
       <pre class="edu-program"><code>MOV B, 3
 loop: OUT B
       ADD B, 1
@@ -353,11 +353,11 @@ skip: OUT 0
     </section>
     <section class="panel edu-section" id="practice">
       <div class="edu-section-heading"><p class="eyebrow">08 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
-      <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。</p>
+      <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
       <div class="edu-exercise-grid">
         <article class="edu-exercise">
           <span>01 / 入門 · LED</span><h3>LEDスキャナの出力を予想する</h3>
-          <p>QUICK STARTの「LEDスキャナ」を選び、停止してSTEPで進めます。<code>OUT 1</code> → <code>OUT 2</code> → <code>OUT 4</code> でLEDはどう変化するでしょうか？</p>
+          <p>PROGRAM EDITORの「LEDスキャナ」を選び、STEPで進めます。<code>OUT 1</code> → <code>OUT 2</code> → <code>OUT 4</code> でLEDはどう変化するでしょうか？</p>
           <details><summary>答えと確認ポイント</summary><p>OUTは1 → 2 → 4、2進数では0001 → 0010 → 0100です。1つずつ違うLEDが点灯します。OUT命令ごとにCは0になります。</p></details>
         </article>
         <article class="edu-exercise">
