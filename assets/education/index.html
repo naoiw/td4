@@ -316,7 +316,9 @@
           <svg id="seq-waveform" viewBox="0 0 768 237" role="img" aria-labelledby="seq-wave-title seq-wave-description">
             <title id="seq-wave-title">CLK・COUT・Cフラグ・レジスタbit0の波形</title>
             <desc id="seq-wave-description">クロック、D入力、記憶されたCと74HC161レジスタのbit0をステップ状の波形で示す。クロックLからHの立ち上がりでCとレジスタの状態が更新される。</desc>
-            <text x="10" y="37">CLK</text><text x="10" y="92">COUT / D</text><text x="10" y="147">C / Q</text><text x="10" y="202">PC / Q0</text>
+            <g data-seq-plot>
+              <text x="10" y="37">CLK</text><text x="10" y="92">COUT / D</text><text x="10" y="147">C / Q</text><text x="10" y="202">PC / Q0</text>
+            </g>
           </svg>
         </div>
         <p class="edu-muted">「PC / Q0」は74HC161の4bit値の最下位bitです。<strong>COUNT</strong>はPC相当、<strong>HOLD</strong>はA/B/OUT相当の動作を選ぶ簡略例で、実際のTD4プログラムの命令デコードとは連動しません。波形は最新16回の操作サンプルで、実際の経過時間は表しません。</p>
