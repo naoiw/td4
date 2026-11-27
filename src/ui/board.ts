@@ -13,6 +13,7 @@
     switches: HTMLButtonElement[];
     leds: HTMLButtonElement[];
     tracked: HTMLElement[];
+    renderedRomBytes: number[];
   }
   let boardNodes: BoardNodes | null = null;
 
@@ -239,7 +240,9 @@
       switches: [...board.querySelectorAll<HTMLButtonElement>('.schematic-io-switch')],
       leds: [...board.querySelectorAll<HTMLButtonElement>('.schematic-io-led')],
       // ROM data-net values change with the PC, so include every DIP upfront.
-      tracked: [...board.querySelectorAll<HTMLElement>('[data-net], .rom-dip')]
+      tracked: [...board.querySelectorAll<HTMLElement>('[data-net], .rom-dip')],
+      // Board ROM bytes are stable between CPU steps: update DIP switches only on edits.
+      renderedRomBytes: new Array(16).fill(-1)
     };
   }
 
@@ -294,6 +297,8 @@
       const lamp=cell.querySelector<HTMLElement>('.rom-select-lamp')!;
       lamp.classList.toggle('is-on',selected && powerOn);
       lamp.classList.toggle('is-selected',powerOn && selectedNet === `ROM_SEL_${addr}`);
+      if (nodes.renderedRomBytes[addr] === byte) continue;
+      nodes.renderedRomBytes[addr] = byte;
       cell.querySelector<HTMLElement>('.rom-slot-value')!.textContent=byte.toString(16).toUpperCase().padStart(2,'0');
       for(const btn of cell.querySelectorAll<HTMLButtonElement>('.rom-dip')){
         const bit=Number(btn.dataset.bit);
