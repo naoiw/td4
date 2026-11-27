@@ -18,6 +18,19 @@
     const p = (name, net) => ({ name, net });
     const nibble = (name, net) => [0, 1, 2, 3].map((i) => p(`${name}${i}`, `${net}${i}`));
     const byte = (name, net) => [0, 1, 2, 3, 4, 5, 6, 7].map((i) => p(`${name}${i}`, `${net}${i}`));
+    /** Physical package sizes are immutable across every chip layout. */
+    const PACKAGE_PINS = {
+        '74HC154': 24,
+        '74HC540': 20,
+        '74HC161': 16,
+        '74HC153': 16,
+        '74HC283': 16,
+        '74HC74': 14,
+        '74HC32': 14,
+        '74HC10': 14,
+        '74HC14': 14
+    };
+
     const chips = [
         {
             id: 'U13',
@@ -172,25 +185,11 @@
             pins: [p('2A', 'OSC_IN'), p('2Y', 'OSC_INV'), p('3A', 'OSC_INV'), p('3Y', 'CLK')]
         }
     ];
-    // DIP physical pad count is independent from the functional terminal positions.
-    // Left/right terminal groups follow signal flow, not physical package pin numbers.
-    const pin = (name, net) => ({ name, net });
+    // Functional pin order reflects signal flow, not literal DIP package positions.
     const row = (...pins) => pins;
-    const lines = (prefix, net, size) => Array.from({ length: size }, (_, index) => row(pin(`${prefix}${index}`, `${net}${index}`)));
+    const lines = (prefix, net, size) => Array.from({ length: size }, (_, index) => row(p(`${prefix}${index}`, `${net}${index}`)));
     const layout = (component) => {
-        const common = {
-            packagePins: {
-                '74HC154': 24,
-                '74HC540': 20,
-                '74HC161': 16,
-                '74HC153': 16,
-                '74HC283': 16,
-                '74HC74': 14,
-                '74HC32': 14,
-                '74HC10': 14,
-                '74HC14': 14
-            }[component.type]
-        };
+        const common = { packagePins: PACKAGE_PINS[component.type] };
         const make = (leftLabel, rightLabel, sections) => ({
             ...common,
             leftLabel,
@@ -199,11 +198,11 @@
         });
         if (component.type === '74HC154') {
             const left = lines('A', 'PC', 4);
-            const right = Array.from({ length: 4 }, (_, index) => row(pin(`Y${(index * 4).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4}`), pin(`Y${(index * 4 + 1).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 1}`), pin(`Y${(index * 4 + 2).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 2}`), pin(`Y${(index * 4 + 3).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 3}`)));
+            const right = Array.from({ length: 4 }, (_, index) => row(p(`Y${(index * 4).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4}`), p(`Y${(index * 4 + 1).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 1}`), p(`Y${(index * 4 + 2).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 2}`), p(`Y${(index * 4 + 3).toString(16).toUpperCase()}#`, `ROM_SEL_${index * 4 + 3}`)));
             return make('INPUT · A', 'OUTPUT · Y', [{ left, right }]);
         }
         if (component.type === '74HC540') {
-            const pair = (name, net) => Array.from({ length: 4 }, (_, index) => row(pin(`${name}${index}`, `${net}${index}`), pin(`${name}${index + 4}`, `${net}${index + 4}`)));
+            const pair = (name, net) => Array.from({ length: 4 }, (_, index) => row(p(`${name}${index}`, `${net}${index}`), p(`${name}${index + 4}`, `${net}${index + 4}`)));
             return make('INPUT · A', 'OUTPUT · Y', [
                 {
                     left: pair('A', 'ROM_RAW'),
@@ -217,14 +216,14 @@
                 label: `回路${index + 1} · bit${n}`,
                 // S0 and S1 are shared select inputs; C3 is tied LOW and hidden.
                 left: [
-                    row(pin('S0', 'SEL_A')),
-                    row(pin('S1', 'SEL_B')),
-                    row(pin(`A${n}`, `A${n}`)),
-                    row(pin(`B${n}`, `B${n}`)),
-                    row(pin(`IN${n}`, `IN${n}`))
+                    row(p('S0', 'SEL_A')),
+                    row(p('S1', 'SEL_B')),
+                    row(p(`A${n}`, `A${n}`)),
+                    row(p(`B${n}`, `B${n}`)),
+                    row(p(`IN${n}`, `IN${n}`))
                 ],
                 leftColumnBreak: 2,
-                right: [row(pin(`Y${n}`, `MUX${n}`))]
+                right: [row(p(`Y${n}`, `MUX${n}`))]
             });
             return make('INPUT · SELECT / DATA', 'OUTPUT · Y', [section(first, 0), section(second, 1)]);
         }
@@ -232,8 +231,8 @@
             return make('INPUT · A / B', 'OUTPUT · SUM / COUT', [
                 {
                     // CIN/C0 is permanently tied LOW: retain physical wiring, hide probe.
-                    left: Array.from({ length: 4 }, (_, n) => row(pin(`A${n}`, `MUX${n}`), pin(`B${n}`, `D${n}`))),
-                    right: [...lines('SUM', 'ALU', 4), row(pin('COUT', 'COUT'))],
+                    left: Array.from({ length: 4 }, (_, n) => row(p(`A${n}`, `MUX${n}`), p(`B${n}`, `D${n}`))),
+                    right: [...lines('SUM', 'ALU', 4), row(p('COUT', 'COUT'))],
                     rightColumnBreak: 4
                 }
             ]);
@@ -242,7 +241,7 @@
             return make('INPUT · D / CTRL', 'OUTPUT · Q', [
                 {
                     left: [
-                        row(pin('CLK', 'CLK')),
+                        row(p('CLK', 'CLK')),
                         // CLR# stays HIGH in the model, so omit its functional probe.
                         ...component.pins.filter((x) => x.name === 'PE#').map((x) => row(x)),
                         ...lines('D', 'ALU', 4)
@@ -268,7 +267,7 @@
             const gateGroups = netlist.gateGroups[component.id];
             if (!gateGroups)
                 throw new Error('Missing gate groups for ' + component.id);
-            const fromPin = (number) => pin(netlist.pinNames[component.id][String(number)], netlist.pinNets[component.id][String(number)]);
+            const fromPin = (number) => p(netlist.pinNames[component.id][String(number)], netlist.pinNets[component.id][String(number)]);
             const inputLabel = component.type === '74HC32' ? 'INPUT · A/B' : 'INPUT · A/B/C';
             return make(inputLabel, 'OUTPUT · Y', gateGroups.map((gate) => ({
                 label: `${gate.gate} · ${gate.purpose}`,
@@ -281,13 +280,13 @@
             return make('INPUT · A', 'OUTPUT · Y', [
                 {
                     label: 'B · OSCILLATOR',
-                    left: [row(pin('2A', 'OSC_IN'))],
-                    right: [row(pin('2Y', 'OSC_INV'))]
+                    left: [row(p('2A', 'OSC_IN'))],
+                    right: [row(p('2Y', 'OSC_INV'))]
                 },
                 {
                     label: 'C · CLOCK BUFFER',
-                    left: [row(pin('3A', 'OSC_INV'))],
-                    right: [row(pin('3Y', 'CLK'))]
+                    left: [row(p('3A', 'OSC_INV'))],
+                    right: [row(p('3Y', 'CLK'))]
                 }
             ]);
         }
