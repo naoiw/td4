@@ -25,7 +25,7 @@
   function transition(state, inputs, action) {
     bit(state.clock); bit(state.carry); word(state.register);
     bit(inputs.d); word(inputs.parallel); mode(inputs.mode);
-    if (action === 'reset') return {...initialState(), edge:'reset'};
+    if (action === 'reset') return {...state, carry:0, register:0, edge:'reset'};
     if (action !== 'tick') throw new RangeError('Unsupported clock action');
     if (state.clock) return {...state, clock:0, edge:'fall'};
     const register = inputs.mode === 'load' ? inputs.parallel
@@ -71,7 +71,9 @@
     }
 
     function drawWave() {
-      while (wave.firstChild) wave.removeChild(wave.firstChild);
+      const plot = wave.querySelector('[data-seq-plot]');
+      if (!plot) return;
+      while (plot.firstChild) plot.removeChild(plot.firstChild);
       const width = 768;
       const left = 106;
       const right = 746;
@@ -83,8 +85,8 @@
         {label:'PC / Q0', key:'register', y:198, color:'#825a9e'}
       ];
       lanes.forEach(lane => {
-        wave.appendChild(svgElement('text',{x:10,y:lane.y + 4,'font-size':13,'font-weight':750,fill:'#344e67'})).textContent = lane.label;
-        wave.appendChild(svgElement('line',{x1:left,y1:lane.y+16,x2:width-13,y2:lane.y+16,stroke:'#dae4ed','stroke-width':1}));
+        plot.appendChild(svgElement('text',{x:10,y:lane.y + 4,'font-size':13,'font-weight':750,fill:'#344e67'})).textContent = lane.label;
+        plot.appendChild(svgElement('line',{x1:left,y1:lane.y+16,x2:width-13,y2:lane.y+16,stroke:'#dae4ed','stroke-width':1}));
         const logical = entry => lane.key === 'register' ? entry.register & 1 : entry[lane.key];
         const y = value => lane.y + (value ? -13 : 13);
         let path = '';
@@ -95,15 +97,15 @@
           else path += ' H' + x + ' V' + y(level);
         });
         if (history.length > 0) path += ' H' + (width - 13);
-        wave.appendChild(svgElement('path',{d:path,stroke:lane.color,'stroke-width':3,fill:'none','stroke-linejoin':'round'}));
+        plot.appendChild(svgElement('path',{d:path,stroke:lane.color,'stroke-width':3,fill:'none','stroke-linejoin':'round'}));
       });
       history.forEach((entry, index) => {
         const x = left + index * step;
         if (entry.edge === 'rise') {
-          wave.appendChild(svgElement('line',{x1:x,y1:9,x2:x,y2:227,stroke:'#b5d6bf','stroke-width':1,'stroke-dasharray':'3 5'}));
+          plot.appendChild(svgElement('line',{x1:x,y1:9,x2:x,y2:227,stroke:'#b5d6bf','stroke-width':1,'stroke-dasharray':'3 5'}));
         }
         if (entry.edge === 'reset') {
-          wave.appendChild(svgElement('line',{x1:x,y1:9,x2:x,y2:227,stroke:'#e1a6a6','stroke-width':1,'stroke-dasharray':'3 5'}));
+          plot.appendChild(svgElement('line',{x1:x,y1:9,x2:x,y2:227,stroke:'#e1a6a6','stroke-width':1,'stroke-dasharray':'3 5'}));
         }
       });
     }
