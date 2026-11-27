@@ -1,15 +1,26 @@
 // Minimal, dependency-free style checks for the TypeScript editing sources.
 import {readFileSync, readdirSync} from 'node:fs';
-import {join} from 'node:path';
+import {extname, join} from 'node:path';
 
-function filesIn(dir) {
+/** Only check hand-edited text sources; generated assets/js are verified by CI. */
+function filesIn(dir, extensions) {
   return readdirSync(dir, {withFileTypes: true}).flatMap(entry => {
     const full = join(dir, entry.name);
-    return entry.isDirectory() ? filesIn(full) : full.endsWith('.ts') ? [full] : [];
+    if (entry.isDirectory()) return filesIn(full, extensions);
+    return entry.isFile() && extensions.includes(extname(entry.name)) ? [full] : [];
   });
 }
 
-const paths = [...filesIn('src'), 'package.json', 'tsconfig.json'];
+const paths = [
+  ...filesIn('src', ['.ts']),
+  ...filesIn('assets/education', ['.html', '.js']),
+  ...filesIn('assets/css', ['.css']),
+  ...filesIn('scripts', ['.mjs']),
+  ...filesIn('tests', ['.cjs']),
+  ...filesIn('docs', ['.md']),
+  ...filesIn('.github/workflows', ['.yml', '.yaml']),
+  'index.html', 'README.md', 'package.json', 'tsconfig.json'
+].sort();
 const failures = [];
 for (const path of paths) {
   const contents = readFileSync(path, 'utf8');
