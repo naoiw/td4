@@ -2,6 +2,24 @@
 
 利用方法は[操作ガイド](usage.md)、物理端子とネットの確定状況は[ネットリスト](netlist.md)、テストの構成は[テスト方針](testing.md)、CIと公開手順は[開発・デプロイ](deployment.md)を参照してください。
 
+## ソースの責務と依存関係（現行実装）
+
+```text
+src/core/td4-core.ts      CPU実行、ALU/MUX、アセンブラ・逆アセンブラ
+        │
+        ├─ src/core/signals.ts      波形用の論理値・サンプリング
+        └─ src/core/ic-circuit.ts   74HC機能ネット・ピン表・基板レイアウト
+                ↑                          ↑
+src/ui/app.ts  ────────→ src/ui/board.ts   │  基板DOM・ROM DIP・IC詳細
+  電源/クロック/PC/ROM/履歴/波形の状態管理    │
+                                           │
+src/data/netlist.json → scripts/generate-netlist.mjs → assets/js/data/netlist.js
+```
+
+実行時は `index.html` から生成済み `assets/js/` を依存順に読み込みます。TypeScriptとネットリストJSONが正本で、生成物を手編集しません。Educationは `assets/education/index.html` と5つの教材用JSで構成し、`TD4.CPU`・`TD4.decodeALU`・`TD4Circuit.levels` を共有します。教材の章順と責務は [Educationの構成](education.md) を参照してください。
+
+
+
 ## 基本構成
 
 TD4は4bitレジスタA/B、4bitのPC、キャリーフラグ、4bit入力スイッチ、4bit LED出力、16×8bit ROMから構成されます。本実装はCPUを命令単位で模擬し、元の74HC153に基づく入力MUXと4bit加算の動作を再現します（非公式な命令バイトも含む）。
@@ -206,10 +224,12 @@ Educationの学習順序・セクションID・教材JSの依存関係・表記�
 ## 描画・状態管理・テスト構成（2026-11）
 
 - **CPU／ロジック**：命令実行・信号波形・ICネットのALU/MUXデコードは `TD4.decodeALU` を共有します。CommonJS／ブラウザ向けグローバル配布方式を維持し、Viteなどのバンドラーは使いません。
-- **DOM参照**：`src/ui/app.ts` は変化しない要素IDを `elementCache` でキャッシュします。`src/ui/board.ts` も部品生成を補助関数に分け、基板の固定DOM参照・追跡候補を保持します。
-- **PROGRAM ROM**：初回に16行×8bitのボタン・表示セルを `romRowNodes` に保存します。`renderROM()` はPCとブレークポイントを各回反映しつつ、ROMバイトの値が変わった行だけビット表示・HEX・逆アセンブルを更新します。
+- **DOM参照**：`src/ui/app.ts` は変化しない要素IDを `elementCache` でキャッシュします。`src/ui/board.ts` は部品生成・基板の固定DOM参照・追跡候補を保持し、ROM各行の描画済みバイトを `renderedRomBytes` で管理します。PC・電源・選択ネットは毎回追従しますが、DIP 128個のビット/ARIA属性はROMバイトが変わった行だけ更新します。
+- **PROGRAM ROM**：初回に16行×8bitのボタン・表示セルを `romRowNodes` に保存します。`renderROM()` はPCとブレークポイントを各回反映しつつ、ROMバイトが変わった行だけビット表示・HEX・逆アセンブルを更新します。ROM表・基板DIPのどちらからビット変更しても `toggleRomBit()` がCPUを停止し、1bit反転、表示・波形・未同期メッセージ更新を共通実行します。
 - **基板描画**：`renderCPU()` から基板更新を1回行い、波形記録用の `recordSignals()` で二重更新しません。CLKの立ち下がりは `setClockLow()` から基板を更新します。
 - **EXECUTION TRACE**：`MAX_TRACE_ENTRIES=25`。通常の命令実行では `prependHistory()` で新しい1行を先頭へ追加し、上限を超えた末尾を削除します。電源操作やROM再ロード時は `renderHistory()` で初期化します。
 - **LOGIC ANALYZER**：波形SVGの10行は初回に構築し、以後は信号パスとH/Lを更新します。取得状態は `ScopeCaptureState` の `live`／`armed`／`triggered`／`stopped` に集約し、固定状態とその時点の信号スナップショットをセットで保持します。画面の `OFF` 表示は電源状態から導出します。
-- **テスト**：CPUや波形の入出力を検証する動作テストを基本とし、レイアウトの静的契約は別途維持します。`tests/helpers/compiled-app.cjs` はTypeScript ASTを使い、生成済みJSの関数を名前で抽出してVM実行します。`tests/app-render.test.cjs` はROM差分更新・TRACE・クロックを直接検証します。詳細は[テスト方針](testing.md)を参照してください。
+- **テスト**：CPUや波形の入出力を検証する動作テストを基本とし、レイアウトの静的契約は維持します。`tests/helpers/compiled-app.cjs` はTypeScript ASTを使い、実際の配布JSから名前で関数を抽出しVMで実行します。`tests/app-render.test.cjs` に加え、`tests/ui-refactor.test.cjs` でROMビット操作の共通フローと変更行だけのDIP更新を検証します。詳細は[テスト方針](testing.md)を参照してください。
 - **ソースと生成物**：`src/**/*.ts` が編集元です。`pnpm run build` で `assets/js/**` を生成して一緒にコミットし、GitHub Actionsで生成物の整合性を確認します。アプリ本体・CSS・テスト用ヘルパーの責務を分離します。
+- **物理パッケージ情報**：`src/core/ic-circuit.ts` のパッケージ別ピン数は固定表 `PACKAGE_PINS` で一元化しています。論理プローブは `p()` を共用し、物理ピンのネット接続・部品ごとの信号はレビュー済みネットリストから求めます。
+- **リリース前検証**：自動テストのほか `develop` の実画面・Education教材の操作を[main統合前チェックリスト](release-checklist.md)で確認してから本番用PRを作成します。
