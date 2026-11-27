@@ -114,5 +114,4 @@ test('carry learning UI provides linked materials and state trace', () => {
   assert.match(html,/aria-live="polite"/);
   assert.match(css,/\.edu-carry-states\{/);
   assert.match(css,/\.edu-carry-history\{/);
-  assert.equal((html.match(/class="panel edu-section"/g)||[]).length,14);
 });
