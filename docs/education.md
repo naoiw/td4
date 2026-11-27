@@ -45,7 +45,7 @@ Education は [本番](https://naoiw.github.io/td4/assets/education/) と [devel
 | `assets/education/carry-jnc.js` | JNCの5ケースを実際の `TD4.CPU` で1命令ずつ実行 |
 | `assets/education/logic-basics.js` | 真理値表と半加算器・全加算器の独立した教材ロジック |
 | `assets/education/sequential.js` | 74HC74・74HC161の概念的な半周期操作と波形教材 |
-| `assets/css/education.css` | Education専用スタイル（共有の `style.css` に追加） |
+| `assets/css/education.css` | Education専用スタイル（共有の `style.css` と併用） |
 
 `td4-core.js` → `ic-circuit.js` → 各教育教材スクリプトの順に `defer` で読み込みます。実行中のEmulatorとEducation教材は状態を共有しません。数値や信号の処理を重複実装する必要が生じた場合は、まず共有CPU・ICロジックの再利用を検討してください。
 
