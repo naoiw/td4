@@ -471,8 +471,15 @@ test('ROM edits and breakpoints pause CPU without shutting off the PCB power',()
     assert.match(stopBody,/clearInterval\(intervalId\)/);
     assert.match(stopBody,/setClockLow\(\)/);
     assert.doesNotMatch(stopBody,/powerOn = false|setPower\(false\)/);
-    assert.match(source,/onRomBitToggle\(addr, bit\)\s*\{\s*stop\(\)/);
-    assert.match(source,/button\.addEventListener\('click', \(\) => \{\s*stop\(\);\s*cpu\.rom\[addr\]/);
+    const editStart=source.indexOf('function toggleRomBit(');
+    const editEnd=source.indexOf('function buildCircuitBoard(',editStart);
+    assert.ok(editStart>=0 && editEnd>editStart,'shared ROM edit function');
+    const editBody=source.slice(editStart,editEnd);
+    assert.match(editBody,/stop\(\)/);
+    assert.match(editBody,/cpu\.rom\[address\] \^= 1 << bit/);
+    assert.match(editBody,/refreshRomAfterEdit\(message\)/);
+    assert.match(source,/onRomBitToggle\(addr, bit\)\s*\{\s*toggleRomBit\(addr, bit,/);
+    assert.match(source,/button\.addEventListener\('click', \(\) => \{\s*toggleRomBit\(addr, bit,/);
     assert.match(source,/if \(breakpoints\.has\(cpu\.pc\)\)\s*\{\s*stop\(/);
     assert.match(source,/\('runPauseBtn'\)\.addEventListener\('click', toggleRunPause\)/);
     assert.match(source,/\('powerOffBtn'\)\.addEventListener\('click', \(\) => setPower\(false\)\)/);

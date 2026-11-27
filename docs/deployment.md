@@ -55,6 +55,12 @@ Educationは `assets/education/index.html` に配置し、既存の `assets/` �
 - ローカルでの整形・チェックは `pnpm run lint`、型チェックは `pnpm run typecheck`、テストは `pnpm test`、ビルドを含む総合検証は `pnpm run verify` です。テストはNode.jsの実行結果検証とHTML/CSSの静的構造検証を併用しています。詳しくは[テスト方針](testing.md)を参照してください。
 - 依存関係の更新時は `pnpm install` で `pnpm-lock.yaml` を更新してコミットします。`package-lock.json` は使用しません。生成した `assets/js/` はソースと一緒にコミットし、CIで整合性を確認します。
 
+## main統合前のレビュー
+
+`develop`のCI・Pagesが成功していても、`main`には自動反映されません。次のステップは[main統合前チェックリスト](release-checklist.md)を利用して、Emulator・Educationを開発プレビュー上で操作し、端末幅や動作の回帰を確認することです。必要に応じてソースと生成JSの差分、`main...develop`の比較、残件Issue・PRをレビューしてから、`develop` → `main` のリリースPRを作成します。確認前に`main`を更新しないでください。
+
+開発用の `assets/js/ui/app.js` / `board.js` / `core/*.js` は `src/**/*.ts` から生成され、`assets/js/data/netlist.js` は `src/data/netlist.json` から生成されます。レビュー前にCIの `Verify generated JavaScript is committed` の成功を確認します。LintはTypeScriptに加え、Education教材、CSS、docs、ワークフロー、テストの手編集ソースも対象とします。生成物はこの手編集チェックの対象に含めません。
+
 ## 注意
 
 - 既存のGitHub Pagesの**公開元設定だけは管理者がUIから切り替える必要があります**。

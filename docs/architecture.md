@@ -2,6 +2,24 @@
 
 利用方法は[操作ガイド](usage.md)、物理端子とネットの確定状況は[ネットリスト](netlist.md)、テストの構成は[テスト方針](testing.md)、CIと公開手順は[開発・デプロイ](deployment.md)を参照してください。
 
+## ソースの責務と依存関係（現行実装）
+
+```text
+src/core/td4-core.ts      CPU実行、ALU/MUX、アセンブラ・逆アセンブラ
+        │
+        ├─ src/core/signals.ts      波形用の論理値・サンプリング
+        └─ src/core/ic-circuit.ts   74HC機能ネット・ピン表・基板レイアウト
+                ↑                          ↑
+src/ui/app.ts  ────────→ src/ui/board.ts   │  基板DOM・ROM DIP・IC詳細
+  電源/クロック/PC/ROM/履歴/波形の状態管理    │
+                                           │
+src/data/netlist.json → scripts/generate-netlist.mjs → assets/js/data/netlist.js
+```
+
+実行時は `index.html` から生成済み `assets/js/` を依存順に読み込みます。TypeScriptとネットリストJSONが正本で、生成物を手編集しません。Educationは `assets/education/index.html` と5つの教材用JSで構成し、`TD4.CPU`・`TD4.decodeALU`・`TD4Circuit.levels` を共有します。教材の章順と責務は [Educationの構成](education.md) を参照してください。
+
+
+
 ## 基本構成
 
 TD4は4bitレジスタA/B、4bitのPC、キャリーフラグ、4bit入力スイッチ、4bit LED出力、16×8bit ROMから構成されます。本実装はCPUを命令単位で模擬し、元の74HC153に基づく入力MUXと4bit加算の動作を再現します（非公式な命令バイトも含む）。
@@ -46,7 +64,7 @@ CSSベースのボードに、PC、ROM、A/Bレジスタ、ALU、出力ラッチ
 信号グループは基本信号・入出力・レジスタA/B・PC / ALU・ROMの5種類です。PC / ALUは `CLK, C, PC3, PC2, PC1, PC0, ALU3, ALU2, ALU1, ALU0` の10信号をまとめて表示します。各グループを10信号以下（レジスタA/BとPC / ALUは10、ROMは9）に制限し、波形領域には常に10行分の枠を表示し、未使用チャンネルは「-」・状態「×」として波形とグリッド線を描きません。10行はグリッドで等分配置し、最上段と最下段の上下余白が同じになるようにします。縦スクロールはありません。隣のEXECUTION TRACEと高さを合わせ、デスクトップでは両パネルを600pxに固定します。650px以下では操作欄の折り返しに対応して両パネルを680pxに固定し、実行履歴のみ内部スクロールします。各信号の直近80サンプルをSVGのステップ波形で描画します。長期連続実行でもメモリ使用量は固定で、画面再描画は高クロック時に制限します。波形取得方式は `WaveCaptureMode = 'cpu' | 'oscilloscope'` の内部設定（初期値 `oscilloscope`）で管理します。`cpu` モードは電源ONかつCPU実行中のクロック/入力操作でのみサンプルを追記し、CPU停止中のINPUT操作では現在のH/L表示と基板は更新するものの、波形履歴は凍結します。信号グループを切り替えるか「波形を消去」を押した際は履歴をクリアし、CPU停止中なら再実行時まで空欄とします。`oscilloscope` モードはCPUのクロックと独立した20ms（50サンプル/秒）のタイマーで電源ON中に連続サンプリングし、CPU停止中はCPU内部信号の論理値を保持した水平波形として記録します（INPUTが非同期に変化した場合は入力イベントで即時に変化点を記録し、次の取得周期以降も変化後の論理値を保持して表示）。電源OFF時はタイマーを停止します。切替は画面に露出せず、`window.TD4WaveCapture.setMode('cpu' | 'oscilloscope')` と `getMode()` で内部的に操作できます。オシロスコープはCLKの最大10Hz（1周期100ms）を5サンプル/周期で記録し、2Hz（1周期500ms）は25サンプル/周期となるので、実際の5倍の周期差を波形で確認できます。波形取得は20msごとに継続しつつSVG描画は40ms以上の間隔に抑えます。80サンプルの表示時間幅は約1.6秒です（INPUTの即時変化点記録時は時間軸がサンプル基準のため厳密な等間隔ではありません）。両モードとも直近80サンプルで制限し、CPUの実行状態やROM内容には影響を与えません。
 
 **トリガー機能（Issue #73）**：初期状態は `scopeTriggerEnabled=false`（チェックボックス「TRIGGER ENABLE」OFF）です。この場合、電源ON中はLIVE状態で過去80点の波形を連続更新し、エッジ検出ではフリーズしません。ENABLE＝ONの場合に限りARMEDとなり、表示グループの1信号（既定値CLK）のエッジ（L→H／H→L）を監視します。初回値はベースラインとし、すでにHであるだけでは立ち上がりとして扱いません。条件成立時に最新サンプルを含む最大80点の波形と、その瞬間のH/Lを保持してTRIGGEREDへ移ります。以後、オシロスコープのサンプル追加と再描画を抑止しますが、CPUの自動クロック・レジスタ・基板・EXECUTION TRACEは継続します。20msの独立タイマー自体は維持し、TRIGGERED中は処理をスキップします。
- 
+
 ENABLEのON/OFF切り替えでは既存の波形履歴を保持し、現在の信号レベルをエッジ判定のベースラインにして、その後に最初に成立したエッジでのみ取得をフリーズします。ENABLEがARMED中にOFFになると履歴を保持したままLIVE取得に戻ります。ただし**TRIGGEREDになった後はENABLEのON/OFFでフリーズを解除しません**。TRIGGERED中のCH・Edge変更でもフリーズを保持し、再測定するにはRUNまたは「波形を消去」が必要です。波形取得中はオシロ専用ボタンをSTOPと表示し、STOP操作でその瞬間の波形/H/Lを固定してSTOPPED状態にします（CPUには影響しません）。STOPPED／TRIGGERED中は同じボタンをRUNと表示し、RUN操作では履歴をクリアし取得を再開します。「波形を消去」もクリアして再開します。**表示信号グループ切替時はENABLEをOFFに戻して新規LIVE波形を表示**します。一方、**CHとエッジの変更では波形履歴を保持**し、取得中だけ新しい条件に再ARMします。フリーズ中は波形を固定したまま設定だけを変更します。再ARM時はCPUの現在の信号レベルを前回値にして、古いトリガー地点からの疑似エッジを防ぎます。エッジ選択はSVGで矩形波形と方向矢印を描く2ボタン（`aria-pressed`付き）で行います。CH選択プルダウンは使わず、オシロ波形左側の信号名ボタン（`aria-pressed`付き）をクリックして1CHを選択し、選択チャンネルの文字色・背景を強調します。未使用行は無効化します。グループ変更時に旧CHが残っていれば保持し、なければ先頭（通常CLK）へ移します。LOGIC ANALYZERとEXECUTION TRACEは、`scope-layout`の`grid-auto-rows:600px`で両パネルの高さを固定します。650px以下では操作欄の折り返しに備えて680pxへ切り替えます。900px以下で上下配置に切り替わっても各パネルの高さは等しく、TRACE件数やCPUの実行状態によって縦に伸びません。履歴はEXECUTION TRACE内の`ol`だけをスクロールさせ、最大25命令を保持します。電源OFF時は状態表示をOFFに戻し、再投入時はENABLEの状態に応じてLIVEまたはARMEDになります。通常のサンプリングは50Hzであり、短い変化を取り逃す場合があります（INPUT操作・手動STEPはその操作時にも取得）。厳密な時間軸・アナログ特性は対象外です。
 
 **波形取得状態の実装**：`src/ui/app.ts` は `ScopeCaptureState` を判別可能な共用体として管理します。取得中は `{status: 'live' | 'armed', previousLevel}`、固定中は `{status: 'triggered' | 'stopped', levels}` となり、固定中のH/Lスナップショットが状態と不可分です。`scopeTriggerEnabled` はトリガー設定であり取得状態とは独立しているため、TRIGGERED後に設定をOFFにしても固定を維持します。表示上の `OFF` は電源状態 `powerOn=false` から導出し、電源OFF時は固定状態を解除します。状態復帰は `resetScopeCaptureState()`、入力チャンネル・エッジ・ENABLE変更に伴う再アームは `rearmScopeTrigger()` に集約します。
@@ -206,10 +224,12 @@ Educationの学習順序・セクションID・教材JSの依存関係・表記�
 ## 描画・状態管理・テスト構成（2026-11）
 
 - **CPU／ロジック**：命令実行・信号波形・ICネットのALU/MUXデコードは `TD4.decodeALU` を共有します。CommonJS／ブラウザ向けグローバル配布方式を維持し、Viteなどのバンドラーは使いません。
-- **DOM参照**：`src/ui/app.ts` は変化しない要素IDを `elementCache` でキャッシュします。`src/ui/board.ts` も部品生成を補助関数に分け、基板の固定DOM参照・追跡候補を保持します。
-- **PROGRAM ROM**：初回に16行×8bitのボタン・表示セルを `romRowNodes` に保存します。`renderROM()` はPCとブレークポイントを各回反映しつつ、ROMバイトの値が変わった行だけビット表示・HEX・逆アセンブルを更新します。
+- **DOM参照**：`src/ui/app.ts` は変化しない要素IDを `elementCache` でキャッシュします。`src/ui/board.ts` は部品生成・基板の固定DOM参照・追跡候補を保持し、ROM各行の描画済みバイトを `renderedRomBytes` で管理します。PC・電源・選択ネットは毎回追従しますが、DIP 128個のビット/ARIA属性はROMバイトが変わった行だけ更新します。
+- **PROGRAM ROM**：初回に16行×8bitのボタン・表示セルを `romRowNodes` に保存します。`renderROM()` はPCとブレークポイントを各回反映しつつ、ROMバイトが変わった行だけビット表示・HEX・逆アセンブルを更新します。ROM表・基板DIPのどちらからビット変更しても `toggleRomBit()` がCPUを停止し、1bit反転、表示・波形・未同期メッセージ更新を共通実行します。
 - **基板描画**：`renderCPU()` から基板更新を1回行い、波形記録用の `recordSignals()` で二重更新しません。CLKの立ち下がりは `setClockLow()` から基板を更新します。
 - **EXECUTION TRACE**：`MAX_TRACE_ENTRIES=25`。通常の命令実行では `prependHistory()` で新しい1行を先頭へ追加し、上限を超えた末尾を削除します。電源操作やROM再ロード時は `renderHistory()` で初期化します。
 - **LOGIC ANALYZER**：波形SVGの10行は初回に構築し、以後は信号パスとH/Lを更新します。取得状態は `ScopeCaptureState` の `live`／`armed`／`triggered`／`stopped` に集約し、固定状態とその時点の信号スナップショットをセットで保持します。画面の `OFF` 表示は電源状態から導出します。
-- **テスト**：CPUや波形の入出力を検証する動作テストを基本とし、レイアウトの静的契約は別途維持します。`tests/helpers/compiled-app.cjs` はTypeScript ASTを使い、生成済みJSの関数を名前で抽出してVM実行します。`tests/app-render.test.cjs` はROM差分更新・TRACE・クロックを直接検証します。詳細は[テスト方針](testing.md)を参照してください。
+- **テスト**：CPUや波形の入出力を検証する動作テストを基本とし、レイアウトの静的契約は維持します。`tests/helpers/compiled-app.cjs` はTypeScript ASTを使い、実際の配布JSから名前で関数を抽出しVMで実行します。`tests/app-render.test.cjs` に加え、`tests/ui-refactor.test.cjs` でROMビット操作の共通フローと変更行だけのDIP更新を検証します。詳細は[テスト方針](testing.md)を参照してください。
 - **ソースと生成物**：`src/**/*.ts` が編集元です。`pnpm run build` で `assets/js/**` を生成して一緒にコミットし、GitHub Actionsで生成物の整合性を確認します。アプリ本体・CSS・テスト用ヘルパーの責務を分離します。
+- **物理パッケージ情報**：`src/core/ic-circuit.ts` のパッケージ別ピン数は固定表 `PACKAGE_PINS` で一元化しています。論理プローブは `p()` を共用し、物理ピンのネット接続・部品ごとの信号はレビュー済みネットリストから求めます。
+- **リリース前検証**：自動テストのほか `develop` の実画面・Education教材の操作を[main統合前チェックリスト](release-checklist.md)で確認してから本番用PRを作成します。

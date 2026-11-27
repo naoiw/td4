@@ -49,6 +49,12 @@ Education は [本番](https://naoiw.github.io/td4/assets/education/) と [devel
 
 `td4-core.js` → `ic-circuit.js` → 各教育教材スクリプトの順に `defer` で読み込みます。実行中のEmulatorとEducation教材は状態を共有しません。数値や信号の処理を重複実装する必要が生じた場合は、まず共有CPU・ICロジックの再利用を検討してください。
 
+## 共有モデルと画面状態の境界
+
+EmulatorのCPU命令の実行は `src/core/td4-core.ts`、ICの各信号レベルは `src/core/ic-circuit.ts` が正本です。`datapath.js`・`rom-decode.js`・`carry-jnc.js` はこの共有モデルを呼び出し、教材専用の状態だけを保持します。`logic-basics.js` と `sequential.js` は論理説明用の独立モデルであり、電圧・遅延のシミュレーションではありません。
+
+教材用JavaScript・HTML・CSSは `scripts/check-style.mjs` の基本書式検査対象です。EmulatorとEducation間でCPUレジスタ値やROM編集結果は共有されません。教材からの操作を実機の状態に反映させたい場合は、明示的にEmulatorでSTEP実行してください。
+
 ## テスト
 
 ```bash
