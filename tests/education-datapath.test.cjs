@@ -31,6 +31,11 @@ test('Education datapath has selectable instruction examples and accessible diag
   assert.match(css, /\.edu-datapath-svg\{/);
   assert.match(css, /\.dp-path\.is-active\{/);
   assert.match(script, /add\('write-' \+ state.destination\)/);
+  assert.match(script, /new core\.CPU\(rom\)/, 'data path uses the shared emulator CPU');
+  assert.match(script, /core\.decodeALU\(/, 'data path uses the shared ALU logic');
+  assert.ok(html.indexOf('src="../js/core/td4-core.js"') < html.indexOf('src="datapath.js"'),
+    'CPU core must load before dependent educational scripts');
+
   for (const route of ['fetch', 'source-A', 'source-B', 'source-INPUT', 'source-0', 'immediate', 'operand', 'result', 'write-A', 'write-B', 'write-OUT', 'write-PC', 'carry-out', 'carry-latched', 'old-carry']) {
     assert.ok(html.includes('data-flow-route="' + route + '"'), 'route: ' + route);
   }

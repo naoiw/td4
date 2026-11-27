@@ -96,6 +96,7 @@ LEDスキャナは末尾の `OUT 1`、次の `JMP`、先頭の `OUT 1` の間、
 - [Education（本番）](https://naoiw.github.io/td4/assets/education/) — 4bit CPUの構造・命令実行フロー・命令デコード・標準12命令・74HC ICの役割
 - [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 74HC詳細解説・CPUデータフロー・クロック・CフラグとJNC・ROMの行選択と命令デコードを学べる開発中のページ
 - Educationからはヘッダーの **Emulator** で操作画面へ戻れます。
+- 教材の読み進め方と各JavaScriptの責務は [Educationの構成と保守方針](education.md) を参照してください。
 
 ## シミュレーションの範囲
 

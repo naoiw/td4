@@ -5,9 +5,14 @@
 .education-hero h1{font-size:clamp(19px,2vw,24px);line-height:1.4;letter-spacing:-.4px;margin:7px 0 12px}
 .education-hero p:not(.eyebrow){font-size:12px;line-height:1.85;color:#637486;margin:0}
 .education-hero a{color:var(--blue)}
-.education-toc{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-.education-toc a{text-decoration:none;color:#466281;background:#f9fbfe;border:1px solid #d9e0e7;border-radius:8px;padding:9px 12px;font-weight:700;font-size:11px}
-.education-toc a:hover{background:#eff7ff;border-color:#95b3d1}
+.education-toc{display:grid;gap:9px;margin-top:18px}
+.education-toc-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:#fbfcfe;border:1px solid #e4eaf0;border-radius:9px}
+.education-toc-label{min-width:88px;font-size:11px;font-weight:850;color:#5a7390}
+.education-toc a{text-decoration:none;color:#466281;background:#fff;border:1px solid #d9e0e7;border-radius:8px;padding:9px 12px;font-weight:700;font-size:11px}
+.education-toc a:hover,.education-toc a:focus-visible{background:#eff7ff;border-color:#95b3d1}
+.education-toc a:focus-visible{outline:2px solid #8db8df;outline-offset:2px}
+.education-hero .edu-learning-path{margin-top:12px;font-size:11px;color:#607994}
+@media(max-width:650px){.education-toc-group{gap:6px}.education-toc-label{flex-basis:100%;min-width:0}.education-toc a{padding:8px 10px}}
 .edu-section{scroll-margin-top:16px}
 .edu-section-heading{margin-bottom:15px}
 .edu-section-heading h2{margin:0;font-size:19px;letter-spacing:-.4px;font-weight:780}

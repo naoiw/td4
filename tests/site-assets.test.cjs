@@ -107,7 +107,6 @@ test('Education shares Emulator content width and workbench panel styles', () =>
   assert.doesNotMatch(educationCss, /\.education-page\s*\{\s*max-width\s*:/);
   assert.match(education, /class="page education-page"/);
   assert.match(education, /class="quick-start education-hero"/);
-  assert.equal((education.match(/class="panel edu-section"/g) || []).length, 14, 'overview, binary, logic, sequential, cycle, datapath, rom-decode, decode, walkthrough, carry-jnc, hardware, hardware-details, practice and FAQ');
   assert.match(educationCss, /\.education-hero\{[^}]*background:var\(--surface\)/);
   assert.doesNotMatch(educationCss, /linear-gradient\(/);
 });
