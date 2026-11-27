@@ -18,7 +18,7 @@ function steps(program, count) {
 }
 
 test('Education navigation covers the curriculum and answers are collapsible', () => {
-  const expected = ['overview','binary','logic','cycle','datapath','decode','walkthrough','hardware','hardware-details','practice','faq'];
+  const expected = ['overview','binary','logic','sequential','cycle','datapath','decode','walkthrough','hardware','hardware-details','practice','faq'];
   const sectionIds = [...education.matchAll(/<section class="panel edu-section" id="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(sectionIds, expected);
   for (const id of expected) assert.ok(education.includes('href="#' + id + '"'), 'anchor to ' + id);
