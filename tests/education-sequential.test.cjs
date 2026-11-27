@@ -102,7 +102,7 @@ test('Education adds accessible sequential learning section with waveform and IC
   assert.match(html, /href="#walkthrough"/);
   assert.match(css, /\.edu-seq-wave-scroll\{/);
   assert.match(css, /\.edu-seq-history\{/);
-  assert.equal((html.match(/class="panel edu-section"/g) || []).length,13);
+  assert.equal((html.match(/class="panel edu-section"/g) || []).length,14);
 });
 
 test('educational input validation prevents invalid bit, register and mode values', () => {
