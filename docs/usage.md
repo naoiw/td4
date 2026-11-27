@@ -94,7 +94,7 @@ LEDスキャナは末尾の `OUT 1`、次の `JMP`、先頭の `OUT 1` の間、
 メイン画面の命令セット一覧は、ヘッダーの **Education** から開ける独立ページへ移しました。
 
 - [Education（本番）](https://naoiw.github.io/td4/assets/education/) — 4bit CPUの構造・命令実行フロー・命令デコード・標準12命令・74HC ICの役割
-- [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 開発中のページ
+- [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 74HCの詳細解説と命令選択式CPUデータフロー図を追加した開発中のページ
 - Educationからはヘッダーの **Emulator** で操作画面へ戻れます。
 
 ## シミュレーションの範囲
