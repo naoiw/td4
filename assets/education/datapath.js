@@ -2,10 +2,12 @@
 (function () {
   'use strict';
 
-  const destinations = ['A', 'B', 'OUT', 'PC'];
+  // Share the Emulator CPU implementation instead of duplicating opcode
+  // decoding and carry/branch semantics in the educational view.
+  const core = typeof module === 'object' && module.exports
+    ? require('../js/core/td4-core.js') : window.TD4;
   const sources = ['A', 'B', 'INPUT', '0'];
 
-  /** Match the TD4 74HC153/283 decoding, including old carry for JNC. */
   function calculate(example) {
     const {byte, pc, a, b, input, out, carry} = example;
     for (const value of [byte, pc, a, b, input, out, carry]) {
@@ -14,27 +16,31 @@
     if (byte < 0 || byte > 255 || [pc, a, b, input, out].some(v => v < 0 || v > 15) || (carry !== 0 && carry !== 1)) {
       throw new RangeError('Datapath values outside the CPU range');
     }
-    const opcode = byte >>> 4;
-    const immediate = byte & 15;
-    const selectA = ((opcode >>> 3) & 1) | (opcode & 1);
-    const selectB = (opcode >>> 1) & 1;
-    const sourceIndex = (selectB << 1) | selectA;
-    const sourceName = sources[sourceIndex];
-    const sourceValue = [a, b, input, 0][sourceIndex];
-    const sum = sourceValue + immediate;
-    const result = sum & 15;
-    const nextCarry = Number(sum > 15);
-    const destination = destinations[opcode >>> 2];
-    const isBranch = destination === 'PC';
-    const branchTaken = isBranch && ((opcode & 1) !== 0 || carry === 0);
-    const writes = !isBranch || branchTaken;
-    const nextPc = branchTaken ? result : (pc + 1) & 15;
-    const next = {a, b, out, pc: nextPc, carry: nextCarry};
-    if (destination !== 'PC') next[destination.toLowerCase()] = result;
+
+    const rom = new Array(16).fill(0);
+    rom[pc] = byte;
+    const cpu = new core.CPU(rom);
+    cpu.pc = pc;
+    cpu.a = a;
+    cpu.b = b;
+    cpu.out = out;
+    cpu.carry = carry;
+    cpu.setInput(input);
+
+    const preview = core.decodeALU(byte, a, b, input);
+    const step = cpu.step();
+    const sourceIndex = (preview.selectB << 1) | preview.selectA;
+    const isBranch = step.destination === 'PC';
+    const writes = !isBranch || step.branchTaken;
+
     return {
-      byte, pc, opcode, immediate, selectA, selectB, sourceIndex,
-      sourceName, sourceValue, sum, result, nextCarry, destination,
-      oldCarry: carry, isBranch, branchTaken, writes, nextPc, next
+      byte, pc, opcode:byte >>> 4, immediate:preview.imm,
+      selectA:preview.selectA, selectB:preview.selectB, sourceIndex,
+      sourceName:sources[sourceIndex], sourceValue:preview.source,
+      sum:preview.sum, result:preview.result, nextCarry:step.carryAfter,
+      destination:step.destination, oldCarry:step.carryBefore,
+      isBranch, branchTaken:step.branchTaken, writes, nextPc:step.pcAfter,
+      next:{a:cpu.a, b:cpu.b, out:cpu.out, pc:cpu.pc, carry:cpu.carry}
     };
   }
 
@@ -73,7 +79,7 @@
         carryOut: String(state.nextCarry),
         carryStored: String(state.nextCarry),
         oldCarry: String(state.oldCarry),
-        sel: 'SelB=' + state.selectB + ' / SelA=' + state.selectA,
+        sel: 'SEL_B=' + state.selectB + ' / SEL_A=' + state.selectA,
         branch: state.isBranch
           ? (state.branchTaken ? '分岐成立：PC ← ' + state.result : '分岐不成立：PC ← PC + 1')
           : '通常実行：PC ← PC + 1',
