@@ -101,3 +101,37 @@
 @media(max-width:900px){.edu-flow,.edu-chip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow-step:after{display:none}}
 @media(max-width:600px){.education-hero{padding:15px 13px}.edu-section{padding:14px}.edu-spec-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-flow,.edu-two-cols,.edu-chip-grid{grid-template-columns:1fr}.edu-byte-diagram>div{padding:13px}.education-page .reference-card summary{padding:15px}.education-page .reference-card .reference-content{padding:3px 12px 17px}.edu-flow-step:after{display:none}}
 @media(max-width:700px){.edu-number-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-exercise-grid{grid-template-columns:1fr}.edu-binary-equation code{font-size:14px;padding:8px}.edu-lesson-actions .btn{white-space:normal}}
+
+/* IC reference: collapsible chip guides with physical DIP pin mappings. */
+.edu-ic-index{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}
+.edu-ic-index a{display:inline-block;padding:7px 11px;border:1px solid #dbe7f2;background:#f5f9fd;border-radius:7px;text-decoration:none;font:800 11px ui-monospace,monospace;color:#39678d}
+.edu-ic-index a:hover{background:#eaf4ff}
+.edu-ic-cards{display:grid;gap:11px;margin-top:16px}
+.edu-ic-card{border:1px solid #dfe7f0;border-radius:10px;background:#fbfcfe;scroll-margin-top:16px}
+.edu-ic-card[open]{background:#fff}
+.edu-ic-card>summary{display:flex;gap:13px;align-items:center;padding:15px 17px;cursor:pointer;list-style:none}
+.edu-ic-card>summary::-webkit-details-marker,.edu-ic-pin-details>summary::-webkit-details-marker{display:none}
+.edu-ic-name{font:850 14px ui-monospace,monospace;color:#2c5f8d;min-width:88px}
+.edu-ic-title{font-size:13px;font-weight:750;color:#344e66;flex:1}
+.edu-ic-title small{display:block;font:650 11px ui-monospace,monospace;color:#7b8c9d;margin-top:4px}
+.edu-ic-card[open]>summary{border-bottom:1px solid #e4edf6}
+.edu-ic-card[open]>summary .chevron{transform:rotate(180deg)}
+.edu-ic-content{padding:10px 18px 19px}
+.edu-ic-content p{margin:12px 0;font-size:12px}
+.edu-ic-table-scroll,.edu-ic-pins-scroll{width:100%;overflow-x:auto;margin:15px 0;border:1px solid #e4eaf0;border-radius:8px}
+.edu-ic-truth,.edu-ic-pins{width:100%;border-collapse:collapse;min-width:410px;font-size:12px}
+.edu-ic-truth th,.edu-ic-truth td,.edu-ic-pins th,.edu-ic-pins td{padding:9px 11px;border-bottom:1px solid #e8edf2;text-align:left}
+.edu-ic-truth th,.edu-ic-pins thead th{background:#eff5fa;color:#526e88;font-size:11px}
+.edu-ic-truth tbody tr:last-child td,.edu-ic-pins tbody tr:last-child td,.edu-ic-pins tbody tr:last-child th{border-bottom:0}
+.edu-ic-truth tbody tr:nth-child(even),.edu-ic-pins tbody tr:nth-child(even){background:#f8fbfe}
+.edu-ic-td4-note{border-left:3px solid #9abfe0;background:#f6f9fc;padding:10px 12px;border-radius:0 5px 5px 0}
+.edu-ic-pin-details{padding:12px 0;border-top:1px solid #e8edf2}
+.edu-ic-pin-details>summary{cursor:pointer;font-size:12px;font-weight:800;color:#376c9a;list-style:none}
+.edu-ic-pins{min-width:490px}
+.edu-ic-pins th[scope=row]{width:64px;font:800 11px ui-monospace,monospace;color:#426584;background:#f0f5f9;text-align:center}
+.edu-ic-pins td{width:40%}
+.edu-ic-pins td code{font:750 11px ui-monospace,monospace;color:#315375}
+.edu-ic-pins td small{display:block;margin-top:3px;color:#788da1;font-size:10px}
+.edu-ic-content .edu-ic-source{font-size:11px;margin-top:12px}
+.edu-ic-source a{color:#276b9e}
+@media(max-width:600px){.edu-ic-card>summary{gap:9px;padding:12px}.edu-ic-name{min-width:78px}.edu-ic-content{padding:10px 12px 14px}}
