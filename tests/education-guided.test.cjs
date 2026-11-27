@@ -18,10 +18,24 @@ function steps(program, count) {
 }
 
 test('Education navigation covers the curriculum and answers are collapsible', () => {
-  const expected = ['overview','binary','logic','sequential','cycle','datapath','rom-decode','decode','walkthrough','carry-jnc','hardware','hardware-details','practice','faq'];
+  const expected = ['overview','binary','logic','sequential','hardware','cycle','rom-decode','decode','datapath','walkthrough','carry-jnc','practice','hardware-details','faq'];
   const sectionIds = [...education.matchAll(/<section class="panel edu-section" id="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(sectionIds, expected);
   for (const id of expected) assert.ok(education.includes('href="#' + id + '"'), 'anchor to ' + id);
+  // Only this curriculum test owns chapter order and numbering. Other feature
+  // tests check their own section, so new lessons need just one test update.
+  const headers = [...education.matchAll(/<section class="panel edu-section" id="([^"]+)">\s*<div class="edu-section-heading"><p class="eyebrow">(\d{2}) \/ /g)];
+  assert.deepEqual(headers.map(match => match[1]), expected, 'numbered headings follow section order');
+  assert.deepEqual(headers.map(match => match[2]), expected.map((_, index) => String(index + 1).padStart(2, '0')));
+  const nav = education.match(/<nav class="education-toc"[^>]*>([\s\S]*?)<\/nav>/);
+  assert.ok(nav, 'grouped curriculum navigation');
+  const anchors = [...nav[1].matchAll(/href="#([^"]+)"/g)].map(match => match[1]);
+  const withInstructionSet = expected.flatMap(id => id === 'decode' ? [id, 'instruction-set'] : [id]);
+  assert.deepEqual(anchors, withInstructionSet, 'TOC follows reading order');
+  const htmlIds = new Set([...education.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
+  for (const id of anchors) assert.ok(htmlIds.has(id), 'TOC anchor target: ' + id);
+  assert.equal((nav[1].match(/class="education-toc-group"/g) || []).length, 4);
+
   assert.match(education, /<details class="reference-card" id="instruction-set"/);
   assert.ok(education.includes('href="#instruction-set"'));
   assert.equal((education.match(/class="isa-instruction"/g) || []).length, 12);
