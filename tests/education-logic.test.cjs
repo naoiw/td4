@@ -94,7 +94,7 @@ test('Education includes the new lesson and accessible exercises', () => {
   assert.match(css, /\.edu-logic-results\{/);
   assert.match(css, /\.edu-logic-table\{/);
   assert.equal((html.match(/data-add-stage="/g) || []).length, 4);
-  assert.equal((html.match(/class="panel edu-section"/g) || []).length, 13);
+  assert.equal((html.match(/class="panel edu-section"/g) || []).length, 14);
   assert.equal((html.match(/<tr><th scope="row">(?:[0-9]|1[0-5])<\/th><td><code>[01]{4}<\/code><\/td><td><code>0x[0-9A-F]<\/code><\/td><\/tr>/g) || []).length, 16);
 });
 

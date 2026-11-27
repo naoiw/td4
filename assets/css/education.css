@@ -284,3 +284,63 @@
 .edu-carry-history tbody tr:last-child>*{border-bottom:0}
 @media(max-width:800px){.edu-carry-flow{grid-template-columns:1fr}.edu-carry-states{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:520px){.edu-carry-lab{padding:13px}.edu-carry-states{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-carry-actions{width:100%}.edu-carry-actions button{flex:1}}
+
+/* ROM address / active-LOW row selection / instruction decoder learning lab. */
+.edu-rom-pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:18px 0}
+.edu-rom-pipeline>div{border:1px solid #dce6f0;background:#f6f9fc;border-radius:9px;padding:13px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.edu-rom-pipeline span{font:800 10px ui-monospace,Consolas,monospace;color:#63819e}
+.edu-rom-pipeline .edu-rom-stage-value{font-size:13px;color:#305574;line-height:1.5;overflow-wrap:anywhere}
+.edu-rom-pipeline small{font-size:11px;line-height:1.55;color:#668098}
+.edu-rom-lab{background:#fcfdff;border:1px solid #dce7f1;border-radius:10px;padding:18px 20px;margin:22px 0}
+.edu-rom-lab h3{font-size:14px;margin:23px 0 11px}
+.edu-rom-lab h3:first-child{margin-top:0}
+.edu-rom-lab>p{font-size:12px;line-height:1.75}
+.edu-rom-controls{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:18px 0}
+.edu-rom-controls label{display:flex;flex-direction:column;gap:7px;flex:1 1 170px;font-size:11px;font-weight:800;color:#4e6982}
+.edu-rom-controls select,.edu-rom-controls input{width:100%;border:1px solid #bfd3e5;background:#fff;color:#305476;border-radius:7px;padding:10px;font:800 12px ui-monospace,Consolas,monospace}
+.edu-rom-controls select:focus-visible,.edu-rom-controls input:focus-visible,.edu-rom-table button:focus-visible{outline:3px solid #89bde6;outline-offset:2px}
+.edu-rom-error{color:#af3232;font-size:12px;font-weight:800}
+.edu-rom-error[hidden]{display:none}
+.edu-rom-selector{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin:14px 0}
+.edu-rom-selector span{padding:9px 4px;text-align:center;font:800 11px ui-monospace,Consolas,monospace;color:#55718c;background:#f1f6fa;border:1px solid #dce6ef;border-radius:6px}
+.edu-rom-selector span.is-selected{color:#fff;background:#2c668f;border-color:#2c668f}
+.edu-rom-table{border-collapse:collapse;width:100%;min-width:475px;font:650 11px ui-monospace,Consolas,monospace}
+.edu-rom-table th,.edu-rom-table td{padding:8px 11px;text-align:left;border-bottom:1px solid #e6edf3;white-space:nowrap}
+.edu-rom-table thead th{background:#f0f5fa;color:#4f6d87}
+.edu-rom-table tbody tr:nth-child(even){background:#f9fbfe}
+.edu-rom-table tbody tr.is-selected{background:#e7f3fd}
+.edu-rom-table button{border:1px solid #d1e2f0;background:#fff;color:#245c85;font:800 11px ui-monospace,Consolas,monospace;border-radius:5px;padding:6px 9px;cursor:pointer}
+.edu-rom-table button[aria-pressed=true]{background:#2a6997;color:#fff;border-color:#2a6997}
+.edu-rom-bits-summary{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:15px 0}
+.edu-rom-bits-summary>div{display:flex;flex-direction:column;gap:7px;padding:14px;background:#f3f8fd;border:1px solid #dce9f3;border-radius:8px;min-width:0}
+.edu-rom-bits-summary>div:nth-child(2){background:transparent;border:0;align-items:center}
+.edu-rom-bits-summary span{font-size:10px;font-weight:800;color:#597993}
+.edu-rom-bits-summary code{font:850 clamp(13px,2vw,19px) ui-monospace,Consolas,monospace;color:#315a7a}
+.edu-rom-bits-summary strong{font:850 14px ui-monospace,Consolas,monospace;color:#3c739a}
+.edu-rom-bit-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;margin:12px 0 18px}
+.edu-rom-bit-grid>div{display:flex;flex-direction:column;align-items:center;gap:6px;border:1px solid #e0e8f1;background:#f8fbfe;padding:10px 3px;border-radius:6px}
+.edu-rom-bit-grid span{font:800 10px ui-monospace,Consolas,monospace;color:#6a849c}
+.edu-rom-bit-grid code{font:800 14px ui-monospace,Consolas,monospace;color:#b56c2f}
+.edu-rom-bit-grid strong{font:850 16px ui-monospace,Consolas,monospace;color:#2873a0}
+.edu-rom-instruction{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.edu-rom-instruction>div{display:flex;flex-direction:column;gap:7px;padding:14px;border:1px solid #d9e5f0;border-radius:8px;background:#f3f8fd}
+.edu-rom-instruction span,.edu-rom-instruction small{font-size:11px;color:#58758e}
+.edu-rom-instruction strong{font:850 20px ui-monospace,Consolas,monospace;color:#285578}
+.edu-rom-asm{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-left:3px solid #7baad1;background:#f4f9ff;padding:10px 14px}
+.edu-rom-asm strong{font:850 14px ui-monospace,Consolas,monospace;color:#315976}
+.edu-rom-asm span{font-size:11px;color:#5a7590}
+.edu-rom-signals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:17px 0}
+.edu-rom-signals>div{display:flex;flex-direction:column;gap:7px;min-width:0;border:1px solid #dce7f1;border-radius:8px;background:#f6f9fc;padding:13px}
+.edu-rom-signals span{font:800 11px ui-monospace,Consolas,monospace;color:#58758f}
+.edu-rom-signals strong{font:850 14px ui-monospace,Consolas,monospace;color:#396183}
+.edu-rom-signals small{font-size:10px;color:#6c8499}
+.edu-rom-signals>div.is-low{background:#eaf6ed;border-color:#bfdccc}
+.edu-rom-signals>div.is-low strong{color:#26794a}
+.edu-rom-result{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:15px 0}
+.edu-rom-result>div{display:flex;flex-direction:column;gap:7px;min-width:0;background:#f5f9fc;border:1px solid #dde8f1;border-radius:8px;padding:13px}
+.edu-rom-result span{font-size:11px;font-weight:800;color:#638099}
+.edu-rom-result strong{font:800 13px ui-monospace,Consolas,monospace;color:#315d7d;overflow-wrap:anywhere}
+.edu-rom-branch{padding:12px 14px;border-left:3px solid #6e9ec7;background:#f1f7ff;border-radius:0 7px 7px 0;font-weight:750}
+@media(max-width:1050px){.edu-rom-pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:740px){.edu-rom-pipeline{grid-template-columns:repeat(2,minmax(0,1fr))}.edu-rom-selector{grid-template-columns:repeat(4,minmax(0,1fr))}.edu-rom-signals,.edu-rom-result{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.edu-rom-lab{padding:13px}.edu-rom-pipeline{grid-template-columns:1fr}.edu-rom-bits-summary{grid-template-columns:1fr}.edu-rom-bits-summary>div:nth-child(2){padding:2px}.edu-rom-bit-grid{gap:3px}.edu-rom-bit-grid>div{padding:8px 2px}.edu-rom-controls label{flex:1 1 100%}}
