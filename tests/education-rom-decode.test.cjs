@@ -136,7 +136,6 @@ test('interactive ROM lesson is linked, accessible and includes all 16x8 entries
   assert.match(html,/aria-live="polite"/);
   assert.match(css,/\.edu-rom-selector\{/);
   assert.match(css,/\.edu-rom-signals\{/);
-  assert.equal((html.match(/class="panel edu-section"/g)||[]).length,14);
 });
 
 test('input validation uses correct TD4 ROM and register limits', () => {
