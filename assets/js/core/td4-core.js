@@ -15,9 +15,10 @@
     const HEX = (n) => n.toString(16).toUpperCase();
     const BINARY = (n, width) => n.toString(2).padStart(width, '0');
     const STANDARD_OPCODES = new Set([0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 14, 15]);
+    const ZERO_IMMEDIATE_ONLY = new Set([1, 2, 4, 6, 9]);
     function isStandard(byte) {
         const op = byte >>> 4;
-        return STANDARD_OPCODES.has(op) && (![1, 2, 4, 6, 9].includes(op) || (byte & 15) === 0);
+        return STANDARD_OPCODES.has(op) && (!ZERO_IMMEDIATE_ONLY.has(op) || (byte & 15) === 0);
     }
     function disassemble(byte) {
         const op = byte >>> 4;

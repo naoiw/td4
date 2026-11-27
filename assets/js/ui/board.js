@@ -257,7 +257,9 @@
             switches: [...board.querySelectorAll('.schematic-io-switch')],
             leds: [...board.querySelectorAll('.schematic-io-led')],
             // ROM data-net values change with the PC, so include every DIP upfront.
-            tracked: [...board.querySelectorAll('[data-net], .rom-dip')]
+            tracked: [...board.querySelectorAll('[data-net], .rom-dip')],
+            // Board ROM bytes are stable between CPU steps: update DIP switches only on edits.
+            renderedRomBytes: new Array(16).fill(-1)
         };
     }
     function render(options) {
@@ -314,6 +316,9 @@
             const lamp = cell.querySelector('.rom-select-lamp');
             lamp.classList.toggle('is-on', selected && powerOn);
             lamp.classList.toggle('is-selected', powerOn && selectedNet === `ROM_SEL_${addr}`);
+            if (nodes.renderedRomBytes[addr] === byte)
+                continue;
+            nodes.renderedRomBytes[addr] = byte;
             cell.querySelector('.rom-slot-value').textContent = byte.toString(16).toUpperCase().padStart(2, '0');
             for (const btn of cell.querySelectorAll('.rom-dip')) {
                 const bit = Number(btn.dataset.bit);

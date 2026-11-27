@@ -2,7 +2,7 @@
 
 [READMEへ戻る](../README.md) ／ [設計・実装仕様](architecture.md) ／ [ネットリスト](netlist.md)
 
-TD4 Web Emulatorの画面操作を説明します。CPU内部の命令処理や物理端子の接続関係は、それぞれ設計・実装仕様とネットリストを参照してください。
+TD4 Web Emulatorの画面操作を説明します。4bit・2進数・論理ゲート・加算回路・クロック・順序回路の基礎から命令をSTEPで追う実践例まで学びたい場合は [Education](https://naoiw.github.io/td4/assets/education/) を参照してください。CPU内部の命令処理や物理端子の接続関係は、それぞれ設計・実装仕様とネットリストを参照してください。
 
 ## はじめに
 
@@ -94,8 +94,15 @@ LEDスキャナは末尾の `OUT 1`、次の `JMP`、先頭の `OUT 1` の間、
 メイン画面の命令セット一覧は、ヘッダーの **Education** から開ける独立ページへ移しました。
 
 - [Education（本番）](https://naoiw.github.io/td4/assets/education/) — 4bit CPUの構造・命令実行フロー・命令デコード・標準12命令・74HC ICの役割
-- [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 開発中のページ
+- [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 74HC詳細解説・CPUデータフロー・クロック・CフラグとJNC・ROMの行選択と命令デコードを学べる開発中のページ
 - Educationからはヘッダーの **Emulator** で操作画面へ戻れます。
+- 教材の読み進め方と各JavaScriptの責務は [Educationの構成と保守方針](education.md) を参照してください。
+
+## ROM編集時の動作
+
+PROGRAM ROMのbitボタンと基板ROM DIPスイッチは同じROMバイトを編集します。どちらで変更してもCPUの自動実行を停止（電源はONのまま）し、ROM表・基板スイッチ・選択信号・波形表示を更新します。編集前のソースコードとは自動同期しないため、現在のROM内容をソース欄に取り込むには「ROM → ソース」を使用してください。表示はROMの変更された行だけ再描画し、PCやブレークポイントのハイライトは常に追従します。
+
+本番統合前の動作確認項目は[main統合前チェックリスト](release-checklist.md)を参照してください。
 
 ## シミュレーションの範囲
 
