@@ -217,3 +217,37 @@
 .edu-logic-lab .edu-table-scroll{margin:14px 0}
 @media(max-width:780px){.edu-logic-tables{grid-template-columns:1fr}.edu-logic-not{min-width:180px}.edu-logic-results{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:480px){.edu-logic-lab{padding:13px}.edu-logic-results{grid-template-columns:repeat(3,minmax(0,1fr))}.edu-bit-weight{gap:5px}.edu-bit-weight>div{padding:10px 4px}.edu-bit-weight small{font-size:9px}.edu-logic-controls label{flex:1}.edu-logic-controls select{width:100%;min-width:0}}
+
+/* Clock and sequential logic learning lab (ideal logic, not physical timing). */
+.edu-seq-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:19px 0}
+.edu-seq-overview>div{min-width:0;border:1px solid #dce7f1;border-radius:9px;background:#f7faff;padding:17px}
+.edu-seq-overview span{display:block;font:800 10px ui-monospace,monospace;color:#65809a;margin-bottom:7px}
+.edu-seq-overview strong{display:block;font-size:14px;color:#345a7c}
+.edu-seq-overview p{font-size:12px;margin:8px 0 0}
+.edu-seq-table{min-width:540px}
+.edu-seq-table th,.edu-seq-table td{text-align:left}
+.edu-seq-lab{margin:21px 0 24px;padding:18px 20px;background:#fbfdff;border:1px solid #dce7f2;border-radius:10px}
+.edu-seq-lab h3{font-size:15px;margin:0 0 12px}
+.edu-seq-lab>p{font-size:12px}
+.edu-seq-controls{display:flex;gap:13px;align-items:end;flex-wrap:wrap;margin:17px 0}
+.edu-seq-controls label{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:800;color:#48627c;flex:1 1 180px;min-width:0}
+.edu-seq-controls select{width:100%;border:1px solid #c3d5e5;background:#fff;border-radius:7px;padding:10px;color:#2d5576;font:750 12px ui-monospace,monospace}
+.edu-seq-controls select:focus-visible,.edu-seq-actions button:focus-visible{outline:3px solid #85b8e8;outline-offset:2px}
+.edu-seq-actions{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+.edu-seq-actions .btn{font-size:12px;cursor:pointer}
+.edu-seq-states{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:17px 0}
+.edu-seq-states>div{min-width:0;display:flex;flex-direction:column;gap:7px;background:#f4f8fc;border:1px solid #dfe8f1;padding:13px;border-radius:8px}
+.edu-seq-states span{font-size:10px;font-weight:800;color:#63819b}
+.edu-seq-states strong{font:800 16px ui-monospace,Consolas,monospace;color:#2e5274}
+.edu-seq-states small{font-size:11px;color:#637d95;line-height:1.5}
+.edu-seq-wave-scroll{overflow-x:auto;border:1px solid #dce6f0;border-radius:9px;background:#fff;margin:17px 0}
+.edu-seq-wave-scroll svg{min-width:650px;width:100%;height:auto;display:block;font-family:ui-sans-serif,system-ui,sans-serif}
+.edu-seq-history{border-collapse:collapse;width:100%;min-width:560px;font:700 11px ui-monospace,Consolas,monospace}
+.edu-seq-history th,.edu-seq-history td{padding:9px 11px;border-bottom:1px solid #e6edf4;text-align:center;white-space:nowrap}
+.edu-seq-history thead th{background:#f1f6fb;color:#526d87}
+.edu-seq-history tbody tr:nth-child(even){background:#f8fbfe}
+.edu-seq-history tbody tr.seq-rising{background:#eaf6ed}
+.edu-seq-history tbody tr:last-child>*{border-bottom:0}
+.edu-seq-lab .edu-seq-task{margin-top:15px;padding:14px;background:#f0f7fe;border-left:3px solid #6b9ac5;border-radius:0 7px 7px 0}
+@media(max-width:750px){.edu-seq-overview{grid-template-columns:1fr}.edu-seq-states{grid-template-columns:1fr 1fr}}
+@media(max-width:470px){.edu-seq-lab{padding:13px}.edu-seq-states{grid-template-columns:1fr}.edu-seq-actions button{flex:1}}

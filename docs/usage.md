@@ -2,7 +2,7 @@
 
 [READMEへ戻る](../README.md) ／ [設計・実装仕様](architecture.md) ／ [ネットリスト](netlist.md)
 
-TD4 Web Emulatorの画面操作を説明します。4bit・2進数・論理ゲート・加算回路の基礎から命令をSTEPで追う実践例まで学びたい場合は [Education](https://naoiw.github.io/td4/assets/education/) を参照してください。CPU内部の命令処理や物理端子の接続関係は、それぞれ設計・実装仕様とネットリストを参照してください。
+TD4 Web Emulatorの画面操作を説明します。4bit・2進数・論理ゲート・加算回路・クロック・順序回路の基礎から命令をSTEPで追う実践例まで学びたい場合は [Education](https://naoiw.github.io/td4/assets/education/) を参照してください。CPU内部の命令処理や物理端子の接続関係は、それぞれ設計・実装仕様とネットリストを参照してください。
 
 ## はじめに
 
@@ -94,7 +94,7 @@ LEDスキャナは末尾の `OUT 1`、次の `JMP`、先頭の `OUT 1` の間、
 メイン画面の命令セット一覧は、ヘッダーの **Education** から開ける独立ページへ移しました。
 
 - [Education（本番）](https://naoiw.github.io/td4/assets/education/) — 4bit CPUの構造・命令実行フロー・命令デコード・標準12命令・74HC ICの役割
-- [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 74HCの詳細解説と命令選択式CPUデータフロー図を追加した開発中のページ
+- [Education（developプレビュー）](https://naoiw.github.io/td4/develop/assets/education/) — 74HC詳細解説・命令選択式CPUデータフロー図・クロックと順序回路の操作教材を追加した開発中のページ
 - Educationからはヘッダーの **Emulator** で操作画面へ戻れます。
 
 ## シミュレーションの範囲
