@@ -98,9 +98,6 @@
       container.querySelectorAll('[data-flow-route]').forEach(element => {
         element.classList.toggle('is-active', active.has(element.getAttribute('data-flow-route')));
       });
-      container.querySelectorAll('[data-flow-jump]').forEach(element => {
-        element.hidden = element.getAttribute('data-flow-jump') !== (state.branchTaken ? 'taken' : 'count');
-      });
     }
 
     select.addEventListener('change', () => show(select.value));
