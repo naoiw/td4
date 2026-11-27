@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="../css/education.css">
   <script src="datapath.js" defer></script>
   <script src="logic-basics.js" defer></script>
+  <script src="sequential.js" defer></script>
 </head>
 <body>
 <div class="page education-page">
@@ -70,6 +71,7 @@
         <a href="#overview">基本構造</a>
         <a href="#binary">4bitと2進数</a>
         <a href="#logic">論理回路の基礎</a>
+        <a href="#sequential">クロック・順序回路</a>
         <a href="#cycle">命令実行の流れ</a>
         <a href="#datapath">CPUデータフロー</a>
         <a href="#decode">デコード解説</a>
@@ -245,8 +247,95 @@
       </div>
     </section>
 
+
+    <section class="panel edu-section" id="sequential">
+      <div class="edu-section-heading"><p class="eyebrow">04 / SEQUENTIAL LOGIC</p><h2>クロックと順序回路：いつ値が変わる？</h2></div>
+      <p>論理ゲートや加算器は、入力が決まると<strong>組合せ回路</strong>として出力が決まります。一方、レジスタやフリップフロップは<strong>順序回路</strong>で、以前の値を保持できます。TD4では、クロックの<strong>L→H（立ち上がり）</strong>のタイミングで結果を取り込みます。</p>
+      <div class="edu-seq-overview">
+        <div><span>COMBINATIONAL / 組合せ</span><strong>74HC153・74HC283</strong><p>入力の組合せでMUX出力やALU結果が変わる。クロックを待って記憶する機能はない。</p></div>
+        <div><span>SEQUENTIAL / 順序</span><strong>74HC74・74HC161</strong><p>直前までの値を保持し、クロック立ち上がりや非同期リセットで状態が変わる。</p></div>
+      </div>
+      <h3>クロックが「Hの間」と「立ち上がる瞬間」は違う</h3>
+      <p>74HC74のD型フリップフロップは、<code>D</code>入力がHに変わっても<strong>直ちにQを更新しません</strong>。立ち上がりエッジでDを取り込み、次の立ち上がりまで保持します。Hの期間中にDを変えても、それだけではQは変化しません。立ち下がり（H→L）も通常の保持動作です。</p>
+      <div class="edu-table-scroll" role="region" aria-label="74HC74のクロックエッジと保持動作" tabindex="0">
+        <table class="edu-logic-table edu-seq-table" id="sequential-dff-table">
+          <thead><tr><th scope="col">CLR#</th><th scope="col">PRE#</th><th scope="col">CLK</th><th scope="col">Q（次状態）</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">L</th><td>H</td><td>任意</td><td>0（非同期クリア）</td></tr>
+            <tr><th scope="row">H</th><td>L</td><td>任意</td><td>1（非同期プリセット）</td></tr>
+            <tr><th scope="row">H</th><td>H</td><td>↑</td><td>Dを取り込む</td></tr>
+            <tr><th scope="row">H</th><td>H</td><td>↑以外</td><td>前のQを保持</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="edu-muted">この表は74HC74の標準的な動作から教材に必要な条件を抜粋したもので、CLR#とPRE#を同時にLにする禁止・非推奨条件は扱いません。TD4で使うのはB側のD-FFで、PRE#はH固定、COUTをDとして受け取ります。</p>
+      <h3>74HC161：ロード・カウント・保持</h3>
+      <p>74HC161は4bitの同期カウンタです。<strong>LOAD#がLならD3..0を並列ロード</strong>し、LOAD#がHかつENPとENTがHならカウント、いずれかがLなら保持します。<strong>CLR#のLは非同期クリア</strong>なのでクロックを待ちません。</p>
+      <div class="edu-table-scroll" role="region" aria-label="74HC161の優先順位と状態遷移" tabindex="0">
+        <table class="edu-logic-table edu-seq-table" id="sequential-161-table">
+          <thead><tr><th scope="col">クリア</th><th scope="col">CLK</th><th scope="col">ロード</th><th scope="col">カウント許可</th><th scope="col">Qの動作</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">CLR# = L</th><td>任意</td><td>任意</td><td>任意</td><td>0へ非同期クリア</td></tr>
+            <tr><th scope="row">CLR# = H</th><td>↑</td><td>LOAD# = L</td><td>任意</td><td>D3..0を取り込む</td></tr>
+            <tr><th scope="row">CLR# = H</th><td>↑</td><td>LOAD# = H</td><td>ENP=ENT=H</td><td>Q ← (Q+1) &amp; 0xF</td></tr>
+            <tr><th scope="row">CLR# = H</th><td>↑</td><td>LOAD# = H</td><td>いずれかL</td><td>Qを保持</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>TD4では、A/B/OUT用74HC161のENP・ENTはL固定で通常は<strong>保持</strong>、ロード信号がLの命令でだけALU結果を取り込みます。PC用74HC161だけENP・ENTがH固定なので通常は<strong>+1</strong>し、JMPや成立したJNCではALU結果を<strong>並列ロード</strong>します。</p>
+
+      <div id="sequential-lab" class="edu-seq-lab">
+        <h3>クロックを半周期ずつ進めて観察する</h3>
+        <p>実際のエミュレータとは独立した教材です。<code>COUT / D</code>と74HC161の動作モードを選び、クロックをL→H、H→Lと交互に進めます。<strong>C（Q）とレジスタの値が変化するのは立ち上がり時だけ</strong>です（RESETを除く）。</p>
+        <div class="edu-seq-controls">
+          <label for="seq-cout-input">74HC74 D入力（ALUのCOUT）
+            <select id="seq-cout-input">
+              <option value="0" selected>0 (L)</option>
+              <option value="1">1 (H)</option>
+            </select>
+          </label>
+          <label for="seq-register-mode">74HC161動作
+            <select id="seq-register-mode">
+              <option value="count" selected>COUNT：PC +1</option><option value="load">LOAD：PC ← D</option><option value="hold">HOLD：A/B/OUT</option>
+            </select>
+          </label>
+          <label for="seq-parallel-input">並列ロード値 D3..0
+            <select id="seq-parallel-input"><option value="0">0 (0x0)</option><option value="1">1 (0x1)</option><option value="2">2 (0x2)</option><option value="3">3 (0x3)</option><option value="4">4 (0x4)</option><option value="5">5 (0x5)</option><option value="6">6 (0x6)</option><option value="7">7 (0x7)</option><option value="8">8 (0x8)</option><option value="9" selected>9 (0x9)</option><option value="10">10 (0xA)</option><option value="11">11 (0xB)</option><option value="12">12 (0xC)</option><option value="13">13 (0xD)</option><option value="14">14 (0xE)</option><option value="15">15 (0xF)</option></select>
+          </label>
+        </div>
+        <div class="edu-seq-actions">
+          <button class="btn btn-primary" type="button" id="seq-clock-toggle">クロック L → H</button>
+          <button class="btn" type="button" id="seq-reset">RESET（非同期クリア）</button>
+        </div>
+        <div class="edu-seq-states" aria-live="polite" aria-atomic="true">
+          <div><span>CLK</span><strong data-seq-value="clock">L (0)</strong><small data-seq-value="nextEdge">次は L→H（取り込み）</small></div>
+          <div><span>74HC74 · C</span><strong data-seq-value="carry">0</strong><small>COUT / D = <span data-seq-value="d">0</span></small></div>
+          <div><span>74HC161 · Q3..0</span><strong data-seq-value="register">0000 (0)</strong><small data-seq-value="mode">カウント +1</small></div>
+        </div>
+        <div class="edu-seq-wave-scroll" role="region" aria-label="4つの論理信号波形。縦点線はクロックの立ち上がりまたはRESET" tabindex="0">
+          <svg id="seq-waveform" viewBox="0 0 768 237" role="img" aria-labelledby="seq-wave-title seq-wave-description">
+            <title id="seq-wave-title">CLK・COUT・Cフラグ・レジスタbit0の波形</title>
+            <desc id="seq-wave-description">クロック、D入力、記憶されたCと74HC161レジスタのbit0をステップ状の波形で示す。クロックLからHの立ち上がりでCとレジスタの状態が更新される。</desc>
+            <text x="10" y="37">CLK</text><text x="10" y="92">COUT / D</text><text x="10" y="147">C / Q</text><text x="10" y="202">PC / Q0</text>
+          </svg>
+        </div>
+        <p class="edu-muted">「PC / Q0」は74HC161の4bit値の最下位bitです。<strong>COUNT</strong>はPC相当、<strong>HOLD</strong>はA/B/OUT相当の動作を選ぶ簡略例で、実際のTD4プログラムの命令デコードとは連動しません。波形は最新16回の操作サンプルで、実際の経過時間は表しません。</p>
+        <div class="edu-table-scroll" role="region" aria-label="クロック操作ごとの状態履歴" tabindex="0">
+          <table class="edu-seq-history" id="seq-history-table">
+            <thead><tr><th scope="col">#</th><th scope="col">操作</th><th scope="col">CLK</th><th scope="col">D</th><th scope="col">C</th><th scope="col">Q3..0</th><th scope="col">モード</th></tr></thead>
+            <tbody id="seq-history-body"><tr><th scope="row">1</th><td>RESET</td><td>0</td><td>0</td><td>0</td><td>0000</td><td>count</td></tr></tbody>
+          </table>
+        </div>
+        <p class="edu-seq-task"><strong>試す順番：</strong> ① Dを1にする → ② クロックを立ち上げてC=1を観察 → ③ HのままDを0にしてもC=1のまま → ④ H→L→L→HでC=0へ。次にLOAD=9を試し、COUNTでPCが進むことを観察してください。</p>
+      </div>
+      <h3>クロックを作るICと、命令が実行される瞬間</h3>
+      <p><a href="#ic-74hc14">74HC14</a>はヒステリシスを持つシュミットトリガ反転器で、TD4のCR発振回路に使われます。実物の発振周波数は抵抗・コンデンサ等に依存しますが、<strong>Emulatorの2Hz／10Hzは理想化した論理クロック</strong>で、過渡電圧や伝搬遅延を模擬していません。</p>
+      <p>エミュレータでは、クロックの立ち上がりが<strong>1命令の状態更新</strong>に対応します。74HC283のCOUTは加算器側の組合せ出力ですが、<a href="#ic-74hc74">74HC74</a>が取り込んだ値が次の命令の<strong>Cフラグ</strong>として参照されます。JNCはその実行前のCを使って判定します。<a href="#walkthrough">STEP実行例</a>や<a href="#datapath">CPUデータフロー図</a>と比べてください。</p>
+      <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を確認</a><a href="#practice">LOGIC ANALYZERの演習へ</a></div>
+    </section>
+
     <section class="panel edu-section" id="cycle">
-      <div class="edu-section-heading"><p class="eyebrow">04 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">05 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
       <div class="edu-flow">
         <div class="edu-flow-step"><span>01 · FETCH</span><strong>ROMから取得</strong><small>PCが示す番地の8bitを読む</small></div>
         <div class="edu-flow-step"><span>02 · DECODE</span><strong>入力元と書込先を選択</strong><small>命令上位4bitでMUXと制御信号を決める</small></div>
@@ -258,7 +347,7 @@
 
 
     <section class="panel edu-section" id="datapath">
-      <div class="edu-section-heading"><p class="eyebrow">05 / DATA PATH</p><h2>命令ごとのCPUデータフロー</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">06 / DATA PATH</p><h2>命令ごとのCPUデータフロー</h2></div>
       <p>TD4の論理回路を簡略化したデータフロー図です。命令を切り替えると、MUXが選ぶ入力元、ALUを通る経路、実際に書き込まれるレジスタ、キャリーフラグの変化を比較できます。<strong>配線図ではなく、データと制御の流れを理解するための概念図</strong>です。</p>
       <div id="datapath-explorer" class="edu-datapath">
         <label for="datapath-choice">観察する命令</label>
@@ -331,7 +420,7 @@
     </section>
 
     <section class="panel edu-section" id="decode">
-      <div class="edu-section-heading"><p class="eyebrow">06 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">07 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
       <div class="edu-byte-diagram" aria-label="8bit命令は上位4bitのopcodeと下位4bitのimmediateで構成">
         <div class="edu-opcode"><span>bit7 … bit4</span><strong>opcode</strong><small>命令の種類・操作先</small></div>
         <div class="edu-immediate"><span>bit3 … bit0</span><strong>Im</strong><small>加算する即値 0〜15</small></div>
@@ -496,7 +585,7 @@
     </details>
 
     <section class="panel edu-section" id="walkthrough">
-      <div class="edu-section-heading"><p class="eyebrow">08 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">09 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
       <p>TD4のプログラムは、PCが示すROMの1命令をクロックの<strong>L→H（立ち上がり）</strong>で実行します。実行後にPCが次の番地へ進み、次の立ち上がりまで状態を保持します。以下はCPUをリセットした状態（A=0、B=0、OUT=0、C=0、PC=0）からの実行例です。</p>
       <h3>例1：Bレジスタの値をLEDに表示する</h3>
       <p><code>MOV B</code> → <code>OUT B</code> → <code>ADD B</code> → <code>JMP</code> の繰り返しです。エミュレータで電源をONにして「停止」を押し、PROGRAM EDITORに次の4行を貼り付けて「ROMに書き込む」を押すとPC=0に戻ります。その状態からSTEPで確認できます。</p>
@@ -543,7 +632,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="hardware">
-      <div class="edu-section-heading"><p class="eyebrow">09 / HARDWARE</p><h2>論理ICの役割</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">10 / HARDWARE</p><h2>論理ICの役割</h2></div>
       <div class="edu-chip-grid">
         <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
         <div><strong>74HC153</strong><span>入力MUX</span><p>A・B・INPUT・0の中から演算元を選択。2個使用。</p></div>
@@ -560,7 +649,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="hardware-details">
-      <div class="edu-section-heading"><p class="eyebrow">10 / IC REFERENCE</p><h2>74HCロジックICの詳細</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">11 / IC REFERENCE</p><h2>74HCロジックICの詳細</h2></div>
       <p>TD4基板の13個のICを、9種類の機能別に詳しく解説します。真理値表・動作条件は理解用に整理したものです。物理端子番号とTD4上の接続ネットはリポジトリのネットリストを元に表示しています。</p>
       <p class="edu-muted">ピン表の「— 未モデル化」は未接続を断定するものではありません。実部品の端子仕様と、本エミュレータで確定済みの論理ネットは別です。各ICの電気的特性・電源条件・タイミングはメーカーのデータシートを参照してください。</p>
       <div class="edu-ic-index"><a href="#ic-74hc161">74HC161</a><a href="#ic-74hc153">74HC153</a><a href="#ic-74hc283">74HC283</a><a href="#ic-74hc74">74HC74</a><a href="#ic-74hc32">74HC32</a><a href="#ic-74hc10">74HC10</a><a href="#ic-74hc14">74HC14</a><a href="#ic-74hc154">74HC154</a><a href="#ic-74hc540">74HC540</a></div>
@@ -665,7 +754,7 @@ skip: OUT 0
       </details></div>
     </section>
     <section class="panel edu-section" id="practice">
-      <div class="edu-section-heading"><p class="eyebrow">11 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">12 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
       <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
       <div class="edu-exercise-grid">
         <article class="edu-exercise">
@@ -692,7 +781,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="faq">
-      <div class="edu-section-heading"><p class="eyebrow">12 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">13 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
       <div class="edu-faq">
         <details><summary>4bit CPUなのに、命令が8bitなのはなぜ？</summary><p>4bitはA/BレジスタやALUが扱うデータの幅です。TD4では命令の幅は8bitで、上位4bitに操作の種類、下位4bitに即値を収めています。データ幅と命令幅は同じでなくても構いません。</p></details>
         <details><summary>INPUTスイッチを変えただけでAやBは更新される？</summary><p>いいえ。INPUTは外部入力の現在値です。<code>IN A</code>または<code>IN B</code>など、入力値を読み取る命令を実行した時点でレジスタに反映されます。</p></details>
