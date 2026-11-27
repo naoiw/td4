@@ -43,6 +43,8 @@
   <script src="datapath.js" defer></script>
   <script src="logic-basics.js" defer></script>
   <script src="sequential.js" defer></script>
+  <script src="../js/core/td4-core.js" defer></script>
+  <script src="carry-jnc.js" defer></script>
 </head>
 <body>
 <div class="page education-page">
@@ -77,6 +79,7 @@
         <a href="#decode">デコード解説</a>
         <a href="#instruction-set">命令セット</a>
         <a href="#walkthrough">プログラム実行例</a>
+        <a href="#carry-jnc">キャリーとJNC</a>
         <a href="#hardware">74HC ICの役割</a>
         <a href="#hardware-details">IC詳細・ピン配置</a>
         <a href="#practice">演習</a>
@@ -633,8 +636,68 @@ skip: OUT 0
       <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を試す</a><a href="#practice">次の演習へ</a></div>
     </section>
 
+
+    <section class="panel edu-section" id="carry-jnc">
+      <div class="edu-section-heading"><p class="eyebrow">10 / CARRY &amp; BRANCH</p><h2>CフラグとJNC条件分岐を追跡する</h2></div>
+      <p>TD4の4bit加算器 <a href="#ic-74hc283">74HC283</a> は、選択した値と命令の即値を常に加算します。計算結果が15を超えると、下位4bitはレジスタへ、5bit目の<strong>COUT=1</strong>は <a href="#ic-74hc74">74HC74</a> のD入力へ進みます。<strong>実行前C</strong>は前の命令で保存された値であり、今の命令で計算するCOUTとは区別します。</p>
+      <div class="edu-carry-flow" role="group" aria-label="旧Cで条件分岐を判断し、クロックで新しいCが保存される流れ">
+        <div><span>前命令で保持した値</span><strong>旧C</strong><small>74HC74のQ／反転値C_NがJNCの制御に使われる</small></div>
+        <div><span>実行中に確定する値</span><strong>ALU → COUT</strong><small>74HC283の組合せ出力。旧Cを入力キャリーとして足さない</small></div>
+        <div><span>立ち上がり後の値</span><strong>新C</strong><small>74HC74がCOUTを取り込む。次の命令から参照</small></div>
+      </div>
+      <h3>JNCが見るのはどのC？</h3>
+      <p><code>JNC Im</code> は、<strong>実行前のC=0</strong>ならPCにImをロードします。実行前C=1ならロードせず、PCは通常どおり+1です。どちらの場合も、JNC自体の計算は <code>0 + Im</code> なのでCOUT=0となり、<strong>実行後のCは0</strong>です。</p>
+      <div class="edu-table-scroll" role="region" aria-label="JNCの実行前Cによる分岐結果" tabindex="0">
+        <table class="edu-state-table edu-carry-table" id="carry-jnc-condition">
+          <thead><tr><th scope="col">実行前C</th><th scope="col">LOAD_PC_N</th><th scope="col">次のPC</th><th scope="col">COUT</th><th scope="col">実行後C</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">0</th><td>L（0：ロード有効）</td><td>Im（ジャンプ成立）</td><td>0</td><td>0</td></tr>
+            <tr><th scope="row">1</th><td>H（1：ロード無効）</td><td>(PC + 1) &amp; 0xF</td><td>0</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>さらに重要なのは、<code>MOV</code>・<code>OUT</code>・<code>IN</code>などの命令もALUを通り、<strong>命令ごとにCが更新される</strong>ことです。「ADD直後にJNC」と「ADDの後に別命令を挟んでJNC」では、分岐結果が変わる場合があります。</p>
+      <div id="carry-lab" class="edu-carry-lab">
+        <h3>5つのプログラムを1命令ずつ比較</h3>
+        <p>実際のエミュレータと同じCPUコアを使う教材です。毎回<strong>A=B=OUT=PC=C=0</strong>から始め、STEPごとに実行前のC、加算器のCOUT、実行後のCと次のPCを記録します。</p>
+        <div class="edu-carry-controls">
+          <label for="carry-scenario">検証するケース
+            <select id="carry-scenario"><option value="no-overflow">桁あふれなし：JNC成立</option><option value="overflow">桁あふれ：JNC不成立</option><option value="intervening-mov">MOVを挟む：Cが0に更新</option><option value="intervening-add">ADDを挟む：別の加算で上書き</option><option value="repeat-jnc">JNCを2回：1回目の判定後にC=0</option></select>
+          </label>
+          <div class="edu-carry-actions">
+            <button class="btn btn-primary" type="button" id="carry-next">STEPを実行</button>
+            <button class="btn" type="button" id="carry-reset">最初から</button>
+          </div>
+        </div>
+        <pre class="edu-program edu-carry-program"><code id="carry-source">MOV A, 14
+ADD A, 1
+JNC skip
+OUT 15
+JMP end
+skip: OUT 0
+end: JMP end</code></pre>
+        <div class="edu-carry-states" aria-live="polite" aria-atomic="true">
+          <div><span>STEP</span><strong data-carry-value="step">0</strong></div>
+          <div><span>実行前C</span><strong data-carry-value="old">—</strong></div>
+          <div><span>COUT</span><strong data-carry-value="cout">—</strong></div>
+          <div><span>実行後C</span><strong data-carry-value="new">0</strong></div>
+          <div><span>次のPC</span><strong data-carry-value="pc">0x0</strong></div>
+        </div>
+        <p class="edu-carry-verdict" aria-live="polite"><strong data-carry-value="decision">命令を選び、STEPを押してください</strong></p>
+        <p class="edu-carry-summary" id="carry-step-summary" aria-live="polite">14 + 1 = 15。Cは0なのでJNCでskipへジャンプします。</p>
+        <div class="edu-table-scroll" role="region" aria-label="キャリーと分岐の命令実行履歴" tabindex="0">
+          <table class="edu-carry-history">
+            <thead><tr><th scope="col">#</th><th scope="col">実行前PC</th><th scope="col">命令</th><th scope="col">MUX + Im</th><th scope="col">旧C</th><th scope="col">COUT → 新C</th><th scope="col">LOAD_PC_N</th><th scope="col">次PC</th><th scope="col">判定</th></tr></thead>
+            <tbody id="carry-history-body"></tbody>
+          </table>
+        </div>
+        <p class="edu-muted">L=0、H=1。<code>LOAD_PC_N</code> はアクティブLOW（LでPCへロード）。通常のA/B/OUT命令では「—」と表示します。表示したCOUTは今回の命令の加算結果で、旧Cを加算器のCinへ入れているわけではありません。</p>
+      </div>
+      <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を確認</a><a href="#walkthrough">既存の実行例</a><a href="#datapath">CPUデータフロー図</a><a href="#sequential">クロックと74HC74</a></div>
+    </section>
+
     <section class="panel edu-section" id="hardware">
-      <div class="edu-section-heading"><p class="eyebrow">10 / HARDWARE</p><h2>論理ICの役割</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">11 / HARDWARE</p><h2>論理ICの役割</h2></div>
       <div class="edu-chip-grid">
         <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
         <div><strong>74HC153</strong><span>入力MUX</span><p>A・B・INPUT・0の中から演算元を選択。2個使用。</p></div>
@@ -651,7 +714,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="hardware-details">
-      <div class="edu-section-heading"><p class="eyebrow">11 / IC REFERENCE</p><h2>74HCロジックICの詳細</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">12 / IC REFERENCE</p><h2>74HCロジックICの詳細</h2></div>
       <p>TD4基板の13個のICを、9種類の機能別に詳しく解説します。真理値表・動作条件は理解用に整理したものです。物理端子番号とTD4上の接続ネットはリポジトリのネットリストを元に表示しています。</p>
       <p class="edu-muted">ピン表の「— 未モデル化」は未接続を断定するものではありません。実部品の端子仕様と、本エミュレータで確定済みの論理ネットは別です。各ICの電気的特性・電源条件・タイミングはメーカーのデータシートを参照してください。</p>
       <div class="edu-ic-index"><a href="#ic-74hc161">74HC161</a><a href="#ic-74hc153">74HC153</a><a href="#ic-74hc283">74HC283</a><a href="#ic-74hc74">74HC74</a><a href="#ic-74hc32">74HC32</a><a href="#ic-74hc10">74HC10</a><a href="#ic-74hc14">74HC14</a><a href="#ic-74hc154">74HC154</a><a href="#ic-74hc540">74HC540</a></div>
@@ -756,7 +819,7 @@ skip: OUT 0
       </details></div>
     </section>
     <section class="panel edu-section" id="practice">
-      <div class="edu-section-heading"><p class="eyebrow">12 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">13 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
       <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
       <div class="edu-exercise-grid">
         <article class="edu-exercise">
@@ -783,7 +846,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="faq">
-      <div class="edu-section-heading"><p class="eyebrow">13 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">14 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
       <div class="edu-faq">
         <details><summary>4bit CPUなのに、命令が8bitなのはなぜ？</summary><p>4bitはA/BレジスタやALUが扱うデータの幅です。TD4では命令の幅は8bitで、上位4bitに操作の種類、下位4bitに即値を収めています。データ幅と命令幅は同じでなくても構いません。</p></details>
         <details><summary>INPUTスイッチを変えただけでAやBは更新される？</summary><p>いいえ。INPUTは外部入力の現在値です。<code>IN A</code>または<code>IN B</code>など、入力値を読み取る命令を実行した時点でレジスタに反映されます。</p></details>
