@@ -174,3 +174,46 @@
 @media(max-width:900px){.edu-datapath-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.edu-datapath-stats{grid-template-columns:1fr}.edu-datapath-svg{min-width:760px}.edu-datapath-legend{gap:8px}}
 @media(prefers-reduced-motion:reduce){.dp-node rect,.dp-path{transition:none}}
+
+/* Logic foundations: binary weights, truth tables and interactive carry practice. */
+.edu-bit-weight{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:16px 0}
+.edu-bit-weight>div{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:8px;border:1px solid #dce8f3;background:#f6faff;padding:13px 8px}
+.edu-bit-weight span{font:800 11px ui-monospace,monospace;color:#6a849e}
+.edu-bit-weight strong{font:850 23px ui-monospace,monospace;color:#284f73}
+.edu-bit-weight small{font-size:10px;color:#698099;text-align:center}
+.edu-number-reference{border:1px solid #e0e9f2;border-radius:9px;margin:15px 0;padding:12px 15px}
+.edu-number-reference summary{color:#2d658f;font-size:12px;font-weight:800;cursor:pointer}
+.edu-number-table{width:100%;border-collapse:collapse;min-width:310px;font-size:12px}
+.edu-number-table th,.edu-number-table td{padding:8px 11px;text-align:left;border-bottom:1px solid #e5ecf3}
+.edu-number-table thead th{background:#f2f7fb;color:#58748c}
+.edu-number-table tbody tr:last-child th,.edu-number-table tbody tr:last-child td{border-bottom:0}
+.edu-number-table code{color:#375d80;font-size:12px}
+.edu-logic-tables{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:13px;margin:14px 0}
+.edu-logic-tables .edu-table-scroll{margin:0}
+.edu-logic-table{border-collapse:collapse;width:100%;min-width:380px;font:700 12px ui-monospace,Consolas,monospace}
+.edu-logic-table th,.edu-logic-table td{padding:10px 12px;text-align:center;border-bottom:1px solid #e8eef5;white-space:nowrap}
+.edu-logic-table thead th{background:#f1f6fa;color:#486986;font-size:11px}
+.edu-logic-table tbody th{font-weight:850;color:#355c7d}
+.edu-logic-table tbody tr:nth-child(even){background:#f9fbfd}
+.edu-logic-table tbody tr:last-child>*{border-bottom:0}
+.edu-logic-table tr.is-active{background:#fff0cf!important}
+.edu-logic-not{min-width:150px}
+.edu-logic-lab{border:1px solid #dfe8f2;border-radius:10px;padding:18px 20px;margin:22px 0;background:#fcfdff}
+.edu-logic-lab h3{font-size:14px;margin:20px 0 10px}
+.edu-logic-lab h3:first-child{margin-top:0}
+.edu-logic-lab>p{font-size:12px}
+.edu-logic-controls{display:flex;align-items:end;gap:14px;flex-wrap:wrap;margin:13px 0}
+.edu-logic-controls label{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:800;color:#4e6780}
+.edu-logic-controls select{min-width:130px;border:1px solid #bed3e4;border-radius:7px;background:#fff;color:#2e5273;font:750 12px ui-monospace,monospace;padding:10px}
+.edu-logic-controls select:focus-visible{outline:3px solid #94bfe6;outline-offset:2px}
+.edu-logic-results{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:15px 0}
+.edu-logic-results>div{display:flex;flex-direction:column;gap:8px;align-items:center;border:1px solid #dce7f0;border-radius:8px;background:#f5f9fd;padding:13px 6px}
+.edu-logic-results span{font:800 10px ui-monospace,monospace;color:#537391}
+.edu-logic-results strong{font:850 23px ui-monospace,monospace;color:#235e86}
+.edu-logic-answer{border-left:3px solid #77a7d0;background:#f4f9ff;padding:10px 13px}
+.edu-logic-add-result{display:flex;flex-direction:column;gap:9px;background:#edf5ff;border:1px solid #d1e4f6;padding:15px;border-radius:9px;margin:14px 0}
+.edu-logic-add-result code{font:800 clamp(14px,2vw,20px) ui-monospace,monospace;color:#254f72}
+.edu-logic-add-result>span{font-size:12px;color:#46637c;line-height:1.6}
+.edu-logic-lab .edu-table-scroll{margin:14px 0}
+@media(max-width:780px){.edu-logic-tables{grid-template-columns:1fr}.edu-logic-not{min-width:180px}.edu-logic-results{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:480px){.edu-logic-lab{padding:13px}.edu-logic-results{grid-template-columns:repeat(3,minmax(0,1fr))}.edu-bit-weight{gap:5px}.edu-bit-weight>div{padding:10px 4px}.edu-bit-weight small{font-size:9px}.edu-logic-controls label{flex:1}.edu-logic-controls select{width:100%;min-width:0}}
