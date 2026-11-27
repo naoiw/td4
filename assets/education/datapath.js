@@ -93,10 +93,8 @@
         'fetch', 'source-' + state.sourceName, 'operand', 'immediate',
         'control-mux', 'control-load', 'carry-out', 'carry-latched'
       ]);
-      if (state.writes) active.add('result');
+      if (state.writes) { active.add('result'); active.add('write-' + state.destination); }
       if (state.isBranch) active.add('old-carry');
-      if (state.branchTaken) active.add('pc-load');
-      if (!state.branchTaken) active.add('pc-count');
       container.querySelectorAll('[data-flow-route]').forEach(element => {
         element.classList.toggle('is-active', active.has(element.getAttribute('data-flow-route')));
       });
