@@ -2,7 +2,7 @@
 
 [READMEへ戻る](../README.md) ／ [設計・実装仕様](architecture.md) ／ [ネットリスト](netlist.md)
 
-TD4 Web Emulatorの画面操作を説明します。4bit・2進数の基礎から命令をSTEPで追う実践例まで学びたい場合は [Education](https://naoiw.github.io/td4/assets/education/) を参照してください。CPU内部の命令処理や物理端子の接続関係は、それぞれ設計・実装仕様とネットリストを参照してください。
+TD4 Web Emulatorの画面操作を説明します。4bit・2進数・論理ゲート・加算回路の基礎から命令をSTEPで追う実践例まで学びたい場合は [Education](https://naoiw.github.io/td4/assets/education/) を参照してください。CPU内部の命令処理や物理端子の接続関係は、それぞれ設計・実装仕様とネットリストを参照してください。
 
 ## はじめに
 

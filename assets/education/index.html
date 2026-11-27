@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/education.css">
   <script src="datapath.js" defer></script>
+  <script src="logic-basics.js" defer></script>
 </head>
 <body>
 <div class="page education-page">
@@ -68,6 +69,7 @@
       <nav class="education-toc" aria-label="教育ページの目次">
         <a href="#overview">基本構造</a>
         <a href="#binary">4bitと2進数</a>
+        <a href="#logic">論理回路の基礎</a>
         <a href="#cycle">命令実行の流れ</a>
         <a href="#datapath">CPUデータフロー</a>
         <a href="#decode">デコード解説</a>
@@ -104,6 +106,37 @@
         <div><span>10進数</span><strong>15</strong><code>1111₂</code><small>0xF</small></div>
       </div>
       <p>各bitの重みは左から <strong>8・4・2・1</strong> です。例えば <code>1010₂</code> は「8 + 0 + 2 + 0 = 10」、16進数では <code>0xA</code> になります。</p>
+
+      <div class="edu-bit-weight" role="group" aria-label="4bitの各桁の重み">
+        <div><span>bit3</span><strong>8</strong><small>最上位bit</small></div>
+        <div><span>bit2</span><strong>4</strong><small>2の2乗</small></div>
+        <div><span>bit1</span><strong>2</strong><small>2の1乗</small></div>
+        <div><span>bit0</span><strong>1</strong><small>最下位bit</small></div>
+      </div>
+      <p>16進数は0〜9の次を <code>A=10</code>、<code>B=11</code>、…、<code>F=15</code> と表し、<strong>16進数1桁が2進数4bitに対応</strong>します。例えば8bitの命令 <code>0xB7</code> は <code>1011 0111₂</code>。上位4bitは命令の種類、下位4bitは即値です。</p>
+      <details class="edu-number-reference">
+        <summary>0〜15の2進数・16進数対応表を表示</summary>
+        <div class="edu-table-scroll" role="region" aria-label="0から15までの数値対応表" tabindex="0">
+          <table class="edu-number-table"><thead><tr><th scope="col">10進数</th><th scope="col">4bit 2進数</th><th scope="col">16進数</th></tr></thead><tbody>
+              <tr><th scope="row">0</th><td><code>0000</code></td><td><code>0x0</code></td></tr>
+              <tr><th scope="row">1</th><td><code>0001</code></td><td><code>0x1</code></td></tr>
+              <tr><th scope="row">2</th><td><code>0010</code></td><td><code>0x2</code></td></tr>
+              <tr><th scope="row">3</th><td><code>0011</code></td><td><code>0x3</code></td></tr>
+              <tr><th scope="row">4</th><td><code>0100</code></td><td><code>0x4</code></td></tr>
+              <tr><th scope="row">5</th><td><code>0101</code></td><td><code>0x5</code></td></tr>
+              <tr><th scope="row">6</th><td><code>0110</code></td><td><code>0x6</code></td></tr>
+              <tr><th scope="row">7</th><td><code>0111</code></td><td><code>0x7</code></td></tr>
+              <tr><th scope="row">8</th><td><code>1000</code></td><td><code>0x8</code></td></tr>
+              <tr><th scope="row">9</th><td><code>1001</code></td><td><code>0x9</code></td></tr>
+              <tr><th scope="row">10</th><td><code>1010</code></td><td><code>0xA</code></td></tr>
+              <tr><th scope="row">11</th><td><code>1011</code></td><td><code>0xB</code></td></tr>
+              <tr><th scope="row">12</th><td><code>1100</code></td><td><code>0xC</code></td></tr>
+              <tr><th scope="row">13</th><td><code>1101</code></td><td><code>0xD</code></td></tr>
+              <tr><th scope="row">14</th><td><code>1110</code></td><td><code>0xE</code></td></tr>
+              <tr><th scope="row">15</th><td><code>1111</code></td><td><code>0xF</code></td></tr>
+          </tbody></table>
+        </div>
+      </details>
       <div class="edu-example">
         <span class="edu-example-tag">EXAMPLE · 4bit OVERFLOW</span>
         <h3>14 + 3 = 17 の結果はどうなる？</h3>
@@ -115,8 +148,105 @@
       </div>
     </section>
 
+    <section class="panel edu-section" id="logic">
+      <div class="edu-section-heading"><p class="eyebrow">03 / LOGIC FOUNDATIONS</p><h2>論理ゲートと加算回路の基礎</h2></div>
+      <p>TD4は、0と1を処理する<strong>論理ゲート</strong>を組み合わせてできています。論理表の <strong>0はL（LOW）、1はH（HIGH）</strong>に対応します。以下は理想的な論理動作で、電圧・伝搬遅延・スイッチのチャタリングを再現したものではありません。</p>
+      <h3>AND / OR / XOR / NAND / NOT</h3>
+      <p><strong>AND</strong>は両方が1なら1、<strong>OR</strong>はどちらかが1なら1、<strong>XOR</strong>は異なる入力なら1、<strong>NAND</strong>はANDの反転、<strong>NOT</strong>は1bitを反転する回路です。表の1行が入力の組合せ1通りを表します。</p>
+      <div class="edu-logic-tables">
+        <div class="edu-table-scroll" role="region" aria-label="2入力論理ゲートの真理値表" tabindex="0">
+          <table class="edu-logic-table" id="logic-truth-two"><thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">AND</th><th scope="col">OR</th><th scope="col">XOR</th><th scope="col">NAND</th></tr></thead><tbody>
+              <tr data-logic-row="00"><th scope="row">0</th><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+              <tr data-logic-row="01"><th scope="row">0</th><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+              <tr data-logic-row="10"><th scope="row">1</th><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+              <tr data-logic-row="11"><th scope="row">1</th><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+          </tbody></table>
+        </div>
+        <div class="edu-table-scroll" role="region" aria-label="NOTゲートの真理値表" tabindex="0">
+          <table class="edu-logic-table edu-logic-not"><thead><tr><th scope="col">A</th><th scope="col">NOT A</th></tr></thead><tbody>
+            <tr><th scope="row">0</th><td>1</td></tr>
+            <tr><th scope="row">1</th><td>0</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div id="logic-lab" class="edu-logic-lab">
+        <h3>入力を切り替えて確認する</h3>
+        <div class="edu-logic-controls">
+          <label for="logic-input-a">入力 A
+            <select id="logic-input-a"><option value="0" selected>0 (L)</option><option value="1">1 (H)</option></select>
+          </label>
+          <label for="logic-input-b">入力 B
+            <select id="logic-input-b"><option value="0" selected>0 (L)</option><option value="1">1 (H)</option></select>
+          </label>
+        </div>
+        <div class="edu-logic-results" aria-live="polite" aria-atomic="true">
+          <div><span>AND</span><strong data-logic-result="and">0</strong></div>
+          <div><span>OR</span><strong data-logic-result="or">0</strong></div>
+          <div><span>XOR</span><strong data-logic-result="xor">0</strong></div>
+          <div><span>NAND</span><strong data-logic-result="nand">1</strong></div>
+          <div><span>NOT A</span><strong data-logic-result="notA">1</strong></div>
+        </div>
+        <p class="edu-muted">入力を変えると、上の真理値表の該当行も強調表示されます。</p>
+        <h3>半加算器（Half Adder）</h3>
+        <p>半加算器は1bitの<strong>A+B</strong>を計算します。結果の1bitをS（SUM）、2の位への桁上がりをC（Carry）とします。<code>S=A XOR B</code>、<code>C=A AND B</code> なので、例えば <code>1+1=10₂</code> です。</p>
+        <div class="edu-table-scroll" role="region" aria-label="半加算器の真理値表" tabindex="0">
+          <table class="edu-logic-table" id="logic-half-adder"><thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">S</th><th scope="col">C</th></tr></thead><tbody>
+              <tr><th scope="row">0</th><td>0</td><td>0</td><td>0</td></tr>
+              <tr><th scope="row">0</th><td>1</td><td>1</td><td>0</td></tr>
+              <tr><th scope="row">1</th><td>0</td><td>1</td><td>0</td></tr>
+              <tr><th scope="row">1</th><td>1</td><td>0</td><td>1</td></tr>
+          </tbody></table>
+        </div>
+        <p class="edu-logic-answer" aria-live="polite">今の入力では <strong>S=<span data-logic-result="halfSum">0</span>、C=<span data-logic-result="halfCarry">0</span></strong> です。</p>
+        <h3>全加算器（Full Adder）</h3>
+        <p>半加算器に、下の桁からの桁上がり<strong>Cin</strong>を加えたものが全加算器です。<code>S=A XOR B XOR Cin</code>、<code>Cout=(A AND B) OR (Cin AND (A XOR B))</code>。3つの入力のうち2つ以上が1なら、Coutは1になります。</p>
+        <div class="edu-table-scroll" role="region" aria-label="全加算器の真理値表" tabindex="0">
+          <table class="edu-logic-table" id="logic-full-adder"><thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">Cin</th><th scope="col">S</th><th scope="col">Cout</th></tr></thead><tbody>
+              <tr><th scope="row">0</th><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr><th scope="row">0</th><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+              <tr><th scope="row">0</th><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+              <tr><th scope="row">0</th><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+              <tr><th scope="row">1</th><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+              <tr><th scope="row">1</th><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+              <tr><th scope="row">1</th><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+              <tr><th scope="row">1</th><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+          </tbody></table>
+        </div>
+        <h3>4bitを加算してキャリーを追う</h3>
+        <p>bit0からbit3へ、前の桁のCoutを次の桁のCinとして渡します。以下は<strong>加算の考え方を4段に分けた説明</strong>です。TD4の74HC283は組合せ回路なので、4クロックかけて1bitずつ処理するわけではありません。</p>
+        <div class="edu-logic-controls">
+          <label for="logic-add-x">4bit入力 X
+            <select id="logic-add-x"><option value="0">0 (0x0)</option><option value="1">1 (0x1)</option><option value="2">2 (0x2)</option><option value="3">3 (0x3)</option><option value="4">4 (0x4)</option><option value="5">5 (0x5)</option><option value="6">6 (0x6)</option><option value="7">7 (0x7)</option><option value="8">8 (0x8)</option><option value="9">9 (0x9)</option><option value="10">10 (0xA)</option><option value="11">11 (0xB)</option><option value="12">12 (0xC)</option><option value="13">13 (0xD)</option><option value="14" selected>14 (0xE)</option><option value="15">15 (0xF)</option></select>
+          </label>
+          <label for="logic-add-y">4bit入力 Y
+            <select id="logic-add-y"><option value="0">0 (0x0)</option><option value="1">1 (0x1)</option><option value="2">2 (0x2)</option><option value="3" selected>3 (0x3)</option><option value="4">4 (0x4)</option><option value="5">5 (0x5)</option><option value="6">6 (0x6)</option><option value="7">7 (0x7)</option><option value="8">8 (0x8)</option><option value="9">9 (0x9)</option><option value="10">10 (0xA)</option><option value="11">11 (0xB)</option><option value="12">12 (0xC)</option><option value="13">13 (0xD)</option><option value="14">14 (0xE)</option><option value="15">15 (0xF)</option></select>
+          </label>
+        </div>
+        <div class="edu-logic-add-result" aria-live="polite" aria-atomic="true">
+          <code><span data-add-result="binaryA">1110</span> + <span data-add-result="binaryB">0011</span> = <span data-add-result="carry">1</span> <span data-add-result="sum">0001</span></code>
+          <span>10進数では <strong data-add-result="decimal">17</strong>。下位4bitは <strong data-add-result="register">1</strong>、Coutは <strong data-add-result="carry">1</strong>。</span>
+        </div>
+        <div class="edu-table-scroll" role="region" aria-label="bit0からbit3のキャリー伝播" tabindex="0">
+          <table class="edu-logic-table" id="logic-carry-stages">
+            <thead><tr><th scope="col">桁（重み）</th><th scope="col">X</th><th scope="col">Y</th><th scope="col">Cin</th><th scope="col">S</th><th scope="col">Cout</th></tr></thead>
+            <tbody>
+                <tr data-add-stage="0"><th scope="row">bit0 (1)</th><td data-stage-bit="a">0</td><td data-stage-bit="b">1</td><td data-stage-bit="carryIn">0</td><td data-stage-bit="sum">1</td><td data-stage-bit="carryOut">0</td></tr>
+                <tr data-add-stage="1"><th scope="row">bit1 (2)</th><td data-stage-bit="a">1</td><td data-stage-bit="b">1</td><td data-stage-bit="carryIn">0</td><td data-stage-bit="sum">0</td><td data-stage-bit="carryOut">1</td></tr>
+                <tr data-add-stage="2"><th scope="row">bit2 (4)</th><td data-stage-bit="a">1</td><td data-stage-bit="b">0</td><td data-stage-bit="carryIn">1</td><td data-stage-bit="sum">0</td><td data-stage-bit="carryOut">1</td></tr>
+                <tr data-add-stage="3"><th scope="row">bit3 (8)</th><td data-stage-bit="a">1</td><td data-stage-bit="b">0</td><td data-stage-bit="carryIn">1</td><td data-stage-bit="sum">0</td><td data-stage-bit="carryOut">1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="edu-muted">TD4の74HC283では、入力側のCinは<strong>常に0に固定</strong>されています。最上位桁から出たCoutが74HC74へ渡り、クロック立ち上がりでCフラグとして保存されます。ここでのCin/Coutは<strong>4bit加算器内部の桁上がり</strong>であり、JNCが参照する前命令のCフラグとは別に考えてください。</p>
+      </div>
+      <div class="edu-note">
+        <strong>TD4のICとつなげて理解する</strong>
+        <p><a href="#ic-74hc32">74HC32</a>はOR、<a href="#ic-74hc10">74HC10</a>はNAND、<a href="#ic-74hc283">74HC283</a>は4bit加算、<a href="#ic-74hc153">74HC153</a>は入力選択（MUX）を担当します。XORは加算器内部の動作を説明する論理であり、TD4基板に独立した74HC XOR ICを追加したという意味ではありません。<a href="#datapath">CPUデータフロー図</a>では、これらが1命令の中でどのようにつながるか確認できます。</p>
+      </div>
+    </section>
+
     <section class="panel edu-section" id="cycle">
-      <div class="edu-section-heading"><p class="eyebrow">03 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">04 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
       <div class="edu-flow">
         <div class="edu-flow-step"><span>01 · FETCH</span><strong>ROMから取得</strong><small>PCが示す番地の8bitを読む</small></div>
         <div class="edu-flow-step"><span>02 · DECODE</span><strong>入力元と書込先を選択</strong><small>命令上位4bitでMUXと制御信号を決める</small></div>
@@ -128,7 +258,7 @@
 
 
     <section class="panel edu-section" id="datapath">
-      <div class="edu-section-heading"><p class="eyebrow">04 / DATA PATH</p><h2>命令ごとのCPUデータフロー</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">05 / DATA PATH</p><h2>命令ごとのCPUデータフロー</h2></div>
       <p>TD4の論理回路を簡略化したデータフロー図です。命令を切り替えると、MUXが選ぶ入力元、ALUを通る経路、実際に書き込まれるレジスタ、キャリーフラグの変化を比較できます。<strong>配線図ではなく、データと制御の流れを理解するための概念図</strong>です。</p>
       <div id="datapath-explorer" class="edu-datapath">
         <label for="datapath-choice">観察する命令</label>
@@ -201,7 +331,7 @@
     </section>
 
     <section class="panel edu-section" id="decode">
-      <div class="edu-section-heading"><p class="eyebrow">05 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">06 / INSTRUCTION DECODE</p><h2>8bit命令のデコード</h2></div>
       <div class="edu-byte-diagram" aria-label="8bit命令は上位4bitのopcodeと下位4bitのimmediateで構成">
         <div class="edu-opcode"><span>bit7 … bit4</span><strong>opcode</strong><small>命令の種類・操作先</small></div>
         <div class="edu-immediate"><span>bit3 … bit0</span><strong>Im</strong><small>加算する即値 0〜15</small></div>
@@ -366,7 +496,7 @@
     </details>
 
     <section class="panel edu-section" id="walkthrough">
-      <div class="edu-section-heading"><p class="eyebrow">07 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">08 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
       <p>TD4のプログラムは、PCが示すROMの1命令をクロックの<strong>L→H（立ち上がり）</strong>で実行します。実行後にPCが次の番地へ進み、次の立ち上がりまで状態を保持します。以下はCPUをリセットした状態（A=0、B=0、OUT=0、C=0、PC=0）からの実行例です。</p>
       <h3>例1：Bレジスタの値をLEDに表示する</h3>
       <p><code>MOV B</code> → <code>OUT B</code> → <code>ADD B</code> → <code>JMP</code> の繰り返しです。エミュレータで電源をONにして「停止」を押し、PROGRAM EDITORに次の4行を貼り付けて「ROMに書き込む」を押すとPC=0に戻ります。その状態からSTEPで確認できます。</p>
@@ -413,7 +543,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="hardware">
-      <div class="edu-section-heading"><p class="eyebrow">08 / HARDWARE</p><h2>論理ICの役割</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">09 / HARDWARE</p><h2>論理ICの役割</h2></div>
       <div class="edu-chip-grid">
         <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
         <div><strong>74HC153</strong><span>入力MUX</span><p>A・B・INPUT・0の中から演算元を選択。2個使用。</p></div>
@@ -430,7 +560,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="hardware-details">
-      <div class="edu-section-heading"><p class="eyebrow">09 / IC REFERENCE</p><h2>74HCロジックICの詳細</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">10 / IC REFERENCE</p><h2>74HCロジックICの詳細</h2></div>
       <p>TD4基板の13個のICを、9種類の機能別に詳しく解説します。真理値表・動作条件は理解用に整理したものです。物理端子番号とTD4上の接続ネットはリポジトリのネットリストを元に表示しています。</p>
       <p class="edu-muted">ピン表の「— 未モデル化」は未接続を断定するものではありません。実部品の端子仕様と、本エミュレータで確定済みの論理ネットは別です。各ICの電気的特性・電源条件・タイミングはメーカーのデータシートを参照してください。</p>
       <div class="edu-ic-index"><a href="#ic-74hc161">74HC161</a><a href="#ic-74hc153">74HC153</a><a href="#ic-74hc283">74HC283</a><a href="#ic-74hc74">74HC74</a><a href="#ic-74hc32">74HC32</a><a href="#ic-74hc10">74HC10</a><a href="#ic-74hc14">74HC14</a><a href="#ic-74hc154">74HC154</a><a href="#ic-74hc540">74HC540</a></div>
@@ -535,7 +665,7 @@ skip: OUT 0
       </details></div>
     </section>
     <section class="panel edu-section" id="practice">
-      <div class="edu-section-heading"><p class="eyebrow">10 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">11 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
       <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
       <div class="edu-exercise-grid">
         <article class="edu-exercise">
@@ -562,7 +692,7 @@ skip: OUT 0
     </section>
 
     <section class="panel edu-section" id="faq">
-      <div class="edu-section-heading"><p class="eyebrow">11 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">12 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
       <div class="edu-faq">
         <details><summary>4bit CPUなのに、命令が8bitなのはなぜ？</summary><p>4bitはA/BレジスタやALUが扱うデータの幅です。TD4では命令の幅は8bitで、上位4bitに操作の種類、下位4bitに即値を収めています。データ幅と命令幅は同じでなくても構いません。</p></details>
         <details><summary>INPUTスイッチを変えただけでAやBは更新される？</summary><p>いいえ。INPUTは外部入力の現在値です。<code>IN A</code>または<code>IN B</code>など、入力値を読み取る命令を実行した時点でレジスタに反映されます。</p></details>
