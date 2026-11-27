@@ -64,7 +64,8 @@
 
   function init() {
     const root = document.getElementById('logic-lab');
-    if (!root) return;
+    const section = document.getElementById('logic');
+    if (!root || !section) return;
     const aInput = root.querySelector('#logic-input-a');
     const bInput = root.querySelector('#logic-input-b');
     const xInput = root.querySelector('#logic-add-x');
@@ -82,7 +83,7 @@
       const half = halfAdder(a, b);
       setText(root, 'data-logic-result', 'halfSum', half.sum);
       setText(root, 'data-logic-result', 'halfCarry', half.carry);
-      root.querySelectorAll('[data-logic-row]').forEach(row => {
+      section.querySelectorAll('[data-logic-row]').forEach(row => {
         row.classList.toggle('is-active', row.getAttribute('data-logic-row') === '' + a + b);
       });
     }
