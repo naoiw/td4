@@ -40,11 +40,11 @@
   </script>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/education.css">
+  <script src="../js/core/td4-core.js" defer></script>
+  <script src="../js/core/ic-circuit.js" defer></script>
   <script src="datapath.js" defer></script>
   <script src="logic-basics.js" defer></script>
   <script src="sequential.js" defer></script>
-  <script src="../js/core/td4-core.js" defer></script>
-  <script src="../js/core/ic-circuit.js" defer></script>
   <script src="rom-decode.js" defer></script>
   <script src="carry-jnc.js" defer></script>
 </head>
@@ -70,23 +70,36 @@
     <section class="quick-start education-hero">
       <p class="eyebrow">EDUCATION / 4-BIT CPU</p>
       <h1>小さなCPUの中で、何が起きているのか。</h1>
-      <p>TD4が命令を読み、計算し、出力するまでを順番に理解するための技術資料です。実機風の基板を直接操作する場合は<a href="../../">Emulator</a>に戻って試せます。</p>
-      <nav class="education-toc" aria-label="教育ページの目次">
-        <a href="#overview">基本構造</a>
-        <a href="#binary">4bitと2進数</a>
-        <a href="#logic">論理回路の基礎</a>
-        <a href="#sequential">クロック・順序回路</a>
-        <a href="#cycle">命令実行の流れ</a>
-        <a href="#datapath">CPUデータフロー</a>
-        <a href="#rom-decode">ROMとデコード回路</a>
-        <a href="#decode">デコード解説</a>
-        <a href="#instruction-set">命令セット</a>
-        <a href="#walkthrough">プログラム実行例</a>
-        <a href="#carry-jnc">キャリーとJNC</a>
-        <a href="#hardware">74HC ICの役割</a>
-        <a href="#hardware-details">IC詳細・ピン配置</a>
-        <a href="#practice">演習</a>
-        <a href="#faq">よくある疑問</a>
+      <p>2進数と論理回路の基礎から、ROMの命令取得・デコード・演算・状態更新までを順に学べる技術資料です。各章にある教材は、その場で入力を変えて確認できます。実機風の基板を操作する場合は<a href="../../">Emulator</a>を開いてください。</p>
+      <p class="edu-learning-path">学習の順番：基礎 → CPUを構成するIC → 命令取得とデコード → データフロー → STEP実行と分岐 → 演習。ICの詳細なピン配置・真理値表は、最後のリファレンスにまとめています。</p>
+      <nav class="education-toc" aria-label="Educationの学習目次">
+        <div class="education-toc-group" aria-label="基礎・構成">
+          <span class="education-toc-label">基礎・構成</span>
+          <a href="#overview">基本構造</a>
+          <a href="#binary">4bitと2進数</a>
+          <a href="#logic">論理回路の基礎</a>
+          <a href="#sequential">クロック・順序回路</a>
+          <a href="#hardware">74HC ICの役割</a>
+        </div>
+        <div class="education-toc-group" aria-label="命令の処理">
+          <span class="education-toc-label">命令の処理</span>
+          <a href="#cycle">命令実行の流れ</a>
+          <a href="#rom-decode">ROM読み出し</a>
+          <a href="#decode">命令デコード</a>
+          <a href="#instruction-set">命令セット</a>
+          <a href="#datapath">CPUデータフロー</a>
+        </div>
+        <div class="education-toc-group" aria-label="実行・演習">
+          <span class="education-toc-label">実行・演習</span>
+          <a href="#walkthrough">プログラム実行例</a>
+          <a href="#carry-jnc">キャリーとJNC</a>
+          <a href="#practice">演習</a>
+        </div>
+        <div class="education-toc-group" aria-label="リファレンス">
+          <span class="education-toc-label">リファレンス</span>
+          <a href="#hardware-details">IC詳細・ピン配置</a>
+          <a href="#faq">よくある疑問</a>
+        </div>
       </nav>
     </section>
 
@@ -342,8 +355,25 @@
       <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を確認</a><a href="#practice">LOGIC ANALYZERの演習へ</a></div>
     </section>
 
+    <section class="panel edu-section" id="hardware">
+      <div class="edu-section-heading"><p class="eyebrow">05 / HARDWARE</p><h2>論理ICの役割</h2></div>
+      <div class="edu-chip-grid">
+        <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
+        <div><strong>74HC153</strong><span>入力MUX</span><p>A・B・INPUT・0の中から演算元を選択。2個使用。</p></div>
+        <div><strong>74HC283</strong><span>4bit加算</span><p>選択した入力元と即値を加え、結果とCOUTを生成。</p></div>
+        <div><strong>74HC74</strong><span>キャリーフラグ</span><p>次のクロックまでCを保持するフリップフロップ。</p></div>
+        <div><strong>74HC32 / 74HC10</strong><span>命令デコード</span><p>制御信号・ロード条件を論理ゲートで生成。</p></div>
+        <div><strong>74HC154 / 74HC540</strong><span>ROMの読み出し</span><p>アドレスデコードとデータバスの反転を担当。</p></div>
+        <div><strong>74HC14</strong><span>クロック</span><p>CR発振を表すシュミットトリガの論理モデル。</p></div>
+      </div>
+      <div class="edu-note">
+        <strong>モデル化の範囲</strong>
+        <p>このページはTD4の<strong>理想的な論理動作</strong>を説明します。実ICの電圧、伝搬遅延、抵抗・コンデンサの過渡応答、完全な物理配線は扱いません。端子の具体的な接続は<a href="https://github.com/naoiw/td4/blob/main/docs/netlist.md">ネットリスト</a>、実装モデルは<a href="https://github.com/naoiw/td4/blob/main/docs/architecture.md">設計資料</a>を参照してください。</p>
+      </div>
+    </section>
+
     <section class="panel edu-section" id="cycle">
-      <div class="edu-section-heading"><p class="eyebrow">05 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">06 / INSTRUCTION CYCLE</p><h2>命令を実行するまでの4段階</h2></div>
       <div class="edu-flow">
         <div class="edu-flow-step"><span>01 · FETCH</span><strong>ROMから取得</strong><small>PCが示す番地の8bitを読む</small></div>
         <div class="edu-flow-step"><span>02 · DECODE</span><strong>入力元と書込先を選択</strong><small>命令上位4bitでMUXと制御信号を決める</small></div>
@@ -351,80 +381,6 @@
         <div class="edu-flow-step"><span>04 · WRITE BACK</span><strong>状態を更新</strong><small>A / B / OUT / PCとCを更新する</small></div>
       </div>
       <p>通常は命令実行後にPCが1進みます（Fの次は0）。JMPは指定先へ移動し、JNCは<strong>命令実行前のC</strong>が0なら指定先へ分岐します。</p>
-    </section>
-
-
-    <section class="panel edu-section" id="datapath">
-      <div class="edu-section-heading"><p class="eyebrow">06 / DATA PATH</p><h2>命令ごとのCPUデータフロー</h2></div>
-      <p>TD4の論理回路を簡略化したデータフロー図です。命令を切り替えると、MUXが選ぶ入力元、ALUを通る経路、実際に書き込まれるレジスタ、キャリーフラグの変化を比較できます。<strong>配線図ではなく、データと制御の流れを理解するための概念図</strong>です。</p>
-      <div id="datapath-explorer" class="edu-datapath">
-        <label for="datapath-choice">観察する命令</label>
-        <select id="datapath-choice" name="datapath-choice"><option value="add">ADD A, 3（A=5）</option><option value="overflow">ADD A, 3（A=14・桁あふれ）</option><option value="mov">MOV B, A（A=9）</option><option value="input">IN B（INPUT=10）</option><option value="outb">OUT B（B=6）</option><option value="outim">OUT 7（即値）</option><option value="jmp">JMP 9（無条件分岐）</option><option value="jnc0">JNC 9（実行前C=0）</option><option value="jnc1">JNC 9（実行前C=1）</option></select>
-        <div class="edu-datapath-legend" aria-label="矢印の色の意味"><span class="dp-legend-fetch">命令取得</span><span class="dp-legend-input">選択された入力</span><span class="dp-legend-result">書き込み</span><span class="dp-legend-carry">キャリー</span><span class="dp-legend-control">制御信号</span></div>
-        <div class="edu-datapath-scroll" role="region" aria-label="TD4論理データフロー図" tabindex="0">
-          <svg class="edu-datapath-svg" viewBox="0 0 1070 660" role="img" aria-labelledby="datapath-svg-title datapath-svg-description">
-            <title id="datapath-svg-title">TD4のROMからレジスタまでの論理データフロー</title>
-            <desc id="datapath-svg-description">PCから74HC154、ROM、74HC540を経て命令が読み出される。デコード回路が74HC153のMUXと書込先を決める。MUXで選択したA・B・INPUT・0の値と即値を74HC283で加算し、A・B・OUT・PCへ書き込む。COUTは74HC74で保持される。色付き経路は選択した命令によって変化する。</desc>
-            <defs><marker id="dp-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#91a2b2"/></marker></defs>
-            <g class="dp-paths"><path class="dp-path " data-flow-route="fetch" d="M178 87 H242" marker-end="url(#dp-arrow)"/>
-<path class="dp-path " data-flow-route="fetch" d="M386 87 H449" marker-end="url(#dp-arrow)"/>
-<path class="dp-path " data-flow-route="fetch" d="M593 87 H657" marker-end="url(#dp-arrow)"/>
-<path class="dp-path " data-flow-route="fetch" d="M801 87 H854" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-source-path" data-flow-route="source-A" d="M193 276 H237 V372 H291" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-source-path" data-flow-route="source-B" d="M193 352 H253 V394 H291" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-source-path" data-flow-route="source-INPUT" d="M193 428 H253 V415 H291" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-source-path" data-flow-route="source-0" d="M193 504 H237 V437 H291" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-source-path" data-flow-route="operand" d="M454 406 H572" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-immediate-path" data-flow-route="immediate" d="M727 123 V207 H647 V361" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-control-path" data-flow-route="control-mux" d="M930 123 V194 H383 V361" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-control-path" data-flow-route="control-load" d="M959 123 V224 H1043 V320 H1029" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-result-path" data-flow-route="result" d="M726 406 H772" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-result-path" data-flow-route="write-A" d="M772 406 V278 H840" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-result-path" data-flow-route="write-B" d="M772 406 V348 H840" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-result-path" data-flow-route="write-OUT" d="M772 406 H840" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-result-path" data-flow-route="write-PC" d="M772 406 V478 H840" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-carry-path" data-flow-route="carry-out" d="M645 452 V547" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-carry-path" data-flow-route="carry-latched" d="M726 583 H840" marker-end="url(#dp-arrow)"/>
-<path class="dp-path dp-control-path" data-flow-route="old-carry" d="M1025 583 H1050 V208 H988 V123" marker-end="url(#dp-arrow)"/></g>
-            <g class="dp-nodes"><g class="dp-node" ><rect x="36" y="51" width="142" height="72" rx="9"/><text class="dp-node-title" x="107" y="72" text-anchor="middle">PC / 74HC161</text><text class="dp-node-detail" x="107" y="93" text-anchor="middle">PC: <tspan data-flow-value="pc">0010</tspan></text></g>
-<g class="dp-node" ><rect x="242" y="51" width="144" height="72" rx="9"/><text class="dp-node-title" x="314" y="72" text-anchor="middle">74HC154</text><text class="dp-node-detail" x="314" y="93" text-anchor="middle">アドレス選択</text></g>
-<g class="dp-node" ><rect x="449" y="51" width="144" height="72" rx="9"/><text class="dp-node-title" x="521" y="72" text-anchor="middle">ROM</text><text class="dp-node-detail" x="521" y="93" text-anchor="middle">16 × 8bit</text></g>
-<g class="dp-node" ><rect x="657" y="51" width="144" height="72" rx="9"/><text class="dp-node-title" x="729" y="72" text-anchor="middle">74HC540</text><text class="dp-node-detail" x="729" y="93" text-anchor="middle">D: <tspan data-flow-value="byte">0x03</tspan></text></g>
-<g class="dp-node" ><rect x="854" y="51" width="174" height="72" rx="9"/><text class="dp-node-title" x="941" y="72" text-anchor="middle">74HC32 / 10</text><text class="dp-node-detail" x="941" y="93" text-anchor="middle">命令デコード</text></g>
-<g class="dp-node" data-flow-source="A"><rect x="36" y="248" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="269" text-anchor="middle">A</text><text class="dp-node-detail" x="114.5" y="290" text-anchor="middle">4bitレジスタ</text></g>
-<g class="dp-node" data-flow-source="B"><rect x="36" y="324" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="345" text-anchor="middle">B</text><text class="dp-node-detail" x="114.5" y="366" text-anchor="middle">4bitレジスタ</text></g>
-<g class="dp-node" data-flow-source="INPUT"><rect x="36" y="400" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="421" text-anchor="middle">INPUT</text><text class="dp-node-detail" x="114.5" y="442" text-anchor="middle">外部スイッチ</text></g>
-<g class="dp-node" data-flow-source="0"><rect x="36" y="476" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="497" text-anchor="middle">0</text><text class="dp-node-detail" x="114.5" y="518" text-anchor="middle">固定値</text></g>
-<g class="dp-node" ><rect x="291" y="361" width="163" height="91" rx="9"/><text class="dp-node-title" x="372.5" y="382" text-anchor="middle">74HC153 × 2</text><text class="dp-node-detail" x="372.5" y="403" text-anchor="middle">MUX 4:1</text></g>
-<g class="dp-node" ><rect x="572" y="361" width="154" height="91" rx="9"/><text class="dp-node-title" x="649" y="382" text-anchor="middle">74HC283</text><text class="dp-node-detail" x="649" y="403" text-anchor="middle">ALU / 4bit加算</text></g>
-<g class="dp-node" data-flow-target="A"><rect x="840" y="250" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="271" text-anchor="middle">A ← ALU</text><text class="dp-node-detail" x="934" y="292" text-anchor="middle">74HC161</text></g>
-<g class="dp-node" data-flow-target="B"><rect x="840" y="320" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="341" text-anchor="middle">B ← ALU</text><text class="dp-node-detail" x="934" y="362" text-anchor="middle">74HC161</text></g>
-<g class="dp-node" data-flow-target="OUT"><rect x="840" y="378" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="399" text-anchor="middle">OUT ← ALU</text><text class="dp-node-detail" x="934" y="420" text-anchor="middle">74HC161</text></g>
-<g class="dp-node" data-flow-target="PC"><rect x="840" y="450" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="471" text-anchor="middle">PC ← ALU</text><text class="dp-node-detail" x="934" y="492" text-anchor="middle">74HC161</text></g>
-<g class="dp-node" ><rect x="572" y="547" width="154" height="73" rx="9"/><text class="dp-node-title" x="649" y="568" text-anchor="middle">74HC74</text><text class="dp-node-detail" x="649" y="589" text-anchor="middle">COUT: <tspan data-flow-value="carryOut">0</tspan></text></g>
-<g class="dp-node" ><rect x="840" y="547" width="188" height="73" rx="9"/><text class="dp-node-title" x="934" y="568" text-anchor="middle">Cフラグ</text><text class="dp-node-detail" x="934" y="589" text-anchor="middle">C: <tspan data-flow-value="carryStored">0</tspan></text></g></g>
-            <text x="57" y="231" class="dp-caption">MUXの入力候補</text>
-            <text x="390" y="342" class="dp-caption">SelB / SelA</text>
-            <text x="651" y="341" class="dp-caption">下位4bit Im</text>
-            <text x="846" y="229" class="dp-caption">LOAD_A/B/OUT/PC_N</text>
-            <text x="579" y="525" class="dp-caption">COUTをD-FFへ</text>
-            <text x="843" y="525" class="dp-caption">次の命令が参照するC</text>
-            <text x="32" y="645" class="dp-caption">※通常のPC+1は74HC161内部のカウント動作。JMP/JNC成立時はALU値を並列ロード。</text>
-          </svg>
-        </div>
-        <div class="edu-datapath-stats" aria-live="polite" aria-atomic="true">
-          <div><span>命令 / 機械語</span><strong data-flow-value="command">ADD A, 3（A=5）</strong><code data-flow-value="byte">0x03</code></div>
-          <div><span>MUX入力・選択信号</span><strong data-flow-value="source">A = 5</strong><code data-flow-value="sel">SelB=0 / SelA=0</code></div>
-          <div><span>ALU：入力元 + 即値</span><strong data-flow-value="operation">5 + 3</strong><code>Im=<span data-flow-value="immediate">3</span> → <span data-flow-value="result">1000 (8)</span></code></div>
-          <div><span>書込先</span><strong data-flow-value="destination">A ← 8</strong><code data-flow-value="control">Aへロード</code></div>
-          <div><span>PCの更新</span><strong data-flow-value="branch">通常実行：PC ← PC + 1</strong><code>次PC: <span data-flow-value="nextPc">0011</span></code></div>
-          <div><span>キャリー (74HC74)</span><strong>COUT=<span data-flow-value="carryOut">0</span> → C=<span data-flow-value="carryStored">0</span></strong><code>旧C=<span data-flow-value="oldCarry">0</span></code></div>
-        </div>
-        <p class="edu-datapath-note" data-flow-value="note">Aの5と即値3が加算器に入り、8がAへ書き戻されます。PCは+1で次の番地へ。</p>
-        <p class="edu-muted"><strong>読み方：</strong>制御信号（SelA/ SelB、LOAD_*_N）は上位4bitから決まります。データパスは常にALUまで計算しますが、JNC不成立時にはPCへのロードは行われません。COUTは加算器の組合せ出力、Cはクロックで74HC74が保持した値です。JNCの条件判定には<strong>実行前のC</strong>を使います。</p>
-        <p class="edu-muted">図のICを詳しく調べる場合は<a href="#hardware-details">74HCロジックIC詳細</a>、命令バイトと制御信号の対応は<a href="#instruction-set">命令セット</a>を参照してください。実際の論理状態は<a href="../../">EmulatorのSTEP実行</a>でも確認できます。</p>
-      </div>
-      <script type="application/json" id="datapath-examples">[{"id":"add","label":"ADD A, 3（A=5）","byte":3,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"Aの5と即値3が加算器に入り、8がAへ書き戻されます。PCは+1で次の番地へ。"},{"id":"overflow","label":"ADD A, 3（A=14・桁あふれ）","byte":3,"pc":2,"a":14,"b":2,"input":10,"out":0,"carry":0,"note":"14+3=17。ALUの4bit出力は1、COUT=1です。74HC74がクロックでC=1を保持します。"},{"id":"mov","label":"MOV B, A（A=9）","byte":64,"pc":2,"a":9,"b":2,"input":10,"out":0,"carry":0,"note":"MUXがAを選択し、即値0を足した9がBへロードされます。Aそのものは変化しません。"},{"id":"input","label":"IN B（INPUT=10）","byte":96,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXはINPUTを選択し、10をBに保存します。外部スイッチを変えるだけではBは変わりません。"},{"id":"outb","label":"OUT B（B=6）","byte":144,"pc":2,"a":5,"b":6,"input":10,"out":0,"carry":0,"note":"Bの6が加算器を経由してOUTレジスタに保存され、LED表示が変わります。"},{"id":"outim","label":"OUT 7（即値）","byte":183,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXは固定0を選び、即値7との加算結果7をOUTへロードします。"},{"id":"jmp","label":"JMP 9（無条件分岐）","byte":249,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXが0を選び、即値9をALUからPCへ並列ロードします。通常のPC+1は使いません。"},{"id":"jnc0","label":"JNC 9（実行前C=0）","byte":233,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"旧C=0なのでJNCが成立し、ALUの9がPCへ書き込まれます。Cは命令後も0です。"},{"id":"jnc1","label":"JNC 9（実行前C=1）","byte":233,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":1,"note":"旧C=1なのでLOAD_PC_Nは無効。ALUは9を計算してもPCへ書かず、PCは2から3へ進みます。Cは実行後0です。"}]</script>
     </section>
 
 
@@ -678,6 +634,80 @@
       </div>
     </details>
 
+    <section class="panel edu-section" id="datapath">
+      <div class="edu-section-heading"><p class="eyebrow">09 / DATA PATH</p><h2>命令ごとのCPUデータフロー</h2></div>
+      <p>TD4の論理回路を簡略化したデータフロー図です。命令を切り替えると、MUXが選ぶ入力元、ALUを通る経路、実際に書き込まれるレジスタ、キャリーフラグの変化を比較できます。<strong>配線図ではなく、データと制御の流れを理解するための概念図</strong>です。</p>
+      <div id="datapath-explorer" class="edu-datapath">
+        <label for="datapath-choice">観察する命令</label>
+        <select id="datapath-choice" name="datapath-choice"><option value="add">ADD A, 3（A=5）</option><option value="overflow">ADD A, 3（A=14・桁あふれ）</option><option value="mov">MOV B, A（A=9）</option><option value="input">IN B（INPUT=10）</option><option value="outb">OUT B（B=6）</option><option value="outim">OUT 7（即値）</option><option value="jmp">JMP 9（無条件分岐）</option><option value="jnc0">JNC 9（実行前C=0）</option><option value="jnc1">JNC 9（実行前C=1）</option></select>
+        <div class="edu-datapath-legend" aria-label="矢印の色の意味"><span class="dp-legend-fetch">命令取得</span><span class="dp-legend-input">選択された入力</span><span class="dp-legend-result">書き込み</span><span class="dp-legend-carry">キャリー</span><span class="dp-legend-control">制御信号</span></div>
+        <div class="edu-datapath-scroll" role="region" aria-label="TD4論理データフロー図" tabindex="0">
+          <svg class="edu-datapath-svg" viewBox="0 0 1070 660" role="img" aria-labelledby="datapath-svg-title datapath-svg-description">
+            <title id="datapath-svg-title">TD4のROMからレジスタまでの論理データフロー</title>
+            <desc id="datapath-svg-description">PCから74HC154、ROM、74HC540を経て命令が読み出される。デコード回路が74HC153のMUXと書込先を決める。MUXで選択したA・B・INPUT・0の値と即値を74HC283で加算し、A・B・OUT・PCへ書き込む。COUTは74HC74で保持される。色付き経路は選択した命令によって変化する。</desc>
+            <defs><marker id="dp-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#91a2b2"/></marker></defs>
+            <g class="dp-paths"><path class="dp-path " data-flow-route="fetch" d="M178 87 H242" marker-end="url(#dp-arrow)"/>
+<path class="dp-path " data-flow-route="fetch" d="M386 87 H449" marker-end="url(#dp-arrow)"/>
+<path class="dp-path " data-flow-route="fetch" d="M593 87 H657" marker-end="url(#dp-arrow)"/>
+<path class="dp-path " data-flow-route="fetch" d="M801 87 H854" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-source-path" data-flow-route="source-A" d="M193 276 H237 V372 H291" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-source-path" data-flow-route="source-B" d="M193 352 H253 V394 H291" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-source-path" data-flow-route="source-INPUT" d="M193 428 H253 V415 H291" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-source-path" data-flow-route="source-0" d="M193 504 H237 V437 H291" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-source-path" data-flow-route="operand" d="M454 406 H572" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-immediate-path" data-flow-route="immediate" d="M727 123 V207 H647 V361" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-control-path" data-flow-route="control-mux" d="M930 123 V194 H383 V361" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-control-path" data-flow-route="control-load" d="M959 123 V224 H1043 V320 H1029" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-result-path" data-flow-route="result" d="M726 406 H772" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-result-path" data-flow-route="write-A" d="M772 406 V278 H840" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-result-path" data-flow-route="write-B" d="M772 406 V348 H840" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-result-path" data-flow-route="write-OUT" d="M772 406 H840" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-result-path" data-flow-route="write-PC" d="M772 406 V478 H840" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-carry-path" data-flow-route="carry-out" d="M645 452 V547" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-carry-path" data-flow-route="carry-latched" d="M726 583 H840" marker-end="url(#dp-arrow)"/>
+<path class="dp-path dp-control-path" data-flow-route="old-carry" d="M1025 583 H1050 V208 H988 V123" marker-end="url(#dp-arrow)"/></g>
+            <g class="dp-nodes"><g class="dp-node" ><rect x="36" y="51" width="142" height="72" rx="9"/><text class="dp-node-title" x="107" y="72" text-anchor="middle">PC / 74HC161</text><text class="dp-node-detail" x="107" y="93" text-anchor="middle">PC: <tspan data-flow-value="pc">0010</tspan></text></g>
+<g class="dp-node" ><rect x="242" y="51" width="144" height="72" rx="9"/><text class="dp-node-title" x="314" y="72" text-anchor="middle">74HC154</text><text class="dp-node-detail" x="314" y="93" text-anchor="middle">アドレス選択</text></g>
+<g class="dp-node" ><rect x="449" y="51" width="144" height="72" rx="9"/><text class="dp-node-title" x="521" y="72" text-anchor="middle">ROM</text><text class="dp-node-detail" x="521" y="93" text-anchor="middle">16 × 8bit</text></g>
+<g class="dp-node" ><rect x="657" y="51" width="144" height="72" rx="9"/><text class="dp-node-title" x="729" y="72" text-anchor="middle">74HC540</text><text class="dp-node-detail" x="729" y="93" text-anchor="middle">D: <tspan data-flow-value="byte">0x03</tspan></text></g>
+<g class="dp-node" ><rect x="854" y="51" width="174" height="72" rx="9"/><text class="dp-node-title" x="941" y="72" text-anchor="middle">74HC32 / 10</text><text class="dp-node-detail" x="941" y="93" text-anchor="middle">命令デコード</text></g>
+<g class="dp-node" data-flow-source="A"><rect x="36" y="248" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="269" text-anchor="middle">A</text><text class="dp-node-detail" x="114.5" y="290" text-anchor="middle">4bitレジスタ</text></g>
+<g class="dp-node" data-flow-source="B"><rect x="36" y="324" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="345" text-anchor="middle">B</text><text class="dp-node-detail" x="114.5" y="366" text-anchor="middle">4bitレジスタ</text></g>
+<g class="dp-node" data-flow-source="INPUT"><rect x="36" y="400" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="421" text-anchor="middle">INPUT</text><text class="dp-node-detail" x="114.5" y="442" text-anchor="middle">外部スイッチ</text></g>
+<g class="dp-node" data-flow-source="0"><rect x="36" y="476" width="157" height="56" rx="9"/><text class="dp-node-title" x="114.5" y="497" text-anchor="middle">0</text><text class="dp-node-detail" x="114.5" y="518" text-anchor="middle">固定値</text></g>
+<g class="dp-node" ><rect x="291" y="361" width="163" height="91" rx="9"/><text class="dp-node-title" x="372.5" y="382" text-anchor="middle">74HC153 × 2</text><text class="dp-node-detail" x="372.5" y="403" text-anchor="middle">MUX 4:1</text></g>
+<g class="dp-node" ><rect x="572" y="361" width="154" height="91" rx="9"/><text class="dp-node-title" x="649" y="382" text-anchor="middle">74HC283</text><text class="dp-node-detail" x="649" y="403" text-anchor="middle">ALU / 4bit加算</text></g>
+<g class="dp-node" data-flow-target="A"><rect x="840" y="250" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="271" text-anchor="middle">A ← ALU</text><text class="dp-node-detail" x="934" y="292" text-anchor="middle">74HC161</text></g>
+<g class="dp-node" data-flow-target="B"><rect x="840" y="320" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="341" text-anchor="middle">B ← ALU</text><text class="dp-node-detail" x="934" y="362" text-anchor="middle">74HC161</text></g>
+<g class="dp-node" data-flow-target="OUT"><rect x="840" y="378" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="399" text-anchor="middle">OUT ← ALU</text><text class="dp-node-detail" x="934" y="420" text-anchor="middle">74HC161</text></g>
+<g class="dp-node" data-flow-target="PC"><rect x="840" y="450" width="188" height="56" rx="9"/><text class="dp-node-title" x="934" y="471" text-anchor="middle">PC ← ALU</text><text class="dp-node-detail" x="934" y="492" text-anchor="middle">74HC161</text></g>
+<g class="dp-node" ><rect x="572" y="547" width="154" height="73" rx="9"/><text class="dp-node-title" x="649" y="568" text-anchor="middle">74HC74</text><text class="dp-node-detail" x="649" y="589" text-anchor="middle">COUT: <tspan data-flow-value="carryOut">0</tspan></text></g>
+<g class="dp-node" ><rect x="840" y="547" width="188" height="73" rx="9"/><text class="dp-node-title" x="934" y="568" text-anchor="middle">Cフラグ</text><text class="dp-node-detail" x="934" y="589" text-anchor="middle">C: <tspan data-flow-value="carryStored">0</tspan></text></g></g>
+            <text x="57" y="231" class="dp-caption">MUXの入力候補</text>
+            <text x="390" y="342" class="dp-caption">SelB / SelA</text>
+            <text x="651" y="341" class="dp-caption">下位4bit Im</text>
+            <text x="846" y="229" class="dp-caption">LOAD_A/B/OUT/PC_N</text>
+            <text x="579" y="525" class="dp-caption">COUTをD-FFへ</text>
+            <text x="843" y="525" class="dp-caption">次の命令が参照するC</text>
+            <text x="32" y="645" class="dp-caption">※通常のPC+1は74HC161内部のカウント動作。JMP/JNC成立時はALU値を並列ロード。</text>
+          </svg>
+        </div>
+        <div class="edu-datapath-stats" aria-live="polite" aria-atomic="true">
+          <div><span>命令 / 機械語</span><strong data-flow-value="command">ADD A, 3（A=5）</strong><code data-flow-value="byte">0x03</code></div>
+          <div><span>MUX入力・選択信号</span><strong data-flow-value="source">A = 5</strong><code data-flow-value="sel">SelB=0 / SelA=0</code></div>
+          <div><span>ALU：入力元 + 即値</span><strong data-flow-value="operation">5 + 3</strong><code>Im=<span data-flow-value="immediate">3</span> → <span data-flow-value="result">1000 (8)</span></code></div>
+          <div><span>書込先</span><strong data-flow-value="destination">A ← 8</strong><code data-flow-value="control">Aへロード</code></div>
+          <div><span>PCの更新</span><strong data-flow-value="branch">通常実行：PC ← PC + 1</strong><code>次PC: <span data-flow-value="nextPc">0011</span></code></div>
+          <div><span>キャリー (74HC74)</span><strong>COUT=<span data-flow-value="carryOut">0</span> → C=<span data-flow-value="carryStored">0</span></strong><code>旧C=<span data-flow-value="oldCarry">0</span></code></div>
+        </div>
+        <p class="edu-datapath-note" data-flow-value="note">Aの5と即値3が加算器に入り、8がAへ書き戻されます。PCは+1で次の番地へ。</p>
+        <p class="edu-muted"><strong>読み方：</strong>制御信号（SelA/ SelB、LOAD_*_N）は上位4bitから決まります。データパスは常にALUまで計算しますが、JNC不成立時にはPCへのロードは行われません。COUTは加算器の組合せ出力、Cはクロックで74HC74が保持した値です。JNCの条件判定には<strong>実行前のC</strong>を使います。</p>
+        <p class="edu-muted">図のICを詳しく調べる場合は<a href="#hardware-details">74HCロジックIC詳細</a>、命令バイトと制御信号の対応は<a href="#instruction-set">命令セット</a>を参照してください。実際の論理状態は<a href="../../">EmulatorのSTEP実行</a>でも確認できます。</p>
+      </div>
+      <script type="application/json" id="datapath-examples">[{"id":"add","label":"ADD A, 3（A=5）","byte":3,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"Aの5と即値3が加算器に入り、8がAへ書き戻されます。PCは+1で次の番地へ。"},{"id":"overflow","label":"ADD A, 3（A=14・桁あふれ）","byte":3,"pc":2,"a":14,"b":2,"input":10,"out":0,"carry":0,"note":"14+3=17。ALUの4bit出力は1、COUT=1です。74HC74がクロックでC=1を保持します。"},{"id":"mov","label":"MOV B, A（A=9）","byte":64,"pc":2,"a":9,"b":2,"input":10,"out":0,"carry":0,"note":"MUXがAを選択し、即値0を足した9がBへロードされます。Aそのものは変化しません。"},{"id":"input","label":"IN B（INPUT=10）","byte":96,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXはINPUTを選択し、10をBに保存します。外部スイッチを変えるだけではBは変わりません。"},{"id":"outb","label":"OUT B（B=6）","byte":144,"pc":2,"a":5,"b":6,"input":10,"out":0,"carry":0,"note":"Bの6が加算器を経由してOUTレジスタに保存され、LED表示が変わります。"},{"id":"outim","label":"OUT 7（即値）","byte":183,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXは固定0を選び、即値7との加算結果7をOUTへロードします。"},{"id":"jmp","label":"JMP 9（無条件分岐）","byte":249,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXが0を選び、即値9をALUからPCへ並列ロードします。通常のPC+1は使いません。"},{"id":"jnc0","label":"JNC 9（実行前C=0）","byte":233,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"旧C=0なのでJNCが成立し、ALUの9がPCへ書き込まれます。Cは命令後も0です。"},{"id":"jnc1","label":"JNC 9（実行前C=1）","byte":233,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":1,"note":"旧C=1なのでLOAD_PC_Nは無効。ALUは9を計算してもPCへ書かず、PCは2から3へ進みます。Cは実行後0です。"}]</script>
+    </section>
+
+
     <section class="panel edu-section" id="walkthrough">
       <div class="edu-section-heading"><p class="eyebrow">10 / STEP-BY-STEP</p><h2>1命令ずつ実行して、レジスタの変化を追う</h2></div>
       <p>TD4のプログラムは、PCが示すROMの1命令をクロックの<strong>L→H（立ち上がり）</strong>で実行します。実行後にPCが次の番地へ進み、次の立ち上がりまで状態を保持します。以下はCPUをリセットした状態（A=0、B=0、OUT=0、C=0、PC=0）からの実行例です。</p>
@@ -785,20 +815,30 @@ end: JMP end</code></pre>
       <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を確認</a><a href="#walkthrough">既存の実行例</a><a href="#datapath">CPUデータフロー図</a><a href="#sequential">クロックと74HC74</a></div>
     </section>
 
-    <section class="panel edu-section" id="hardware">
-      <div class="edu-section-heading"><p class="eyebrow">12 / HARDWARE</p><h2>論理ICの役割</h2></div>
-      <div class="edu-chip-grid">
-        <div><strong>74HC161</strong><span>A / B / OUT / PC</span><p>レジスタとPCカウント。4個使用。</p></div>
-        <div><strong>74HC153</strong><span>入力MUX</span><p>A・B・INPUT・0の中から演算元を選択。2個使用。</p></div>
-        <div><strong>74HC283</strong><span>4bit加算</span><p>選択した入力元と即値を加え、結果とCOUTを生成。</p></div>
-        <div><strong>74HC74</strong><span>キャリーフラグ</span><p>次のクロックまでCを保持するフリップフロップ。</p></div>
-        <div><strong>74HC32 / 74HC10</strong><span>命令デコード</span><p>制御信号・ロード条件を論理ゲートで生成。</p></div>
-        <div><strong>74HC154 / 74HC540</strong><span>ROMの読み出し</span><p>アドレスデコードとデータバスの反転を担当。</p></div>
-        <div><strong>74HC14</strong><span>クロック</span><p>CR発振を表すシュミットトリガの論理モデル。</p></div>
-      </div>
-      <div class="edu-note">
-        <strong>モデル化の範囲</strong>
-        <p>このページはTD4の<strong>理想的な論理動作</strong>を説明します。実ICの電圧、伝搬遅延、抵抗・コンデンサの過渡応答、完全な物理配線は扱いません。端子の具体的な接続は<a href="https://github.com/naoiw/td4/blob/main/docs/netlist.md">ネットリスト</a>、実装モデルは<a href="https://github.com/naoiw/td4/blob/main/docs/architecture.md">設計資料</a>を参照してください。</p>
+    <section class="panel edu-section" id="practice">
+      <div class="edu-section-heading"><p class="eyebrow">12 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
+      <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
+      <div class="edu-exercise-grid">
+        <article class="edu-exercise">
+          <span>01 / 入門 · LED</span><h3>LEDスキャナの出力を予想する</h3>
+          <p>PROGRAM EDITORの「LEDスキャナ」を選び、STEPで進めます。<code>OUT 1</code> → <code>OUT 2</code> → <code>OUT 4</code> でLEDはどう変化するでしょうか？</p>
+          <details><summary>答えと確認ポイント</summary><p>OUTは1 → 2 → 4、2進数では0001 → 0010 → 0100です。1つずつ違うLEDが点灯します。OUT命令ごとにCは0になります。</p></details>
+        </article>
+        <article class="edu-exercise">
+          <span>02 / 入門 · INPUT</span><h3>スイッチを変えたらいつLEDが変わる？</h3>
+          <p>「スイッチ入力」を選び、INPUTを例えば <code>0101</code> にしてSTEPで実行。<code>IN B</code> の直後と <code>OUT B</code> の直後を比べてください。</p>
+          <details><summary>答えと確認ポイント</summary><p><code>IN B</code>ではBに5が取り込まれますが、OUTは変わりません。次の<code>OUT B</code>でOUTが5に変わり、LED0とLED2が点灯します。</p></details>
+        </article>
+        <article class="edu-exercise">
+          <span>03 / 中級 · JNC</span><h3>桁あふれの直後はどこへ進む？</h3>
+          <p>「キャリーと分岐」を選択し、<code>ADD A, 1</code> の次のSTEPでPCがどこに進むか予想します。<code>JNC</code>実行後のC表示にも注目。</p>
+          <details><summary>答えと確認ポイント</summary><p>ADD後のCは1。JNCはその旧Cを見て分岐せず、PC=0x3に進みます。JNCの実行後はC=0に更新されます。</p></details>
+        </article>
+        <article class="edu-exercise">
+          <span>04 / 中級 · 波形</span><h3>クロックの立ち上がりと停止を観察</h3>
+          <p>10Hzで実行し、LOGIC ANALYZERのCLKとPCの変化を観察します。TRIGGERをONにしてCLKのL→Hを指定したとき、何が止まるでしょうか？</p>
+          <details><summary>答えと確認ポイント</summary><p>指定エッジで波形取得が固定（TRIGGERED）されますが、CPUの自動実行は続きます。CPUを停止するにはCPU側の「停止」を使います。</p></details>
+        </article>
       </div>
     </section>
 
@@ -907,35 +947,8 @@ end: JMP end</code></pre>
         </div>
       </details></div>
     </section>
-    <section class="panel edu-section" id="practice">
-      <div class="edu-section-heading"><p class="eyebrow">14 / HANDS-ON</p><h2>エミュレータで試す4つの演習</h2></div>
-      <p>説明を読んだら、まず自分で次の状態を予想し、そのあとエミュレータで確認してください。各演習はサンプルプログラムか標準機能だけで試せます。STEPで最初から追う場合は、電源をONにして「停止」を押し、PROGRAM EDITORでサンプルを選び直してください。ROMが再読み込みされ、PC=0に戻ります。</p>
-      <div class="edu-exercise-grid">
-        <article class="edu-exercise">
-          <span>01 / 入門 · LED</span><h3>LEDスキャナの出力を予想する</h3>
-          <p>PROGRAM EDITORの「LEDスキャナ」を選び、STEPで進めます。<code>OUT 1</code> → <code>OUT 2</code> → <code>OUT 4</code> でLEDはどう変化するでしょうか？</p>
-          <details><summary>答えと確認ポイント</summary><p>OUTは1 → 2 → 4、2進数では0001 → 0010 → 0100です。1つずつ違うLEDが点灯します。OUT命令ごとにCは0になります。</p></details>
-        </article>
-        <article class="edu-exercise">
-          <span>02 / 入門 · INPUT</span><h3>スイッチを変えたらいつLEDが変わる？</h3>
-          <p>「スイッチ入力」を選び、INPUTを例えば <code>0101</code> にしてSTEPで実行。<code>IN B</code> の直後と <code>OUT B</code> の直後を比べてください。</p>
-          <details><summary>答えと確認ポイント</summary><p><code>IN B</code>ではBに5が取り込まれますが、OUTは変わりません。次の<code>OUT B</code>でOUTが5に変わり、LED0とLED2が点灯します。</p></details>
-        </article>
-        <article class="edu-exercise">
-          <span>03 / 中級 · JNC</span><h3>桁あふれの直後はどこへ進む？</h3>
-          <p>「キャリーと分岐」を選択し、<code>ADD A, 1</code> の次のSTEPでPCがどこに進むか予想します。<code>JNC</code>実行後のC表示にも注目。</p>
-          <details><summary>答えと確認ポイント</summary><p>ADD後のCは1。JNCはその旧Cを見て分岐せず、PC=0x3に進みます。JNCの実行後はC=0に更新されます。</p></details>
-        </article>
-        <article class="edu-exercise">
-          <span>04 / 中級 · 波形</span><h3>クロックの立ち上がりと停止を観察</h3>
-          <p>10Hzで実行し、LOGIC ANALYZERのCLKとPCの変化を観察します。TRIGGERをONにしてCLKのL→Hを指定したとき、何が止まるでしょうか？</p>
-          <details><summary>答えと確認ポイント</summary><p>指定エッジで波形取得が固定（TRIGGERED）されますが、CPUの自動実行は続きます。CPUを停止するにはCPU側の「停止」を使います。</p></details>
-        </article>
-      </div>
-    </section>
-
     <section class="panel edu-section" id="faq">
-      <div class="edu-section-heading"><p class="eyebrow">15 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
+      <div class="edu-section-heading"><p class="eyebrow">14 / FAQ</p><h2>TD4を動かすときによくある疑問</h2></div>
       <div class="edu-faq">
         <details><summary>4bit CPUなのに、命令が8bitなのはなぜ？</summary><p>4bitはA/BレジスタやALUが扱うデータの幅です。TD4では命令の幅は8bitで、上位4bitに操作の種類、下位4bitに即値を収めています。データ幅と命令幅は同じでなくても構いません。</p></details>
         <details><summary>INPUTスイッチを変えただけでAやBは更新される？</summary><p>いいえ。INPUTは外部入力の現在値です。<code>IN A</code>または<code>IN B</code>など、入力値を読み取る命令を実行した時点でレジスタに反映されます。</p></details>
