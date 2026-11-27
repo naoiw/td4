@@ -115,6 +115,7 @@
         <div><span>OUT</span><strong>4bit</strong><small>LEDに対応する出力</small></div>
       </div>
       <p class="edu-muted">A/B・PC・OUTなどは74HC161、キャリーは74HC74の論理モデルで表現しています。電圧や伝搬遅延まで再現する回路シミュレータではありません。</p>
+      <p class="edu-muted"><strong>信号の表記</strong>：Hは1、Lは0。末尾の<code>_N</code>や<code>#</code>は通常<strong>アクティブLOW</strong>（Lで有効）を表します。<code>COUT</code>は加算器の現在の桁上がり、<code>C</code>はフリップフロップに保持されたキャリーフラグです。</p>
     </section>
 
     <section class="panel edu-section" id="binary">
@@ -694,14 +695,14 @@
         </div>
         <div class="edu-datapath-stats" aria-live="polite" aria-atomic="true">
           <div><span>命令 / 機械語</span><strong data-flow-value="command">ADD A, 3（A=5）</strong><code data-flow-value="byte">0x03</code></div>
-          <div><span>MUX入力・選択信号</span><strong data-flow-value="source">A = 5</strong><code data-flow-value="sel">SelB=0 / SelA=0</code></div>
+          <div><span>MUX入力・選択信号</span><strong data-flow-value="source">A = 5</strong><code data-flow-value="sel">SEL_B=0 / SEL_A=0</code></div>
           <div><span>ALU：入力元 + 即値</span><strong data-flow-value="operation">5 + 3</strong><code>Im=<span data-flow-value="immediate">3</span> → <span data-flow-value="result">1000 (8)</span></code></div>
           <div><span>書込先</span><strong data-flow-value="destination">A ← 8</strong><code data-flow-value="control">Aへロード</code></div>
           <div><span>PCの更新</span><strong data-flow-value="branch">通常実行：PC ← PC + 1</strong><code>次PC: <span data-flow-value="nextPc">0011</span></code></div>
           <div><span>キャリー (74HC74)</span><strong>COUT=<span data-flow-value="carryOut">0</span> → C=<span data-flow-value="carryStored">0</span></strong><code>旧C=<span data-flow-value="oldCarry">0</span></code></div>
         </div>
         <p class="edu-datapath-note" data-flow-value="note">Aの5と即値3が加算器に入り、8がAへ書き戻されます。PCは+1で次の番地へ。</p>
-        <p class="edu-muted"><strong>読み方：</strong>制御信号（SelA/ SelB、LOAD_*_N）は上位4bitから決まります。データパスは常にALUまで計算しますが、JNC不成立時にはPCへのロードは行われません。COUTは加算器の組合せ出力、Cはクロックで74HC74が保持した値です。JNCの条件判定には<strong>実行前のC</strong>を使います。</p>
+        <p class="edu-muted"><strong>読み方：</strong>制御信号（SEL_A / SEL_B、LOAD_*_N）は上位4bitから決まります。データパスは常にALUまで計算しますが、JNC不成立時にはPCへのロードは行われません。COUTは加算器の組合せ出力、Cはクロックで74HC74が保持した値です。JNCの条件判定には<strong>実行前のC</strong>を使います。</p>
         <p class="edu-muted">図のICを詳しく調べる場合は<a href="#hardware-details">74HCロジックIC詳細</a>、命令バイトと制御信号の対応は<a href="#instruction-set">命令セット</a>を参照してください。実際の論理状態は<a href="../../">EmulatorのSTEP実行</a>でも確認できます。</p>
       </div>
       <script type="application/json" id="datapath-examples">[{"id":"add","label":"ADD A, 3（A=5）","byte":3,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"Aの5と即値3が加算器に入り、8がAへ書き戻されます。PCは+1で次の番地へ。"},{"id":"overflow","label":"ADD A, 3（A=14・桁あふれ）","byte":3,"pc":2,"a":14,"b":2,"input":10,"out":0,"carry":0,"note":"14+3=17。ALUの4bit出力は1、COUT=1です。74HC74がクロックでC=1を保持します。"},{"id":"mov","label":"MOV B, A（A=9）","byte":64,"pc":2,"a":9,"b":2,"input":10,"out":0,"carry":0,"note":"MUXがAを選択し、即値0を足した9がBへロードされます。Aそのものは変化しません。"},{"id":"input","label":"IN B（INPUT=10）","byte":96,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXはINPUTを選択し、10をBに保存します。外部スイッチを変えるだけではBは変わりません。"},{"id":"outb","label":"OUT B（B=6）","byte":144,"pc":2,"a":5,"b":6,"input":10,"out":0,"carry":0,"note":"Bの6が加算器を経由してOUTレジスタに保存され、LED表示が変わります。"},{"id":"outim","label":"OUT 7（即値）","byte":183,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXは固定0を選び、即値7との加算結果7をOUTへロードします。"},{"id":"jmp","label":"JMP 9（無条件分岐）","byte":249,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"MUXが0を選び、即値9をALUからPCへ並列ロードします。通常のPC+1は使いません。"},{"id":"jnc0","label":"JNC 9（実行前C=0）","byte":233,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":0,"note":"旧C=0なのでJNCが成立し、ALUの9がPCへ書き込まれます。Cは命令後も0です。"},{"id":"jnc1","label":"JNC 9（実行前C=1）","byte":233,"pc":2,"a":5,"b":2,"input":10,"out":0,"carry":1,"note":"旧C=1なのでLOAD_PC_Nは無効。ALUは9を計算してもPCへ書かず、PCは2から3へ進みます。Cは実行後0です。"}]</script>
@@ -752,6 +753,7 @@ skip: OUT 0
         </table>
       </div>
       <p>3番目の命令が実行される直前はC=1なので、<code>JNC skip</code>では分岐せずPCが0x3へ進みます。その後の <code>OUT 15</code> でLEDがすべてONになります。<strong>JNC実行後のC=0を見て分岐したと勘違いしない</strong>ことが重要です。</p>
+      <p class="edu-muted">この表は最初の4命令だけを示した例です。C=0/1や別命令を挟んだ結果は、次章の<a href="#carry-jnc">キャリーとJNCのSTEP演習</a>で比較できます。</p>
       <div class="edu-lesson-actions"><a class="btn btn-primary" href="../../">EmulatorでSTEP実行を試す</a><a href="#practice">次の演習へ</a></div>
     </section>
 
