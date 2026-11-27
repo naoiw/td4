@@ -83,9 +83,7 @@
                 button.title = `アドレス${HEX(addr)} D${bit} を反転`;
                 button.setAttribute('aria-label', `ROM ${HEX(addr)}番地のD${bit}を反転`);
                 button.addEventListener('click', () => {
-                    stop();
-                    cpu.rom[addr] ^= 1 << bit;
-                    refreshRomAfterEdit('ROMを直接変更しました。ソースとの内容が異なります。');
+                    toggleRomBit(addr, bit, 'ROMを直接変更しました。ソースとの内容が異なります。');
                 });
                 bits.append(button);
                 bitButtons[bit] = button;
@@ -167,6 +165,12 @@
         showMessage(message, 'unsynced');
     }
     /** Each switch is a real editable ROM bit; all display surfaces share cpu.rom. */
+    /** Every ROM editing surface uses the same stop / mutate / refresh lifecycle. */
+    function toggleRomBit(address, bit, message) {
+        stop();
+        cpu.rom[address] ^= 1 << bit;
+        refreshRomAfterEdit(message);
+    }
     /** Assemble the PCB view; application state stays here, rendering stays in board.ts. */
     function buildCircuitBoard() {
         window.TD4BoardView.mount({
@@ -175,9 +179,7 @@
             toggleIcDetails,
             setSelectedNet,
             onRomBitToggle(addr, bit) {
-                stop();
-                cpu.rom[addr] ^= (1 << bit);
-                refreshRomAfterEdit('ROM ' + HEX(addr) + '番地 D' + bit + 'を変更しました。ソースとROMの内容が異なります。');
+                toggleRomBit(addr, bit, 'ROM ' + HEX(addr) + '番地 D' + bit + 'を変更しました。ソースとROMの内容が異なります。');
             },
             onInputBitToggle(bit) {
                 const before = readCpuState();
