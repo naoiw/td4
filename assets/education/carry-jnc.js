@@ -45,10 +45,9 @@
       history,
       cpu,
       next() {
-        const before = {pc:cpu.pc, a:cpu.a, b:cpu.b, out:cpu.out, carry:cpu.carry};
         const step = cpu.step();
         const row = {
-          pcBefore:before.pc, asm:step.asm, byte:step.byte,
+          pcBefore:step.pc, asm:step.asm, byte:step.byte,
           source:step.source, imm:step.imm, sum:step.sum, result:step.result,
           carryBefore:step.carryBefore, cout:step.carryAfter, carryAfter:cpu.carry,
           destination:step.destination,
@@ -116,7 +115,7 @@
       const cells = [
         String(runner.history.length),hex(row.pcBefore),row.asm,
         row.source + '+' + row.imm + '=' + row.sum,
-        String(row.carryBefore),String(row.cout),
+        String(row.carryBefore),row.cout + ' → ' + row.carryAfter,
         row.loadPcN === null ? '—' : String(row.loadPcN),
         hex(row.pcAfter),verdict
       ];
